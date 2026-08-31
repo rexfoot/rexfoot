@@ -1,4 +1,15 @@
 # RexFoot — apps/worker (process Node autonome, jobs BullMQ)
+#
+# apps/worker importe les packages partagés (@rexfoot/config, @rexfoot/db,
+# @rexfoot/football-provider) directement depuis leur source TypeScript
+# (package.json "main": "src/index.ts", aucune étape de build/dist pour ces
+# packages). Ça fonctionne pour apps/web parce que `next build` transpile et
+# bundle tout dans .next/ une fois pour toutes. apps/worker n'a pas de tel
+# bundler : on exécute donc son point d'entrée avec `tsx` (déjà utilisé en
+# dev) plutôt que de compiler en JS puis lancer `node dist/index.js`, qui ne
+# peut pas résoudre les imports TypeScript des packages partagés au runtime.
+# `tsc --noEmit` reste lancé pendant le build pour garder un vrai garde-fou
+# de types avant de déployer.
 
 FROM node:22-slim AS base
 WORKDIR /app
@@ -16,15 +27,15 @@ RUN npm ci
 FROM deps AS build
 COPY . .
 RUN npm run prisma:generate
-RUN npm run build:worker
+RUN npm run typecheck:worker
 
 FROM base AS runtime
 ENV NODE_ENV=production
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/tsconfig.base.json ./tsconfig.base.json
 COPY --from=build /app/packages ./packages
-COPY --from=build /app/apps/worker/dist ./apps/worker/dist
-COPY --from=build /app/apps/worker/package.json ./apps/worker/package.json
+COPY --from=build /app/apps/worker ./apps/worker
 
 WORKDIR /app/apps/worker
-CMD ["node", "dist/index.js"]
+CMD ["npm", "run", "start"]

@@ -11,7 +11,7 @@
     "dev": "npm run dev --workspace=apps/web",
     "dev:worker": "npm run dev --workspace=apps/worker",
     "build": "npm run build --workspace=apps/web",
-    "build:worker": "npm run build --workspace=apps/worker",
+    "typecheck:worker": "npm run typecheck --workspace=apps/worker",
     "prisma:generate": "npm run generate --workspace=packages/db",
     "prisma:migrate:dev": "npm run migrate:dev --workspace=packages/db",
     "prisma:studio": "npm run studio --workspace=packages/db",
