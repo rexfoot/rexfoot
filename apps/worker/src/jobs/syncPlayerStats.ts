@@ -1,15 +1,17 @@
 import { prisma } from "@rexfoot/db";
 import { hasFootballApiKey } from "@rexfoot/config";
 import { createFootballProvider } from "@rexfoot/football-provider";
-import { findPlayerByExternalId } from "../lib/upsert.js";
 import { logger } from "../lib/logger.js";
 
 const LOOKBACK_HOURS = 48;
 
 /**
- * Pour les matchs terminés récemment, récupère les statistiques équipe et
- * joueur. Volontairement limité à une fenêtre glissante (dernières 48h) pour
- * ne pas re-parcourir tout l'historique à chaque exécution.
+ * Pour les matchs terminés récemment, récupère les statistiques d'équipe
+ * (2 appels par match : domicile + extérieur). Volontairement limité à une
+ * fenêtre glissante (dernières 48h). Les statistiques par joueur ne sont PAS
+ * synchronisées ici : un appel getPlayerStatistics par membre d'effectif
+ * exploserait le quota du plan gratuit API-Football (100 req/jour) — à
+ * reconsidérer si le plan est mis à niveau.
  */
 export async function syncPlayerStats(): Promise<void> {
   if (!hasFootballApiKey()) {
@@ -57,56 +59,6 @@ export async function syncPlayerStats(): Promise<void> {
             offsides: teamStats.offsides,
             yellowCards: teamStats.yellowCards,
             redCards: teamStats.redCards,
-          },
-        });
-      }
-
-      const members = await prisma.playerTeamMembership.findMany({
-        where: { teamId: team.id, seasonId: fixture.seasonId },
-        select: { playerId: true, player: { select: { externalId: true } } },
-      });
-
-      for (const member of members) {
-        const playerStats = await provider.getPlayerStatistics({
-          playerExternalId: member.player.externalId,
-          seasonExternalId: fixture.season.externalId,
-        });
-        const statForTeam = playerStats.find((s) => s.teamExternalId === team.externalId);
-        if (!statForTeam) continue;
-
-        const player = await findPlayerByExternalId(member.player.externalId);
-        if (!player) continue;
-
-        await prisma.playerStatistics.upsert({
-          where: { fixtureId_playerId: { fixtureId: fixture.id, playerId: player.id } },
-          create: {
-            fixtureId: fixture.id,
-            playerId: player.id,
-            teamId: team.id,
-            minutesPlayed: statForTeam.minutesPlayed,
-            goals: statForTeam.goals,
-            assists: statForTeam.assists,
-            shots: statForTeam.shots,
-            shotsOnTarget: statForTeam.shotsOnTarget,
-            passes: statForTeam.passes,
-            passAccuracy: statForTeam.passAccuracy,
-            tackles: statForTeam.tackles,
-            rating: statForTeam.rating,
-            yellowCards: statForTeam.yellowCards,
-            redCards: statForTeam.redCards,
-          },
-          update: {
-            minutesPlayed: statForTeam.minutesPlayed,
-            goals: statForTeam.goals,
-            assists: statForTeam.assists,
-            shots: statForTeam.shots,
-            shotsOnTarget: statForTeam.shotsOnTarget,
-            passes: statForTeam.passes,
-            passAccuracy: statForTeam.passAccuracy,
-            tackles: statForTeam.tackles,
-            rating: statForTeam.rating,
-            yellowCards: statForTeam.yellowCards,
-            redCards: statForTeam.redCards,
           },
         });
       }

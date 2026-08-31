@@ -7,6 +7,7 @@ import { syncFixtures } from "./jobs/syncFixtures.js";
 import { syncLiveScores } from "./jobs/syncLiveScores.js";
 import { syncStandings } from "./jobs/syncStandings.js";
 import { syncPlayerStats } from "./jobs/syncPlayerStats.js";
+import { syncRosters } from "./jobs/syncRosters.js";
 
 async function main(): Promise<void> {
   getEnv(); // valide les variables d'env dès le démarrage, échoue vite si mal configuré
@@ -30,6 +31,8 @@ async function main(): Promise<void> {
           return syncStandings();
         case JobName.syncPlayerStats:
           return syncPlayerStats();
+        case JobName.syncRosters:
+          return syncRosters();
         case JobName.syncLiveScores: {
           const hadLiveMatches = await syncLiveScores();
           await scheduleNextLiveScoresRun(queue, hadLiveMatches);

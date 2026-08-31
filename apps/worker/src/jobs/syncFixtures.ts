@@ -2,7 +2,7 @@ import { prisma } from "@rexfoot/db";
 import { hasFootballApiKey } from "@rexfoot/config";
 import { createFootballProvider } from "@rexfoot/football-provider";
 import { resolveFeaturedCompetitions } from "../lib/competitions.js";
-import { upsertPlayer, upsertSeason, upsertTeam } from "../lib/upsert.js";
+import { upsertSeason, upsertTeam } from "../lib/upsert.js";
 import { logger } from "../lib/logger.js";
 
 const WINDOW_DAYS_PAST = 3;
@@ -10,9 +10,12 @@ const WINDOW_DAYS_FUTURE = 14;
 
 /**
  * Synchronise, pour chaque compétition vedette : la saison courante, les
- * équipes + effectifs, puis les matchs de la fenêtre [-3j, +14j]. C'est le
- * job qui pose les fondations (équipes/joueurs) dont dépendent les autres
- * jobs (syncLiveScores, syncStandings, syncPlayerStats).
+ * équipes, puis les matchs de la fenêtre [-3j, +14j]. C'est le job qui pose
+ * les fondations (équipes) dont dépendent les autres jobs (syncLiveScores,
+ * syncStandings, syncPlayerStats). Les effectifs (joueurs) sont synchronisés
+ * séparément par syncRosters.ts, à un rythme beaucoup plus rare — un appel
+ * getPlayers par équipe est le poste de coût dominant sur le plan gratuit
+ * API-Football (100 req/jour), inutile de le refaire à chaque cycle.
  */
 export async function syncFixtures(): Promise<void> {
   if (!hasFootballApiKey()) {
@@ -57,26 +60,6 @@ export async function syncFixtures(): Promise<void> {
         create: { teamId: team.id, competitionId: competition.id, seasonId: season.id },
         update: {},
       });
-
-      const players = await provider.getPlayers({
-        teamExternalId: teamDto.externalId,
-        seasonExternalId: currentSeasonDto.externalId,
-      });
-      for (const playerDto of players) {
-        const player = await upsertPlayer(playerDto);
-        await prisma.playerTeamMembership.upsert({
-          where: {
-            playerId_teamId_seasonId: { playerId: player.id, teamId: team.id, seasonId: season.id },
-          },
-          create: {
-            playerId: player.id,
-            teamId: team.id,
-            seasonId: season.id,
-            shirtNumber: playerDto.shirtNumber,
-          },
-          update: { shirtNumber: playerDto.shirtNumber },
-        });
-      }
     }
 
     const fixtures = await provider.getFixtures({
