@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { getMatches } from "@/lib/data/matches";
 import { MatchesListClient } from "@/components/MatchesListClient";
 
+// Dynamique : évite tout appel Prisma au moment du `docker build` (DATABASE_URL
+// n'existe qu'au runtime sur Railway) — voir page.tsx (accueil) pour le détail.
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Matchs",
   description: "Tous les matchs de football : en direct, résultats et calendrier à venir.",

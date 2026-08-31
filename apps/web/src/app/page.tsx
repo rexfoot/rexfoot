@@ -8,7 +8,10 @@ import { MatchesListClient } from "@/components/MatchesListClient";
 import { EmptyState } from "@/components/EmptyState";
 import { NewsCard } from "@/components/NewsCard";
 
-export const revalidate = 60;
+// Dynamique plutôt que statique/ISR : Railway n'injecte DATABASE_URL qu'au
+// runtime du conteneur, pas pendant `docker build` — un prerendering statique
+// ferait planter le build faute de connexion DB disponible à ce stade.
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const todayIso = new Date().toISOString();

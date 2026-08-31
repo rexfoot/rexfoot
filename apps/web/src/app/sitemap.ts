@@ -3,6 +3,10 @@ import { prisma } from "@rexfoot/db";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rexfoot.com";
 
+// Dynamique : évite tout appel Prisma au moment du `docker build` — voir
+// page.tsx (accueil) pour le détail.
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [teams, players, competitions, videos, articles] = await Promise.all([
     prisma.team.findMany({ select: { slug: true, updatedAt: true } }),

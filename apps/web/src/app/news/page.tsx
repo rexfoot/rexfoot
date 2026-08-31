@@ -4,7 +4,9 @@ import { getPublishedNews } from "@/lib/data/news";
 import { NewsCard } from "@/components/NewsCard";
 import { EmptyState } from "@/components/EmptyState";
 
-export const revalidate = 300;
+// Dynamique : évite tout appel Prisma au moment du `docker build` — voir
+// page.tsx (accueil) pour le détail.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Actualités",
