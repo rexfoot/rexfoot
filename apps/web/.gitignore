@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# fichiers agent auto-générés par `next dev`/`next build` (Next.js 16) — désactivés
+# via `agentRules: false` dans next.config.ts, mais ignorés ici par sécurité.
+AGENTS.md
+CLAUDE.md

@@ -21,6 +21,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Évite que `next dev`/`next build` régénèrent AGENTS.md/CLAUDE.md à chaque run.
+  agentRules: false,
   // Le client Prisma fait de l'accès filesystem dynamique (résolution des
   // binaires moteur) qui casse le tracing statique de Next — on le charge
   // en dépendance native côté serveur plutôt que de le bundler.
