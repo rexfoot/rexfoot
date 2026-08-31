@@ -1,5 +1,6 @@
 import type {
   FootballDataProvider,
+  GetCompetitionsParams,
   GetFixturesParams,
   GetPlayersParams,
   GetPlayerStatisticsParams,
@@ -109,9 +110,10 @@ export class ApiFootballProvider implements FootballDataProvider {
     return body.response;
   }
 
-  async getCompetitions(params: { countryCode?: string } = {}): Promise<CompetitionDTO[]> {
+  async getCompetitions(params: GetCompetitionsParams = {}): Promise<CompetitionDTO[]> {
     const raw = await this.request<ApiFootballLeagueEnvelope[]>("/leagues", {
       code: params.countryCode,
+      id: params.id,
     });
     return raw.map(mapCompetition);
   }

@@ -2,6 +2,7 @@ import type { Redis } from "ioredis";
 import { CACHE_TTL_SECONDS } from "@rexfoot/config";
 import type {
   FootballDataProvider,
+  GetCompetitionsParams,
   GetFixturesParams,
   GetPlayersParams,
   GetPlayerStatisticsParams,
@@ -47,9 +48,9 @@ export class RedisCachingProvider implements FootballDataProvider {
     return value;
   }
 
-  async getCompetitions(params: { countryCode?: string } = {}): Promise<CompetitionDTO[]> {
+  async getCompetitions(params: GetCompetitionsParams = {}): Promise<CompetitionDTO[]> {
     return this.cached(
-      `competitions:${params.countryCode ?? "all"}`,
+      `competitions:${params.id ?? "-"}:${params.countryCode ?? "all"}`,
       CACHE_TTL_SECONDS.staticEntities,
       () => this.inner.getCompetitions(params),
     );

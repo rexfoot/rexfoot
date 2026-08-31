@@ -11,6 +11,12 @@ import type {
   TeamStatisticsDTO,
 } from "./types";
 
+export interface GetCompetitionsParams {
+  countryCode?: string;
+  /** Filtre par ID externe exact du fournisseur — évite toute ambiguïté de nom/pays. */
+  id?: string;
+}
+
 export interface GetFixturesParams {
   competitionExternalId?: string;
   teamExternalId?: string;
@@ -53,7 +59,7 @@ export interface GetPlayerStatisticsParams {
  * implémente cette interface et mettre à jour `createFootballProvider()`.
  */
 export interface FootballDataProvider {
-  getCompetitions(params?: { countryCode?: string }): Promise<CompetitionDTO[]>;
+  getCompetitions(params?: GetCompetitionsParams): Promise<CompetitionDTO[]>;
   getSeasons(competitionExternalId: string): Promise<SeasonDTO[]>;
   getTeams(params: GetTeamsParams): Promise<TeamDTO[]>;
   getPlayers(params: GetPlayersParams): Promise<PlayerDTO[]>;

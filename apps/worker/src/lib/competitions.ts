@@ -1,31 +1,47 @@
-import { FEATURED_COMPETITION_SLUGS } from "@rexfoot/config";
+import { FEATURED_COMPETITION_SLUGS, type FeaturedCompetitionSlug } from "@rexfoot/config";
 import type { FootballDataProvider } from "@rexfoot/football-provider";
 import type { Competition } from "@rexfoot/db";
-import { slugify } from "./slugify.js";
 import { upsertCompetition } from "./upsert.js";
 import { logger } from "./logger.js";
 
 /**
- * Résout les compétitions "vedettes" (FEATURED_COMPETITION_SLUGS) contre la
- * liste renvoyée par le fournisseur, en comparant le slug du nom. Upsert
- * chaque compétition trouvée. Les compétitions non trouvées sont juste
- * loguées — ça n'empêche pas la sync des autres.
+ * IDs de ligue API-Football (stables, documentés publiquement) pour chaque
+ * compétition vedette. On résout par ID plutôt que par nom slugifié : le nom
+ * exact renvoyé par l'API ne correspond pas toujours à notre slug ("UEFA
+ * Champions League" ≠ "champions-league"), et un nom de championnat comme
+ * "Premier League" ou "Serie A" existe dans plusieurs pays — matcher par
+ * nom seul risque de résoudre la mauvaise compétition sans erreur visible.
+ */
+const API_FOOTBALL_LEAGUE_IDS: Record<FeaturedCompetitionSlug, string> = {
+  "premier-league": "39",
+  "la-liga": "140",
+  "ligue-1": "61",
+  "serie-a": "135",
+  bundesliga: "78",
+  "champions-league": "2",
+  "europa-league": "3",
+};
+
+/**
+ * Résout chaque compétition vedette directement par son ID externe connu.
+ * Upsert celles trouvées ; les autres sont juste loguées (ne bloque pas la
+ * sync des autres compétitions).
  */
 export async function resolveFeaturedCompetitions(
   provider: FootballDataProvider,
 ): Promise<Array<{ competition: Competition; externalId: string }>> {
-  const all = await provider.getCompetitions();
-  const bySlug = new Map(all.map((dto) => [slugify(dto.name), dto]));
-
   const resolved: Array<{ competition: Competition; externalId: string }> = [];
+
   for (const slug of FEATURED_COMPETITION_SLUGS) {
-    const dto = bySlug.get(slug);
+    const id = API_FOOTBALL_LEAGUE_IDS[slug];
+    const [dto] = await provider.getCompetitions({ id });
     if (!dto) {
-      logger.warn({ slug }, "Compétition vedette introuvable chez le fournisseur");
+      logger.warn({ slug, id }, "Compétition vedette introuvable chez le fournisseur");
       continue;
     }
     const competition = await upsertCompetition(dto);
     resolved.push({ competition, externalId: dto.externalId });
   }
+
   return resolved;
 }

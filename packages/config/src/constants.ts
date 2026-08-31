@@ -12,6 +12,8 @@ export const FEATURED_COMPETITION_SLUGS = [
   "europa-league",
 ] as const;
 
+export type FeaturedCompetitionSlug = (typeof FEATURED_COMPETITION_SLUGS)[number];
+
 export const PAGE_SIZE_DEFAULT = 20;
 export const PAGE_SIZE_MATCHES = 30;
 export const PAGE_SIZE_VIDEOS = 24;
