@@ -33,10 +33,17 @@ packages/config              variables d'env (zod) + constantes partagées
 Deux services Docker à créer dans le même projet Railway, tous deux pointant
 sur ce repo GitHub :
 
-- **web** : Dockerfile Path = `Dockerfile` (défaut, déjà dans `railway.json`)
-- **worker** : Dockerfile Path = `Dockerfile.worker` (à définir manuellement
-  dans Settings > Build de ce service — `railway.json` ne s'applique qu'au
-  service par défaut)
+- **web** : Settings → Build → Dockerfile Path = `Dockerfile`
+- **worker** : Settings → Build → Dockerfile Path = `Dockerfile.worker`
+
+`railway.json` (racine) ne définit **volontairement pas** de `build.dockerfilePath` :
+ce fichier est appliqué à tous les services du projet par défaut (sauf s'ils ont
+leur propre config-as-code scopée dans Settings → Config-as-code), donc y mettre
+un `dockerfilePath` écraserait le réglage Dashboard de chaque service et forcerait
+tout le monde à utiliser le même Dockerfile — c'est exactement ce qui a cassé le
+service `worker` en config initiale (il buildait `apps/web` malgré son propre
+réglage Dashboard correct). Le Dockerfile Path se règle donc uniquement au niveau
+de chaque service, dans le Dashboard.
 
 Plus les plugins **PostgreSQL** et **Redis**. Variables d'environnement à
 définir sur les deux services (`web` et `worker`) : voir `.env.example`.
