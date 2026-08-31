@@ -13,6 +13,11 @@
 
 FROM node:22-slim AS base
 WORKDIR /app
+# Le moteur de requête Prisma a besoin de libssl pour détecter la version
+# openssl du système — sans ça il retombe sur une valeur par défaut avec un
+# warning au démarrage (inoffensif mais évitable).
+RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+    && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps
 COPY package.json package-lock.json tsconfig.base.json ./
