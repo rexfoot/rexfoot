@@ -19,7 +19,8 @@
     "lint": "npm run lint --workspace=apps/web"
   },
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "dotenv-cli": "^7.4.4"
   },
   "overrides": {
     "deepmerge-ts": "^8.0.0"
