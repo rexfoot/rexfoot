@@ -1,0 +1,25 @@
+{
+  "name": "@rexfoot/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rexfoot/config": "*",
+    "@rexfoot/db": "*",
+    "@rexfoot/football-provider": "*",
+    "bullmq": "^5.34.4",
+    "ioredis": "^5.4.1",
+    "pino": "^9.6.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "@types/node": "^22.10.5"
+  }
+}

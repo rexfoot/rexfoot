@@ -1,0 +1,627 @@
+// RexFoot — schéma Prisma
+//
+// Principe de conception : chaque entité synchronisée depuis un fournisseur de
+// données football (ex. API-Football) porte un `provider` + `externalId` en plus
+// de son `id` interne (cuid). Toutes les relations internes pointent sur `id`,
+// jamais sur `externalId` — ça garantit qu'on peut changer de fournisseur plus
+// tard (ou en avoir plusieurs) sans casser le schéma ni les données existantes.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum CompetitionType {
+  LEAGUE
+  CUP
+  INTERNATIONAL
+}
+
+enum PlayerPosition {
+  GOALKEEPER
+  DEFENDER
+  MIDFIELDER
+  FORWARD
+}
+
+enum FixtureStatus {
+  SCHEDULED
+  LIVE
+  HALFTIME
+  FINISHED
+  POSTPONED
+  CANCELLED
+}
+
+enum FixtureEventType {
+  GOAL
+  OWN_GOAL
+  PENALTY
+  MISSED_PENALTY
+  YELLOW_CARD
+  RED_CARD
+  SUBSTITUTION
+  VAR
+}
+
+enum NewsStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum VideoStatus {
+  UPLOADING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum VideoModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  FLAGGED
+}
+
+enum VideoLicenseType {
+  ORIGINAL
+  LICENSED
+  FAIR_USE
+}
+
+enum VideoCommentStatus {
+  VISIBLE
+  HIDDEN
+  DELETED
+}
+
+enum VideoReportReason {
+  SPAM
+  COPYRIGHT
+  ABUSE
+  OTHER
+}
+
+enum VideoReportStatus {
+  OPEN
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+enum UserRole {
+  USER
+  EDITOR
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
+enum FavoriteEntityType {
+  TEAM
+  PLAYER
+  COMPETITION
+}
+
+// ---------------------------------------------------------------------------
+// Football — compétitions, saisons, équipes, joueurs
+// ---------------------------------------------------------------------------
+
+model Competition {
+  id          String          @id @default(cuid())
+  provider    String
+  externalId  String
+  name        String
+  slug        String          @unique
+  type        CompetitionType @default(LEAGUE)
+  logoUrl     String?
+  countryName String?
+  countryCode String?
+  /// Ordre d'affichage (plus petit = plus mis en avant).
+  tier        Int             @default(100)
+  isActive    Boolean         @default(true)
+
+  seasons               Season[]
+  teamCompetitionSeasons TeamCompetitionSeason[]
+  fixtures              Fixture[]
+  standings             Standing[]
+  news                  NewsArticle[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, externalId])
+  @@index([isActive, tier])
+}
+
+model Season {
+  id         String   @id @default(cuid())
+  provider   String
+  externalId String
+  year       String
+  startDate  DateTime?
+  endDate    DateTime?
+  isCurrent  Boolean  @default(false)
+
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+
+  teamCompetitionSeasons TeamCompetitionSeason[]
+  playerTeamMemberships  PlayerTeamMembership[]
+  fixtures               Fixture[]
+  standings              Standing[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, externalId])
+  @@index([competitionId, isCurrent])
+}
+
+model Team {
+  id          String  @id @default(cuid())
+  provider    String
+  externalId  String
+  name        String
+  shortName   String?
+  slug        String  @unique
+  crestUrl    String?
+  foundedYear Int?
+  venueName   String?
+  venueCity   String?
+  countryCode String?
+
+  competitionSeasons  TeamCompetitionSeason[]
+  playerMemberships   PlayerTeamMembership[]
+  homeFixtures        Fixture[]                @relation("HomeTeam")
+  awayFixtures        Fixture[]                @relation("AwayTeam")
+  standings           Standing[]
+  teamStatistics      TeamStatistics[]
+  playerStatistics    PlayerStatistics[]
+  relatedNews         NewsArticle[]
+  relatedVideos       Video[]
+  fixtureEvents       FixtureEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, externalId])
+}
+
+model Player {
+  id          String          @id @default(cuid())
+  provider    String
+  externalId  String
+  firstName   String
+  lastName    String
+  displayName String
+  slug        String          @unique
+  photoUrl    String?
+  dateOfBirth DateTime?
+  nationality String?
+  position    PlayerPosition?
+  heightCm    Int?
+  weightKg    Int?
+
+  teamMemberships  PlayerTeamMembership[]
+  statistics       PlayerStatistics[]
+  fixtureEvents    FixtureEvent[]           @relation("EventPlayer")
+  assistEvents     FixtureEvent[]           @relation("EventAssistPlayer")
+  relatedEvents    FixtureEvent[]           @relation("EventRelatedPlayer")
+  relatedNews      NewsArticle[]
+  relatedVideos    Video[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, externalId])
+}
+
+/// Un joueur peut changer d'équipe d'une saison à l'autre — cette table
+/// capture l'appartenance équipe/saison plutôt qu'une relation directe fixe.
+model PlayerTeamMembership {
+  id          String    @id @default(cuid())
+  playerId    String
+  player      Player    @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId      String
+  team        Team      @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  seasonId    String
+  season      Season    @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  shirtNumber Int?
+  joinedAt    DateTime?
+  leftAt      DateTime?
+
+  @@unique([playerId, teamId, seasonId])
+  @@index([teamId, seasonId])
+}
+
+/// Quelles équipes jouent dans quelle compétition/saison (nécessaire pour
+/// scoper les classements et gérer les phases de groupes).
+model TeamCompetitionSeason {
+  id            String      @id @default(cuid())
+  teamId        String
+  team          Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  seasonId      String
+  season        Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  groupName     String?
+
+  @@unique([teamId, competitionId, seasonId])
+}
+
+// ---------------------------------------------------------------------------
+// Football — matchs
+// ---------------------------------------------------------------------------
+
+model Fixture {
+  id         String        @id @default(cuid())
+  provider   String
+  externalId String
+  round      String?
+  kickoffAt  DateTime
+  status     FixtureStatus @default(SCHEDULED)
+  /// Minute de jeu courante, uniquement pertinent quand status = LIVE/HALFTIME.
+  minute     Int?
+  homeScore  Int?
+  awayScore  Int?
+  venueName  String?
+  referee    String?
+
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  seasonId      String
+  season        Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  homeTeamId    String
+  homeTeam      Team        @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  awayTeamId    String
+  awayTeam      Team        @relation("AwayTeam", fields: [awayTeamId], references: [id])
+
+  events           FixtureEvent[]
+  teamStatistics   TeamStatistics[]
+  playerStatistics PlayerStatistics[]
+  relatedVideos    Video[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([provider, externalId])
+  @@index([competitionId, seasonId, round])
+  @@index([status, kickoffAt])
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+}
+
+model FixtureEvent {
+  id            String           @id @default(cuid())
+  fixtureId     String
+  fixture       Fixture          @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  type          FixtureEventType
+  minute        Int
+  extraMinute   Int?
+  teamId        String
+  team          Team             @relation(fields: [teamId], references: [id])
+  playerId        String?
+  player          Player?  @relation("EventPlayer", fields: [playerId], references: [id])
+  assistPlayerId  String?
+  assistPlayer    Player?  @relation("EventAssistPlayer", fields: [assistPlayerId], references: [id])
+  relatedPlayerId String?
+  relatedPlayer   Player?  @relation("EventRelatedPlayer", fields: [relatedPlayerId], references: [id])
+  detail        String?
+
+  @@index([fixtureId, minute])
+}
+
+model Standing {
+  id             String  @id @default(cuid())
+  competitionId  String
+  competition    Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  seasonId       String
+  season         Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  teamId         String
+  team           Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  groupName      String?
+  position       Int
+  played         Int     @default(0)
+  won            Int     @default(0)
+  drawn          Int     @default(0)
+  lost           Int     @default(0)
+  goalsFor       Int     @default(0)
+  goalsAgainst   Int     @default(0)
+  goalDifference Int     @default(0)
+  points         Int     @default(0)
+  /// Forme récente, ex. "WWDLW" (du plus ancien au plus récent).
+  form           String?
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([competitionId, seasonId, teamId, groupName])
+  @@index([competitionId, seasonId, position])
+}
+
+model TeamStatistics {
+  id             String  @id @default(cuid())
+  fixtureId      String
+  fixture        Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  teamId         String
+  team           Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  possession     Int?
+  shotsTotal     Int?
+  shotsOnTarget  Int?
+  corners        Int?
+  fouls          Int?
+  offsides       Int?
+  yellowCards    Int?
+  redCards       Int?
+
+  @@unique([fixtureId, teamId])
+}
+
+model PlayerStatistics {
+  id             String  @id @default(cuid())
+  fixtureId      String
+  fixture        Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  playerId       String
+  player         Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId         String
+  team           Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  minutesPlayed  Int?
+  goals          Int?
+  assists        Int?
+  shots          Int?
+  shotsOnTarget  Int?
+  passes         Int?
+  passAccuracy   Int?
+  tackles        Int?
+  rating         Float?
+  yellowCards    Int?
+  redCards       Int?
+
+  @@unique([fixtureId, playerId])
+  @@index([playerId])
+}
+
+// ---------------------------------------------------------------------------
+// Actualités
+// ---------------------------------------------------------------------------
+
+model NewsArticle {
+  id             String     @id @default(cuid())
+  title          String
+  slug           String     @unique
+  summary        String?
+  contentHtml    String
+  coverImageUrl  String?
+  authorId       String?
+  author         User?      @relation(fields: [authorId], references: [id])
+  sourceUrl      String?
+  status         NewsStatus @default(DRAFT)
+  publishedAt    DateTime?
+
+  relatedCompetitionId String?
+  relatedCompetition   Competition? @relation(fields: [relatedCompetitionId], references: [id])
+  relatedTeamId        String?
+  relatedTeam          Team?        @relation(fields: [relatedTeamId], references: [id])
+  relatedPlayerId      String?
+  relatedPlayer        Player?      @relation(fields: [relatedPlayerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+// ---------------------------------------------------------------------------
+// Vidéo — fonctionnalité de première classe (voir packages/video-provider)
+// ---------------------------------------------------------------------------
+
+model Video {
+  id               String                 @id @default(cuid())
+  title            String
+  slug             String                 @unique
+  description      String?
+  uploaderId       String?
+  uploader         User?                  @relation(fields: [uploaderId], references: [id])
+
+  providerName     String
+  providerAssetId  String?
+  playbackUrl      String?
+  thumbnailUrl     String?
+  durationSeconds  Int?
+
+  status           VideoStatus            @default(UPLOADING)
+  moderationStatus VideoModerationStatus  @default(PENDING)
+  licenseType      VideoLicenseType       @default(ORIGINAL)
+  rightsHolder     String?
+
+  publishedAt      DateTime?
+  viewCount        Int                    @default(0)
+  likeCount        Int                    @default(0)
+
+  relatedFixtureId String?
+  relatedFixture   Fixture? @relation(fields: [relatedFixtureId], references: [id])
+  relatedTeamId    String?
+  relatedTeam      Team?    @relation(fields: [relatedTeamId], references: [id])
+  relatedPlayerId  String?
+  relatedPlayer    Player?  @relation(fields: [relatedPlayerId], references: [id])
+
+  tags      VideoTagAssignment[]
+  views     VideoView[]
+  likes     VideoLike[]
+  favorites VideoFavorite[]
+  comments  VideoComment[]
+  reports   VideoReport[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([moderationStatus, status, publishedAt])
+}
+
+model VideoTag {
+  id   String @id @default(cuid())
+  name String @unique
+  slug String @unique
+
+  videos VideoTagAssignment[]
+}
+
+model VideoTagAssignment {
+  id         String   @id @default(cuid())
+  videoId    String
+  video      Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  videoTagId String
+  videoTag   VideoTag @relation(fields: [videoTagId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, videoTagId])
+}
+
+model VideoView {
+  id             String   @id @default(cuid())
+  videoId        String
+  video          Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id])
+  viewedAt       DateTime @default(now())
+  watchedSeconds Int?
+
+  @@index([videoId, viewedAt])
+}
+
+model VideoLike {
+  id        String   @id @default(cuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([videoId, userId])
+}
+
+model VideoFavorite {
+  id        String   @id @default(cuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([videoId, userId])
+}
+
+model VideoComment {
+  id              String              @id @default(cuid())
+  videoId         String
+  video           Video               @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parentCommentId String?
+  parentComment   VideoComment?       @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies         VideoComment[]      @relation("CommentReplies")
+  body            String
+  status          VideoCommentStatus  @default(VISIBLE)
+  createdAt       DateTime            @default(now())
+
+  @@index([videoId, createdAt])
+}
+
+model VideoReport {
+  id             String            @id @default(cuid())
+  videoId        String
+  video          Video             @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  reportedById   String
+  reportedBy     User              @relation("VideoReportsFiled", fields: [reportedById], references: [id])
+  reason         VideoReportReason
+  details        String?
+  status         VideoReportStatus @default(OPEN)
+  createdAt      DateTime          @default(now())
+  reviewedById   String?
+  reviewedBy     User?             @relation("VideoReportsReviewed", fields: [reviewedById], references: [id])
+  reviewedAt     DateTime?
+
+  @@index([videoId, status])
+}
+
+// ---------------------------------------------------------------------------
+// Utilisateurs, favoris, modération
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String     @id @default(cuid())
+  email        String     @unique
+  passwordHash String?
+  displayName  String
+  avatarUrl    String?
+  role         UserRole   @default(USER)
+  status       UserStatus @default(ACTIVE)
+
+  articles         NewsArticle[]
+  videos           Video[]
+  videoViews       VideoView[]
+  videoLikes       VideoLike[]
+  videoFavorites   VideoFavorite[]
+  videoComments    VideoComment[]
+  videoReportsFiled    VideoReport[] @relation("VideoReportsFiled")
+  videoReportsReviewed VideoReport[] @relation("VideoReportsReviewed")
+  favorites        Favorite[]
+  blocksInitiated  UserBlock[]     @relation("BlockInitiator")
+  blocksReceived   UserBlock[]     @relation("BlockTarget")
+  auditLogEntries  AuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+/// Favori générique — équipe, joueur ou compétition suivie par un utilisateur.
+model Favorite {
+  id         String             @id @default(cuid())
+  userId     String
+  user       User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  entityType FavoriteEntityType
+  entityId   String
+  createdAt  DateTime           @default(now())
+
+  @@unique([userId, entityType, entityId])
+}
+
+model UserBlock {
+  id        String   @id @default(cuid())
+  blockerId String
+  blocker   User     @relation("BlockInitiator", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("BlockTarget", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([blockerId, blockedId])
+}
+
+/// Trace d'audit des actions de modération (qui a fait quoi, sur quoi).
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorUserId  String
+  actor        User     @relation(fields: [actorUserId], references: [id])
+  action       String
+  targetType   String
+  targetId     String
+  metadata     Json?
+  createdAt    DateTime @default(now())
+
+  @@index([targetType, targetId])
+}

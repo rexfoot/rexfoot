@@ -1,0 +1,38 @@
+{
+  "name": "rexfoot",
+  "private": true,
+  "version": "0.1.0",
+  "description": "RexFoot — The King of Football. Plateforme football internationale.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=apps/web",
+    "dev:worker": "npm run dev --workspace=apps/worker",
+    "build": "npm run build --workspace=apps/web",
+    "build:worker": "npm run build --workspace=apps/worker",
+    "prisma:generate": "npm run generate --workspace=packages/db",
+    "prisma:migrate:dev": "npm run migrate:dev --workspace=packages/db",
+    "prisma:studio": "npm run studio --workspace=packages/db",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "npm run lint --workspace=apps/web"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  },
+  "overrides": {
+    "deepmerge-ts": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "allowScripts": {
+    "prisma@6.19.3": true,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true,
+    "unrs-resolver@1.12.2": true,
+    "msgpackr-extract@3.0.4": true,
+    "esbuild@0.28.2": true
+  }
+}
