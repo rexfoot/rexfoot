@@ -194,7 +194,22 @@
     "matchesTitle": "Today's matches",
     "trendingTitle": "Trending",
     "trendingEmptyTitle": "Trending is coming soon",
-    "trendingEmptyDescription": "This section will highlight the most popular content once RexFoot has traffic to analyze."
+    "trendingEmptyDescription": "This section will highlight the most popular content once RexFoot has traffic to analyze.",
+    "nowTitle": "RexFoot Now",
+    "nowCta": "See the full feed"
+  },
+  "now": {
+    "title": "RexFoot Now",
+    "subtitle": "News, matches, videos and transfers together in one feed, newest first.",
+    "metaDescription": "The RexFoot Now feed: news, matches, videos and transfers all in one place.",
+    "empty": "Nothing to show yet",
+    "favoriteMatch": "Favorite",
+    "kind": {
+      "news": "News",
+      "video": "Video",
+      "transfer": "Transfer",
+      "match": "Match"
+    }
   },
   "language": {
     "fr": "Français",

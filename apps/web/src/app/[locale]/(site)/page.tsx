@@ -1,5 +1,7 @@
 import { Suspense } from "react";
 import { useTranslations } from "next-intl";
+import { Zap, ChevronRight } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { SectionHeader } from "@/components/SectionHeader";
 import { NewsSection } from "@/components/home/NewsSection";
 import { MatchesHeroSection } from "@/components/home/MatchesHeroSection";
@@ -26,6 +28,20 @@ export default function HomePage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-6">
+      <Link
+        href="/now"
+        className="flex items-center justify-between gap-3 rounded-2xl border border-rf-gold/30 bg-rf-gold/10 px-4 py-3.5 transition-colors hover:bg-rf-gold/15"
+      >
+        <span className="flex items-center gap-2.5 font-display text-base font-bold text-rf-gold">
+          <Zap size={19} />
+          {t("nowTitle")}
+        </span>
+        <span className="flex items-center gap-1 text-sm font-medium text-rf-gold">
+          {t("nowCta")}
+          <ChevronRight size={16} className="rtl:rotate-180" />
+        </span>
+      </Link>
+
       <section>
         <SectionHeader title={t("matchesTitle")} href="/matches" />
         <Suspense fallback={<MatchesHeroSkeleton />}>

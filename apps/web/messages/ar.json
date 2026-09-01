@@ -194,7 +194,22 @@
     "matchesTitle": "مباريات اليوم",
     "trendingTitle": "الأكثر تداولاً",
     "trendingEmptyTitle": "قسم الأكثر تداولاً قريبًا",
-    "trendingEmptyDescription": "سيسلط هذا القسم الضوء على أكثر المحتويات متابعة بمجرد أن تحصل RexFoot على حركة زوار كافية للتحليل."
+    "trendingEmptyDescription": "سيسلط هذا القسم الضوء على أكثر المحتويات متابعة بمجرد أن تحصل RexFoot على حركة زوار كافية للتحليل.",
+    "nowTitle": "RexFoot Now",
+    "nowCta": "عرض كل الأحداث"
+  },
+  "now": {
+    "title": "RexFoot Now",
+    "subtitle": "الأخبار والمباريات والفيديوهات والانتقالات في تدفق واحد، من الأحدث إلى الأقدم.",
+    "metaDescription": "تدفق RexFoot Now: الأخبار والمباريات والفيديوهات والانتقالات في مكان واحد.",
+    "empty": "لا يوجد شيء لعرضه بعد",
+    "favoriteMatch": "مفضل",
+    "kind": {
+      "news": "خبر",
+      "video": "فيديو",
+      "transfer": "انتقال",
+      "match": "مباراة"
+    }
   },
   "language": {
     "fr": "Français",

@@ -194,7 +194,22 @@
     "matchesTitle": "Matchs du jour",
     "trendingTitle": "Tendances",
     "trendingEmptyTitle": "Les tendances arrivent bientôt",
-    "trendingEmptyDescription": "Cette section mettra en avant les contenus les plus suivis dès que RexFoot aura du trafic à analyser."
+    "trendingEmptyDescription": "Cette section mettra en avant les contenus les plus suivis dès que RexFoot aura du trafic à analyser.",
+    "nowTitle": "RexFoot Now",
+    "nowCta": "Tout le flux"
+  },
+  "now": {
+    "title": "RexFoot Now",
+    "subtitle": "Actus, matchs, vidéos et mercato réunis dans un seul flux, du plus récent au plus ancien.",
+    "metaDescription": "Le flux RexFoot Now : actualités, matchs, vidéos et mercato réunis en un seul endroit.",
+    "empty": "Rien à afficher pour l'instant",
+    "favoriteMatch": "Favori",
+    "kind": {
+      "news": "Actu",
+      "video": "Vidéo",
+      "transfer": "Mercato",
+      "match": "Match"
+    }
   },
   "language": {
     "fr": "Français",
