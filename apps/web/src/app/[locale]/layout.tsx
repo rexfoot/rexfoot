@@ -5,6 +5,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Inter, Outfit } from "next/font/google";
 import { SITE_NAME } from "@rexfoot/config";
 import { routing, isRtl } from "@/i18n/routing";
+import { buildAlternates, ogLocale } from "@/lib/seo/alternates";
 import "../globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -28,7 +29,15 @@ export async function generateMetadata({
     metadataBase: new URL(siteUrl),
     title: { default: t("title"), template: `%s | ${SITE_NAME}` },
     description: t("description"),
-    openGraph: { type: "website", siteName: SITE_NAME, title: t("title"), description: t("description") },
+    alternates: buildAlternates("/", locale),
+    openGraph: {
+      type: "website",
+      siteName: SITE_NAME,
+      title: t("title"),
+      description: t("description"),
+      locale: ogLocale(locale),
+      alternateLocale: routing.locales.filter((l) => l !== locale).map(ogLocale),
+    },
     twitter: { card: "summary_large_image", title: t("title"), description: t("description") },
     icons: { icon: "/favicon.ico" },
   };

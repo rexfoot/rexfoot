@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Newspaper } from "lucide-react";
 import { getPublishedNews } from "@/lib/data/news";
 import { NewsCard } from "@/components/NewsCard";
 import { EmptyState } from "@/components/EmptyState";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 // Dynamique : évite tout appel Prisma au moment du `docker build` — voir
 // page.tsx (accueil) pour le détail.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("news");
-  return { title: t("title"), description: t("metaDescription") };
+  const [t, locale] = await Promise.all([getTranslations("news"), getLocale()]);
+  return { title: t("title"), description: t("metaDescription"), alternates: buildAlternates("/news", locale) };
 }
 
 export default async function NewsIndexPage() {

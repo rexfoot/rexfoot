@@ -5,6 +5,7 @@ import { getLocale } from "next-intl/server";
 import { getNewsArticleBySlug } from "@/lib/data/news";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { TrackView } from "@/components/TrackView";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -12,12 +13,13 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const article = await getNewsArticleBySlug(slug);
+  const [article, locale] = await Promise.all([getNewsArticleBySlug(slug), getLocale()]);
   if (!article) return {};
   return {
     title: article.title,
     description: article.summary ?? undefined,
     openGraph: article.coverImageUrl ? { images: [{ url: article.coverImageUrl }] } : undefined,
+    alternates: buildAlternates(`/news/${slug}`, locale),
   };
 }
 

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { ArrowLeftRight } from "lucide-react";
 import type { TransferStatus } from "@rexfoot/db";
 import { getPublishedTransfers } from "@/lib/data/transfers";
@@ -7,14 +7,15 @@ import { isTransferStatus } from "@/lib/transfer-status";
 import { TransferCard } from "@/components/TransferCard";
 import { TransferStatusFilter } from "@/components/TransferStatusFilter";
 import { EmptyState } from "@/components/EmptyState";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 // Dynamique : évite tout appel Prisma au moment du `docker build` — voir
 // page.tsx (accueil) pour le détail.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("mercato");
-  return { title: t("title"), description: t("metaDescription") };
+  const [t, locale] = await Promise.all([getTranslations("mercato"), getLocale()]);
+  return { title: t("title"), description: t("metaDescription"), alternates: buildAlternates("/mercato", locale) };
 }
 
 interface PageProps {

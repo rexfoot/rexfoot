@@ -9,6 +9,7 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { TrackView } from "@/components/TrackView";
 import { toIntlLocale } from "@/lib/intl-locale";
+import { buildAlternates } from "@/lib/seo/alternates";
 import type { PlayerPosition } from "@rexfoot/db";
 
 export const revalidate = 3600;
@@ -26,11 +27,16 @@ const POSITION_KEY: Record<PlayerPosition, string> = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const [player, t] = await Promise.all([getPlayerBySlug(slug), getTranslations("players")]);
+  const [player, t, locale] = await Promise.all([
+    getPlayerBySlug(slug),
+    getTranslations("players"),
+    getLocale(),
+  ]);
   if (!player) return {};
   return {
     title: player.displayName,
     description: t("metaDescription", { name: player.displayName }),
+    alternates: buildAlternates(`/players/${slug}`, locale),
   };
 }
 

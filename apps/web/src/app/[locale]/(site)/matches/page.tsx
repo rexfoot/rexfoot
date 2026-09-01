@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getMatches } from "@/lib/data/matches";
@@ -7,14 +7,15 @@ import { getFeaturedCompetitions } from "@/lib/data/competitions";
 import { MatchesListClient } from "@/components/MatchesListClient";
 import { MatchesDateNav } from "@/components/MatchesDateNav";
 import { CompetitionFilter } from "@/components/CompetitionFilter";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 // Dynamique : évite tout appel Prisma au moment du `docker build` (DATABASE_URL
 // n'existe qu'au runtime sur Railway) — voir page.tsx (accueil) pour le détail.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("matches");
-  return { title: t("title"), description: t("metaDescription") };
+  const [t, locale] = await Promise.all([getTranslations("matches"), getLocale()]);
+  return { title: t("title"), description: t("metaDescription"), alternates: buildAlternates("/matches", locale) };
 }
 
 interface PageProps {

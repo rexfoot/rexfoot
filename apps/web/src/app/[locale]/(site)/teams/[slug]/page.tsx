@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getTeamBySlug, getTeamFixtures } from "@/lib/data/teams";
@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/EmptyState";
 import { SectionHeader } from "@/components/SectionHeader";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { TrackView } from "@/components/TrackView";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 export const revalidate = 3600;
 
@@ -20,11 +21,12 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const [team, t] = await Promise.all([getTeamBySlug(slug), getTranslations("teams")]);
+  const [team, t, locale] = await Promise.all([getTeamBySlug(slug), getTranslations("teams"), getLocale()]);
   if (!team) return {};
   return {
     title: team.name,
     description: t("metaDescription", { name: team.name }),
+    alternates: buildAlternates(`/teams/${slug}`, locale),
   };
 }
 

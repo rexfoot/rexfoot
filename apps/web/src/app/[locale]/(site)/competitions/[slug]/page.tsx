@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { ListOrdered, CalendarDays } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import {
@@ -8,6 +8,7 @@ import {
   getFixturesForCompetition,
   getStandingsForCompetition,
 } from "@/lib/data/competitions";
+import { buildAlternates } from "@/lib/seo/alternates";
 import { TeamCrest } from "@/components/TeamCrest";
 import { CompetitionBadge } from "@/components/CompetitionBadge";
 import { MatchCard } from "@/components/MatchCard";
@@ -24,11 +25,16 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const [competition, t] = await Promise.all([getCompetitionBySlug(slug), getTranslations("standings")]);
+  const [competition, t, locale] = await Promise.all([
+    getCompetitionBySlug(slug),
+    getTranslations("standings"),
+    getLocale(),
+  ]);
   if (!competition) return {};
   return {
     title: competition.name,
     description: t("metaDescriptionDetail", { name: competition.name }),
+    alternates: buildAlternates(`/competitions/${slug}`, locale),
   };
 }
 

@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { ListOrdered } from "lucide-react";
 import { getFeaturedCompetitions } from "@/lib/data/competitions";
 import { CompetitionCard } from "@/components/CompetitionCard";
 import { EmptyState } from "@/components/EmptyState";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 // Dynamique : évite tout appel Prisma au moment du `docker build` — voir
 // page.tsx (accueil) pour le détail.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("standings");
-  return { title: t("title"), description: t("metaDescription") };
+  const [t, locale] = await Promise.all([getTranslations("standings"), getLocale()]);
+  return { title: t("title"), description: t("metaDescription"), alternates: buildAlternates("/classements", locale) };
 }
 
 export default async function StandingsIndexPage() {

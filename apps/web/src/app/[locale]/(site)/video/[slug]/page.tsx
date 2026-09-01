@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Loader2 } from "lucide-react";
 import { getRelatedVideos, getVideoBySlug } from "@/lib/data/videos";
 import { VideoCard } from "@/components/VideoCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { TrackView } from "@/components/TrackView";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -13,12 +14,13 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const [video, t] = await Promise.all([getVideoBySlug(slug), getTranslations("video")]);
+  const [video, t, locale] = await Promise.all([getVideoBySlug(slug), getTranslations("video"), getLocale()]);
   if (!video) return {};
   return {
     title: video.title,
     description: video.description ?? t("metaFallbackDescription", { title: video.title }),
     openGraph: video.thumbnailUrl ? { images: [{ url: video.thumbnailUrl }] } : undefined,
+    alternates: buildAlternates(`/video/${slug}`, locale),
   };
 }
 

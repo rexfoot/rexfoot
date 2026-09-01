@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { getMatchById } from "@/lib/data/matches";
 import { MatchDetailClient } from "@/components/MatchDetailClient";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 interface PageProps {
   params: Promise<{ id: string }>;
@@ -10,13 +11,14 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const [match, t] = await Promise.all([getMatchById(id), getTranslations("matches")]);
+  const [match, t, locale] = await Promise.all([getMatchById(id), getTranslations("matches"), getLocale()]);
   if (!match) return {};
 
   const title = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
   return {
     title,
     description: `${title} — ${match.competition.name}. ${t("metaDescription")}`,
+    alternates: buildAlternates(`/matches/${id}`, locale),
   };
 }
 

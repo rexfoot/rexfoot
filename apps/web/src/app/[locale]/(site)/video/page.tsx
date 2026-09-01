@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Film } from "lucide-react";
 import { getPublishedVideos } from "@/lib/data/videos";
 import { VideoCard } from "@/components/VideoCard";
 import { EmptyState } from "@/components/EmptyState";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 // Dynamique : évite tout appel Prisma au moment du `docker build` — voir
 // page.tsx (accueil) pour le détail.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const t = await getTranslations("video");
-  return { title: t("pageTitle"), description: t("metaDescription") };
+  const [t, locale] = await Promise.all([getTranslations("video"), getLocale()]);
+  return { title: t("pageTitle"), description: t("metaDescription"), alternates: buildAlternates("/video", locale) };
 }
 
 export default async function VideoIndexPage() {
