@@ -42,7 +42,11 @@ export default async function AdminTransfersListPage({ searchParams }: PageProps
         <EmptyState
           icon={ArrowLeftRight}
           title="Aucun transfert pour l'instant"
-          description="Clique sur « Nouveau transfert » pour ajouter ta première rumeur ou officialisation."
+          description={
+            canManage
+              ? "Clique sur « Nouveau transfert » pour ajouter ta première rumeur ou officialisation."
+              : "Aucun transfert n'a encore été publié."
+          }
         />
       ) : (
         <div className="space-y-3">

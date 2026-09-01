@@ -51,7 +51,11 @@ export default async function AdminVideosListPage({ searchParams }: PageProps) {
         <EmptyState
           icon={Film}
           title="Aucune vidéo pour l'instant"
-          description="Clique sur « Ajouter une vidéo » pour publier ton premier highlight."
+          description={
+            canManage
+              ? "Clique sur « Ajouter une vidéo » pour publier ton premier highlight."
+              : "Aucune vidéo n'a encore été publiée."
+          }
         />
       ) : (
         <div className="space-y-3">

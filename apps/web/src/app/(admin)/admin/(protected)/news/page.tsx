@@ -52,7 +52,11 @@ export default async function AdminNewsListPage({ searchParams }: PageProps) {
         <EmptyState
           icon={Newspaper}
           title="Aucun article pour l'instant"
-          description="Clique sur « Nouvel article » pour publier ta première actualité."
+          description={
+            canManage
+              ? "Clique sur « Nouvel article » pour publier ta première actualité."
+              : "Aucun article n'a encore été publié."
+          }
         />
       ) : (
         <div className="space-y-3">
