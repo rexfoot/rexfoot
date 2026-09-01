@@ -53,6 +53,12 @@ enum FixtureEventType {
   VAR
 }
 
+enum MatchVoteChoice {
+  HOME
+  DRAW
+  AWAY
+}
+
 enum NewsStatus {
   DRAFT
   PUBLISHED
@@ -306,6 +312,7 @@ model Fixture {
   teamStatistics   TeamStatistics[]
   playerStatistics PlayerStatistics[]
   relatedVideos    Video[]
+  votes            MatchVote[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -404,6 +411,21 @@ model PlayerStatistics {
 
   @@unique([fixtureId, playerId])
   @@index([playerId])
+}
+
+/// Vote "qui va gagner ?" affiché sur le hero d'un match — anonyme (dédupliqué
+/// par cookie voterKey, voir lib/voter.ts), jamais lié à un compte utilisateur
+/// puisque RexFoot n'a pas encore de comptes publics.
+model MatchVote {
+  id        String          @id @default(cuid())
+  fixtureId String
+  fixture   Fixture         @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  voterKey  String
+  choice    MatchVoteChoice
+  createdAt DateTime        @default(now())
+
+  @@unique([fixtureId, voterKey])
+  @@index([fixtureId])
 }
 
 // ---------------------------------------------------------------------------

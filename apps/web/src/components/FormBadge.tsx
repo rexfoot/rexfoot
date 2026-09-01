@@ -16,7 +16,7 @@ export function FormBadge({ form }: { form: string | null }) {
         <span
           key={index}
           className={cn(
-            "flex h-5 w-5 items-center justify-center rounded text-[10px] font-bold",
+            "flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold",
             RESULT_STYLES[letter] ?? "bg-rf-fg-subtle/20 text-rf-fg-muted",
           )}
         >

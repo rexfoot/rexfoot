@@ -4,6 +4,7 @@ import { ListChecks } from "lucide-react";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
 import { EmptyState } from "./EmptyState";
+import { MatchVotePanel } from "./MatchVotePanel";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import type { MatchDetail } from "@/lib/types";
 
@@ -63,6 +64,10 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
             </p>
           </div>
           <TeamColumn name={match.awayTeam.name} crestUrl={match.awayTeam.crestUrl} />
+        </div>
+
+        <div className="mt-6 border-t border-rf-border pt-5">
+          <MatchVotePanel matchId={match.id} homeTeam={match.homeTeam} awayTeam={match.awayTeam} />
         </div>
       </div>
 

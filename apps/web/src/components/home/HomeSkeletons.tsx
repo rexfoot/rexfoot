@@ -50,39 +50,45 @@ export function VideoRailSkeleton() {
   );
 }
 
-function MatchCardSkeleton() {
+function LiveMatchMiniCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-rf-border bg-rf-bg-card p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <Skeleton className="h-4 w-24" />
-        <Skeleton className="h-4 w-12" />
-      </div>
-      <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-5 w-5 rounded-full" />
-            <Skeleton className="h-4 w-24" />
-          </div>
-          <Skeleton className="h-4 w-4" />
-        </div>
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-5 w-5 rounded-full" />
-            <Skeleton className="h-4 w-20" />
-          </div>
-          <Skeleton className="h-4 w-4" />
-        </div>
+    <div className="rounded-xl border border-rf-border bg-rf-bg-card p-3">
+      <Skeleton className="mb-2 h-3 w-2/3" />
+      <div className="flex items-center justify-between gap-2">
+        <Skeleton className="h-5 w-5 rounded-full" />
+        <Skeleton className="h-4 w-10" />
+        <Skeleton className="h-5 w-5 rounded-full" />
       </div>
     </div>
   );
 }
 
-export function MatchesSkeleton() {
+export function MatchesHeroSkeleton() {
   return (
-    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <MatchCardSkeleton key={i} />
-      ))}
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="rounded-2xl border border-rf-border bg-rf-bg-card p-5 sm:p-7 lg:col-span-2">
+        <div className="mb-5 flex items-center justify-between">
+          <Skeleton className="h-6 w-20 rounded-full" />
+          <Skeleton className="h-4 w-32" />
+        </div>
+        <div className="grid grid-cols-3 items-center gap-3 sm:gap-6">
+          <div className="flex flex-col items-center gap-2">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+          <Skeleton className="mx-auto h-10 w-20" />
+          <div className="flex flex-col items-center gap-2">
+            <Skeleton className="h-12 w-12 rounded-full" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+        </div>
+        <Skeleton className="mt-6 h-24 w-full" />
+      </div>
+      <div className="space-y-2">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <LiveMatchMiniCardSkeleton key={i} />
+        ))}
+      </div>
     </div>
   );
 }

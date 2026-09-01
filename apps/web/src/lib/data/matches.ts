@@ -44,6 +44,34 @@ export async function getMatchesOfTheDay(): Promise<MatchSummary[]> {
   return rows.map(serialize);
 }
 
+/**
+ * Le match mis en avant en hero sur l'accueil : priorité à un match en direct,
+ * sinon le prochain à venir, sinon le plus récent terminé — jamais vide tant
+ * qu'un match existe en base.
+ */
+export async function getFeaturedMatch(): Promise<MatchSummary | null> {
+  const live = await prisma.fixture.findFirst({
+    where: { status: { in: ["LIVE", "HALFTIME"] } },
+    orderBy: { kickoffAt: "asc" },
+    select: matchSelect,
+  });
+  if (live) return serialize(live);
+
+  const upcoming = await prisma.fixture.findFirst({
+    where: { status: "SCHEDULED", kickoffAt: { gte: new Date() } },
+    orderBy: { kickoffAt: "asc" },
+    select: matchSelect,
+  });
+  if (upcoming) return serialize(upcoming);
+
+  const recent = await prisma.fixture.findFirst({
+    where: { status: "FINISHED" },
+    orderBy: { kickoffAt: "desc" },
+    select: matchSelect,
+  });
+  return recent ? serialize(recent) : null;
+}
+
 export interface GetMatchesParams {
   date?: Date;
   competitionSlug?: string;

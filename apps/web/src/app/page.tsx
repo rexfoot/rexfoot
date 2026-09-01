@@ -3,9 +3,9 @@ import { TrendingUp } from "lucide-react";
 import { SectionHeader } from "@/components/SectionHeader";
 import { EmptyState } from "@/components/EmptyState";
 import { NewsSection } from "@/components/home/NewsSection";
-import { MatchesSection } from "@/components/home/MatchesSection";
+import { MatchesHeroSection } from "@/components/home/MatchesHeroSection";
 import { VideoSection } from "@/components/home/VideoSection";
-import { NewsSectionSkeleton, MatchesSkeleton, VideoRailSkeleton } from "@/components/home/HomeSkeletons";
+import { NewsSectionSkeleton, MatchesHeroSkeleton, VideoRailSkeleton } from "@/components/home/HomeSkeletons";
 
 // Dynamique plutôt que statique/ISR : Railway n'injecte DATABASE_URL qu'au
 // runtime du conteneur, pas pendant `docker build` — un prerendering statique
@@ -20,6 +20,13 @@ export default function HomePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-6">
       <section>
+        <SectionHeader title="Matchs du jour" href="/matches" />
+        <Suspense fallback={<MatchesHeroSkeleton />}>
+          <MatchesHeroSection />
+        </Suspense>
+      </section>
+
+      <section>
         <SectionHeader title="Actualités" href="/news" />
         <Suspense fallback={<NewsSectionSkeleton />}>
           <NewsSection />
@@ -30,13 +37,6 @@ export default function HomePage() {
         <SectionHeader title="🔥 RexFoot Video" href="/video" />
         <Suspense fallback={<VideoRailSkeleton />}>
           <VideoSection />
-        </Suspense>
-      </section>
-
-      <section>
-        <SectionHeader title="Matchs du jour" href="/matches" />
-        <Suspense fallback={<MatchesSkeleton />}>
-          <MatchesSection />
         </Suspense>
       </section>
 

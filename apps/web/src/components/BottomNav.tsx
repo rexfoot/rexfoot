@@ -2,18 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, CalendarDays, ListOrdered, PlayCircle, Newspaper } from "lucide-react";
-import { NAV_ITEMS, type NavItem } from "@/lib/nav";
+import { NAV_ITEMS } from "@/lib/nav";
+import { NAV_ICONS } from "@/components/nav-icons";
 import { cn } from "@/lib/cn";
-
-const ICONS: Record<NavItem["icon"], typeof Home> = {
-  home: Home,
-  matches: CalendarDays,
-  standings: ListOrdered,
-  video: PlayCircle,
-  news: Newspaper,
-  more: Home,
-};
 
 /** Nav mobile fixe en bas de l'écran — priorité #1 de l'UX RexFoot. Cachée dès `md`. */
 export function BottomNav() {
@@ -27,20 +18,20 @@ export function BottomNav() {
     >
       <ul className="flex items-stretch justify-around">
         {NAV_ITEMS.map((item) => {
-          const Icon = ICONS[item.icon];
+          const Icon = NAV_ICONS[item.icon];
           const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           return (
-            <li key={item.href} className="flex-1">
+            <li key={item.href} className="min-w-0 flex-1">
               <Link
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2.5 text-[11px] font-medium transition-colors",
+                  "flex flex-col items-center gap-1 px-0.5 py-2.5 text-[10px] font-medium transition-colors",
                   isActive ? "text-rf-gold" : "text-rf-fg-muted",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
-                <Icon size={22} strokeWidth={isActive ? 2.25 : 1.75} />
-                {item.label}
+                <Icon size={20} strokeWidth={isActive ? 2.25 : 1.75} />
+                <span className="truncate">{item.label}</span>
               </Link>
             </li>
           );
