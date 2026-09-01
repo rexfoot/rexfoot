@@ -13,7 +13,10 @@ const securityHeaders = [
       "media-src 'self' https:",
       "style-src 'self' 'unsafe-inline'",
       "script-src 'self' 'unsafe-inline'",
-      "connect-src 'self'",
+      // upload.videodelivery.net : upload direct navigateur → Cloudflare Stream depuis le panel admin.
+      "connect-src 'self' https://upload.videodelivery.net https://*.cloudflarestream.com",
+      // iframe.videodelivery.net : lecteur vidéo intégré Cloudflare Stream sur /video/[slug].
+      "frame-src https://iframe.videodelivery.net https://*.cloudflarestream.com",
       "font-src 'self' data:",
       "frame-ancestors 'none'",
     ].join("; "),

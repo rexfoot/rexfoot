@@ -28,6 +28,25 @@ packages/config              variables d'env (zod) + constantes partagées
 5. `npm run dev` (apps/web sur http://localhost:3000)
 6. `npm run dev:worker` (dans un autre terminal, optionnel en local)
 
+## Panel admin (`/admin`)
+
+Interface protégée par mot de passe pour publier des actualités et des vidéos
+sans toucher au code. Seuls les `User` avec `role = ADMIN` et `status = ACTIVE`
+peuvent s'y connecter.
+
+- Créer ou réinitialiser un compte admin :
+  `cd packages/db && npx dotenv -e ../../.env -- npx tsx prisma/create-admin.ts <email> [mot de passe] [nom affiché]`
+  (sans mot de passe fourni, un mot de passe aléatoire est généré et affiché).
+- Une fois connecté, le mot de passe peut être changé depuis `/admin/account`.
+- Les images de couverture des articles sont stockées directement dans
+  Postgres (table `Asset`, servie via `/api/assets/[id]`) — aucun stockage
+  objet externe n'est requis.
+- L'upload vidéo nécessite `VIDEO_PROVIDER=cloudflare-stream` +
+  `CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_STREAM_API_TOKEN` (voir
+  `.env.example`) ; tant que ces variables ne sont pas renseignées, le
+  formulaire d'ajout de vidéo affiche une erreur claire plutôt que d'échouer
+  silencieusement.
+
 ## Déploiement Railway
 
 Deux services Docker à créer dans le même projet Railway, tous deux pointant

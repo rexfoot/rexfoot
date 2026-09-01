@@ -59,6 +59,16 @@ enum NewsStatus {
   ARCHIVED
 }
 
+enum NewsCategory {
+  TRANSFERTS
+  RESULTATS
+  ANALYSES
+  INTERVIEWS
+  COMPETITIONS
+  INTERNATIONAL
+  AUTRE
+}
+
 enum VideoStatus {
   UPLOADING
   PROCESSING
@@ -401,16 +411,17 @@ model PlayerStatistics {
 // ---------------------------------------------------------------------------
 
 model NewsArticle {
-  id             String     @id @default(cuid())
+  id             String       @id @default(cuid())
   title          String
-  slug           String     @unique
+  slug           String       @unique
   summary        String?
   contentHtml    String
   coverImageUrl  String?
+  category       NewsCategory @default(AUTRE)
   authorId       String?
-  author         User?      @relation(fields: [authorId], references: [id])
+  author         User?        @relation(fields: [authorId], references: [id])
   sourceUrl      String?
-  status         NewsStatus @default(DRAFT)
+  status         NewsStatus   @default(DRAFT)
   publishedAt    DateTime?
 
   relatedCompetitionId String?
@@ -424,6 +435,19 @@ model NewsArticle {
   updatedAt DateTime @updatedAt
 
   @@index([status, publishedAt])
+}
+
+/// Fichier binaire uploadé depuis le panel admin (ex. image de couverture d'un
+/// article) et stocké directement en base — évite de dépendre d'un stockage
+/// objet externe (S3/R2) tant que le volume d'images reste modeste. Servi via
+/// GET /api/assets/[id].
+model Asset {
+  id        String   @id @default(cuid())
+  mimeType  String
+  filename  String
+  byteSize  Int
+  data      Bytes
+  createdAt DateTime @default(now())
 }
 
 // ---------------------------------------------------------------------------

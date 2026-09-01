@@ -8,6 +8,8 @@ const envSchema = z.object({
   RAPIDAPI_HOST: z.string().default("v3.football.api-sports.io"),
 
   VIDEO_PROVIDER: z.enum(["stub", "cloudflare-stream"]).default("stub"),
+  CLOUDFLARE_ACCOUNT_ID: z.string().optional().default(""),
+  CLOUDFLARE_STREAM_API_TOKEN: z.string().optional().default(""),
 
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
@@ -43,4 +45,8 @@ export function getEnv(): Env {
 
 export function hasFootballApiKey(env: Env = getEnv()): boolean {
   return env.RAPIDAPI_KEY.trim().length > 0;
+}
+
+export function hasCloudflareStreamConfig(env: Env = getEnv()): boolean {
+  return env.CLOUDFLARE_ACCOUNT_ID.trim().length > 0 && env.CLOUDFLARE_STREAM_API_TOKEN.trim().length > 0;
 }

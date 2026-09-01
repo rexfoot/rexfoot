@@ -1,8 +1,20 @@
 import { NextResponse } from "next/server";
 import { rateLimit, getClientIp } from "./rate-limit";
+import { getCurrentAdminFromRequest, type CurrentAdmin } from "./auth/current-admin";
 
 export function apiError(status: number, message: string) {
   return NextResponse.json({ error: message }, { status });
+}
+
+/** Garde d'accès pour les routes `/api/admin/*` — renvoie l'admin courant ou une réponse 401 à propager. */
+export async function requireAdmin(
+  request: Request,
+): Promise<{ admin: CurrentAdmin; response: null } | { admin: null; response: NextResponse }> {
+  const admin = await getCurrentAdminFromRequest(request);
+  if (!admin) {
+    return { admin: null, response: apiError(401, "Authentification requise.") };
+  }
+  return { admin, response: null };
 }
 
 /** Applique le rate limiting d'une route API publique ; renvoie une réponse 429 si dépassé, sinon `null`. */

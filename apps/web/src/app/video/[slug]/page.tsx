@@ -31,7 +31,13 @@ export default async function VideoDetailPage({ params }: PageProps) {
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
       <div className="overflow-hidden rounded-2xl bg-rf-bg-card">
         {video.playbackUrl ? (
-          <video src={video.playbackUrl} poster={video.thumbnailUrl ?? undefined} controls className="aspect-video w-full" />
+          <iframe
+            src={video.playbackUrl}
+            title={video.title}
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allowFullScreen
+            className="aspect-video w-full border-0"
+          />
         ) : (
           <div className="flex aspect-video w-full flex-col items-center justify-center gap-2 text-rf-fg-muted">
             <Loader2 className="animate-spin" size={28} />
