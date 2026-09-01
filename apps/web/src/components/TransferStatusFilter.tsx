@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import type { TransferStatus } from "@rexfoot/db";
 import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_VALUES } from "@/lib/transfer-status";
 import { cn } from "@/lib/cn";

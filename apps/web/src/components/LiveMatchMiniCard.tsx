@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
 import type { MatchSummary } from "@/lib/types";

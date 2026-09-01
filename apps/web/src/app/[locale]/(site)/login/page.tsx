@@ -1,8 +1,8 @@
 "use client";
 
 import { Suspense, useState, type FormEvent } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { AdminInput, AdminButton, Banner, FieldGroup } from "@/components/admin/ui";
 
 function LoginForm() {

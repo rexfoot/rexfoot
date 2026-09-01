@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
 import { NAV_ITEMS } from "@/lib/nav";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { cn } from "@/lib/cn";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/cn";
 /** Nav mobile fixe en bas de l'écran — priorité #1 de l'UX RexFoot. Cachée dès `md`. */
 export function BottomNav() {
   const pathname = usePathname();
+  const t = useTranslations("nav");
 
   return (
     <nav
@@ -31,7 +32,7 @@ export function BottomNav() {
                 aria-current={isActive ? "page" : undefined}
               >
                 <Icon size={20} strokeWidth={isActive ? 2.25 : 1.75} />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{t(item.icon)}</span>
               </Link>
             </li>
           );

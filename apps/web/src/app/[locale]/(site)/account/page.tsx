@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import { redirect } from "next/navigation";
-import Link from "next/link";
 import { Heart, Shield, Users, Trophy, type LucideIcon } from "lucide-react";
+import { getLocale } from "next-intl/server";
+import { Link, redirect } from "@/i18n/navigation";
 import type { FavoriteEntityType } from "@rexfoot/db";
 import { getCurrentUser } from "@/lib/auth/current-user";
 import { getFavoritesForUser } from "@/lib/data/favorites";
@@ -15,7 +15,11 @@ export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/login?next=/account");
+  if (!user) {
+    const locale = await getLocale();
+    redirect({ href: "/login?next=/account", locale });
+    return;
+  }
 
   const { teams, players, competitions } = await getFavoritesForUser(user.id);
   const hasFavorites = teams.length > 0 || players.length > 0 || competitions.length > 0;

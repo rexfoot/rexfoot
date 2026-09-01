@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname } from "@/i18n/navigation";
 import { Heart } from "lucide-react";
 import type { FavoriteEntityType } from "@rexfoot/db";
 import { cn } from "@/lib/cn";

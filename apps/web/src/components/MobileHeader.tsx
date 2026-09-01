@@ -1,8 +1,9 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { AccountMenuButton } from "./AccountMenuButton";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 import type { CurrentUser } from "@/lib/auth/current-user";
 
-/** Barre du haut visible uniquement sur mobile — la nav de contenu vit dans BottomNav, ceci ne sert qu'au compte. */
+/** Barre du haut visible uniquement sur mobile — la nav de contenu vit dans BottomNav, ceci ne sert qu'au compte/langue. */
 export function MobileHeader({ user }: { user: CurrentUser | null }) {
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-rf-border bg-rf-bg/95 px-4 py-2.5 backdrop-blur md:hidden">
@@ -10,7 +11,10 @@ export function MobileHeader({ user }: { user: CurrentUser | null }) {
         <span className="text-rf-gold">Rex</span>
         <span className="text-rf-fg">Foot</span>
       </Link>
-      <AccountMenuButton user={user} />
+      <div className="flex items-center gap-2">
+        <LanguageSwitcher />
+        <AccountMenuButton user={user} />
+      </div>
     </header>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ListOrdered, CalendarDays } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import {
   getCompetitionBySlug,
   getFixturesForCompetition,
@@ -88,10 +89,10 @@ export default async function CompetitionPage({ params }: PageProps) {
                   <tr key={row.id} className="border-t border-rf-border">
                     <td className="px-3 py-2 text-rf-fg-muted">{row.position}</td>
                     <td className="px-3 py-2">
-                      <a href={`/teams/${row.team.slug}`} className="flex items-center gap-2 font-medium text-rf-fg">
+                      <Link href={`/teams/${row.team.slug}`} className="flex items-center gap-2 font-medium text-rf-fg">
                         <TeamCrest crestUrl={row.team.crestUrl} teamName={row.team.name} size="sm" />
                         {row.team.name}
-                      </a>
+                      </Link>
                     </td>
                     <td className="px-3 py-2 text-center text-rf-fg-muted">{row.played}</td>
                     <td className="px-3 py-2 text-center text-rf-fg-muted">{row.won}</td>

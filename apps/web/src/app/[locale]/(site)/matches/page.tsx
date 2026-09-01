@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { getMatches } from "@/lib/data/matches";
 import { getFeaturedCompetitions } from "@/lib/data/competitions";
 import { MatchesListClient } from "@/components/MatchesListClient";

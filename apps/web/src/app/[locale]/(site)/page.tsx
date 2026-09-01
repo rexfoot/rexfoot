@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import { useTranslations } from "next-intl";
 import { TrendingUp } from "lucide-react";
 import { SectionHeader } from "@/components/SectionHeader";
 import { EmptyState } from "@/components/EmptyState";
@@ -17,36 +18,34 @@ export const dynamic = "force-dynamic";
 // skeleton animé (jamais de texte "chargement…") jusqu'à ce que sa requête
 // Prisma résolve, indépendamment des autres sections.
 export default function HomePage() {
+  const t = useTranslations("home");
+
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-6">
       <section>
-        <SectionHeader title="Matchs du jour" href="/matches" />
+        <SectionHeader title={t("matchesTitle")} href="/matches" />
         <Suspense fallback={<MatchesHeroSkeleton />}>
           <MatchesHeroSection />
         </Suspense>
       </section>
 
       <section>
-        <SectionHeader title="Actualités" href="/news" />
+        <SectionHeader title={t("newsTitle")} href="/news" />
         <Suspense fallback={<NewsSectionSkeleton />}>
           <NewsSection />
         </Suspense>
       </section>
 
       <section>
-        <SectionHeader title="🔥 RexFoot Video" href="/video" />
+        <SectionHeader title={`🔥 ${t("videoTitle")}`} href="/video" />
         <Suspense fallback={<VideoRailSkeleton />}>
           <VideoSection />
         </Suspense>
       </section>
 
       <section>
-        <SectionHeader title="Tendances" />
-        <EmptyState
-          icon={TrendingUp}
-          title="Les tendances arrivent bientôt"
-          description="Cette section mettra en avant les contenus les plus suivis dès que RexFoot aura du trafic à analyser."
-        />
+        <SectionHeader title={t("trendingTitle")} />
+        <EmptyState icon={TrendingUp} title={t("trendingEmptyTitle")} description={t("trendingEmptyDescription")} />
       </section>
     </div>
   );

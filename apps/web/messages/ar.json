@@ -1,0 +1,33 @@
+{
+  "common": {
+    "seeAll": "عرض الكل"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "matches": "المباريات",
+    "standings": "الترتيب",
+    "mercato": "الانتقالات",
+    "video": "الفيديو",
+    "news": "الأخبار",
+    "login": "تسجيل الدخول",
+    "account": "حسابي"
+  },
+  "home": {
+    "newsTitle": "الأخبار",
+    "videoTitle": "فيديوهات RexFoot",
+    "matchesTitle": "مباريات اليوم",
+    "trendingTitle": "الأكثر تداولاً",
+    "trendingEmptyTitle": "قسم الأكثر تداولاً قريبًا",
+    "trendingEmptyDescription": "سيسلط هذا القسم الضوء على أكثر المحتويات متابعة بمجرد أن تحصل RexFoot على حركة زوار كافية للتحليل."
+  },
+  "language": {
+    "fr": "Français",
+    "en": "English",
+    "ar": "العربية",
+    "switchLabel": "اللغة"
+  },
+  "metadata": {
+    "title": "ركس فوت — كرة القدم التي لا تنام",
+    "description": "يجمع RexFoot أخبار كرة القدم والمباريات المباشرة والنتائج والإحصائيات والفيديو في مكان واحد."
+  }
+}

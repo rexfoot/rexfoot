@@ -1,0 +1,33 @@
+{
+  "common": {
+    "seeAll": "See all"
+  },
+  "nav": {
+    "home": "Home",
+    "matches": "Matches",
+    "standings": "Standings",
+    "mercato": "Transfers",
+    "video": "Video",
+    "news": "News",
+    "login": "Log in",
+    "account": "My account"
+  },
+  "home": {
+    "newsTitle": "News",
+    "videoTitle": "RexFoot Video",
+    "matchesTitle": "Today's matches",
+    "trendingTitle": "Trending",
+    "trendingEmptyTitle": "Trending is coming soon",
+    "trendingEmptyDescription": "This section will highlight the most popular content once RexFoot has traffic to analyze."
+  },
+  "language": {
+    "fr": "Français",
+    "en": "English",
+    "ar": "العربية",
+    "switchLabel": "Language"
+  },
+  "metadata": {
+    "title": "RexFoot — Football that never sleeps",
+    "description": "RexFoot brings together football news, live matches, results, statistics and video in one place."
+  }
+}

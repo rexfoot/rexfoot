@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Users } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { getTeamBySlug, getTeamFixtures } from "@/lib/data/teams";
 import { TeamCrest } from "@/components/TeamCrest";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
@@ -62,7 +63,7 @@ export default async function TeamPage({ params }: PageProps) {
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {team.playerMemberships.map((membership) => (
-              <a
+              <Link
                 key={membership.id}
                 href={`/players/${membership.player.slug}`}
                 className="flex flex-col items-center gap-2 rounded-xl border border-rf-border bg-rf-bg-card p-3 text-center transition-colors hover:border-rf-gold/40"
@@ -72,7 +73,7 @@ export default async function TeamPage({ params }: PageProps) {
                 {membership.shirtNumber && (
                   <span className="text-[11px] text-rf-fg-subtle">#{membership.shirtNumber}</span>
                 )}
-              </a>
+              </Link>
             ))}
           </div>
         )}
