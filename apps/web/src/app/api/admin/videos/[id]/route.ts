@@ -39,9 +39,18 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!existing) return apiError(404, "Vidéo introuvable.");
 
   if (existing.providerAssetId) {
+    // Best-effort : le fichier local (DB) est supprimé même en cas d'échec
+    // côté fournisseur vidéo, mais l'échec doit rester visible (logs Railway)
+    // plutôt que disparaître silencieusement — sinon un asset reste orphelin
+    // chez le fournisseur sans que personne ne le sache jamais.
     await createVideoProvider()
       .delete(existing.providerAssetId)
-      .catch(() => {});
+      .catch((error) => {
+        console.error(
+          `Échec de la suppression de l'asset ${existing.providerAssetId} chez le fournisseur vidéo :`,
+          error,
+        );
+      });
   }
   await prisma.video.delete({ where: { id } });
 

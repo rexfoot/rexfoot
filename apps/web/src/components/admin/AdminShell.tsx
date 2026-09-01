@@ -14,14 +14,14 @@ interface NavEntry {
   href: string;
   icon: typeof LayoutDashboard;
   /** Omis = visible pour tous les rôles admin. */
-  requires?: "manageNews" | "manageTransfers" | "manageVideos" | "manageUsers";
+  requires?: "viewNews" | "viewTransfers" | "viewVideos" | "manageUsers";
 }
 
 const NAV_ITEMS: NavEntry[] = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
-  { label: "Actualités", href: "/admin/news", icon: Newspaper, requires: "manageNews" },
-  { label: "Mercato", href: "/admin/transfers", icon: ArrowLeftRight, requires: "manageTransfers" },
-  { label: "Vidéos", href: "/admin/videos", icon: Film, requires: "manageVideos" },
+  { label: "Actualités", href: "/admin/news", icon: Newspaper, requires: "viewNews" },
+  { label: "Mercato", href: "/admin/transfers", icon: ArrowLeftRight, requires: "viewTransfers" },
+  { label: "Vidéos", href: "/admin/videos", icon: Film, requires: "viewVideos" },
   { label: "Utilisateurs", href: "/admin/users", icon: Users, requires: "manageUsers" },
   { label: "Mon compte", href: "/admin/account", icon: UserCog },
 ];

@@ -21,13 +21,18 @@ export const ROLE_LABELS: Record<UserRole, string> = {
  * Matrice de permissions du panel admin (section 25 du plan). Un Journaliste
  * écrit et publie ses articles mais ne peut pas en supprimer ; le Mercato et
  * la gestion des utilisateurs restent à l'Éditeur/Super Admin ; le Modérateur
- * s'occupe des vidéos ; l'Analyste n'a accès qu'en lecture au tableau de bord.
+ * s'occupe des vidéos ; l'Analyste a un accès en lecture seule aux listes
+ * (actus/mercato/vidéos) et au tableau de bord — jamais de création, édition
+ * ou suppression (voir les `viewX` ci-dessous, distincts des `manageX`).
  */
 export const PERMISSIONS = {
   manageNews: ["ADMIN", "EDITOR", "JOURNALIST"],
   deleteNews: ["ADMIN", "EDITOR"],
+  viewNews: ["ADMIN", "EDITOR", "JOURNALIST", "ANALYST"],
   manageTransfers: ["ADMIN", "EDITOR"],
+  viewTransfers: ["ADMIN", "EDITOR", "ANALYST"],
   manageVideos: ["ADMIN", "EDITOR", "MODERATOR"],
+  viewVideos: ["ADMIN", "EDITOR", "MODERATOR", "ANALYST"],
   manageUsers: ["ADMIN"],
 } satisfies Record<string, UserRole[]>;
 

@@ -6,6 +6,7 @@ import { AdminButton, Banner } from "@/components/admin/ui";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { EmptyState } from "@/components/EmptyState";
 import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
+import { can } from "@/lib/auth/permissions";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,8 @@ interface PageProps {
 }
 
 export default async function AdminTransfersListPage({ searchParams }: PageProps) {
-  await requireAdminPagePermission("manageTransfers");
+  const admin = await requireAdminPagePermission("viewTransfers");
+  const canManage = can(admin.role, "manageTransfers");
   const { saved, deleted } = await searchParams;
   const transfers = await getAllTransfersForAdmin();
 
@@ -23,12 +25,14 @@ export default async function AdminTransfersListPage({ searchParams }: PageProps
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-bold text-rf-fg">Mercato</h1>
-        <Link href="/admin/transfers/new">
-          <AdminButton>
-            <Plus size={18} />
-            Nouveau transfert
-          </AdminButton>
-        </Link>
+        {canManage && (
+          <Link href="/admin/transfers/new">
+            <AdminButton>
+              <Plus size={18} />
+              Nouveau transfert
+            </AdminButton>
+          </Link>
+        )}
       </div>
 
       {saved && <Banner kind="success">Transfert enregistré avec succès.</Banner>}
@@ -74,19 +78,21 @@ export default async function AdminTransfersListPage({ searchParams }: PageProps
                 </div>
               </div>
 
-              <div className="flex shrink-0 items-center gap-2">
-                <Link
-                  href={`/admin/transfers/${transfer.id}/edit`}
-                  className="rounded-lg border border-rf-border px-3 py-2 text-sm font-medium text-rf-fg transition-colors hover:border-rf-gold/40"
-                >
-                  Modifier
-                </Link>
-                <DeleteButton
-                  endpoint={`/api/admin/transfers/${transfer.id}`}
-                  redirectTo="/admin/transfers?deleted=1"
-                  confirmMessage={`Supprimer définitivement le transfert de « ${transfer.playerName} » ?`}
-                />
-              </div>
+              {canManage && (
+                <div className="flex shrink-0 items-center gap-2">
+                  <Link
+                    href={`/admin/transfers/${transfer.id}/edit`}
+                    className="rounded-lg border border-rf-border px-3 py-2 text-sm font-medium text-rf-fg transition-colors hover:border-rf-gold/40"
+                  >
+                    Modifier
+                  </Link>
+                  <DeleteButton
+                    endpoint={`/api/admin/transfers/${transfer.id}`}
+                    redirectTo="/admin/transfers?deleted=1"
+                    confirmMessage={`Supprimer définitivement le transfert de « ${transfer.playerName} » ?`}
+                  />
+                </div>
+              )}
             </div>
           ))}
         </div>

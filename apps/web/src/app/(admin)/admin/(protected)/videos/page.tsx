@@ -8,6 +8,7 @@ import { DeleteButton } from "@/components/admin/DeleteButton";
 import { SyncButton } from "@/components/admin/SyncButton";
 import { EmptyState } from "@/components/EmptyState";
 import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
+import { can } from "@/lib/auth/permissions";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
@@ -24,7 +25,8 @@ interface PageProps {
 }
 
 export default async function AdminVideosListPage({ searchParams }: PageProps) {
-  await requireAdminPagePermission("manageVideos");
+  const admin = await requireAdminPagePermission("viewVideos");
+  const canManage = can(admin.role, "manageVideos");
   const { saved, deleted } = await searchParams;
   const videos = await getAllVideosForAdmin();
 
@@ -32,12 +34,14 @@ export default async function AdminVideosListPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-bold text-rf-fg">Vidéos</h1>
-        <Link href="/admin/videos/new">
-          <AdminButton>
-            <Plus size={18} />
-            Ajouter une vidéo
-          </AdminButton>
-        </Link>
+        {canManage && (
+          <Link href="/admin/videos/new">
+            <AdminButton>
+              <Plus size={18} />
+              Ajouter une vidéo
+            </AdminButton>
+          </Link>
+        )}
       </div>
 
       {saved && <Banner kind="success">Vidéo mise à jour.</Banner>}
@@ -89,20 +93,22 @@ export default async function AdminVideosListPage({ searchParams }: PageProps) {
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-2">
-                  {isProcessing && <SyncButton videoId={video.id} />}
-                  <Link
-                    href={`/admin/videos/${video.id}/edit`}
-                    className="rounded-lg border border-rf-border px-3 py-2 text-sm font-medium text-rf-fg transition-colors hover:border-rf-gold/40"
-                  >
-                    Modifier
-                  </Link>
-                  <DeleteButton
-                    endpoint={`/api/admin/videos/${video.id}`}
-                    redirectTo="/admin/videos?deleted=1"
-                    confirmMessage={`Supprimer définitivement « ${video.title} » ?`}
-                  />
-                </div>
+                {canManage && (
+                  <div className="flex shrink-0 items-center gap-2">
+                    {isProcessing && <SyncButton videoId={video.id} />}
+                    <Link
+                      href={`/admin/videos/${video.id}/edit`}
+                      className="rounded-lg border border-rf-border px-3 py-2 text-sm font-medium text-rf-fg transition-colors hover:border-rf-gold/40"
+                    >
+                      Modifier
+                    </Link>
+                    <DeleteButton
+                      endpoint={`/api/admin/videos/${video.id}`}
+                      redirectTo="/admin/videos?deleted=1"
+                      confirmMessage={`Supprimer définitivement « ${video.title} » ?`}
+                    />
+                  </div>
+                )}
               </div>
             );
           })}

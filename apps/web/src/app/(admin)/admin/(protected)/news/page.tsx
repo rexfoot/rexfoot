@@ -25,7 +25,8 @@ interface PageProps {
 }
 
 export default async function AdminNewsListPage({ searchParams }: PageProps) {
-  const admin = await requireAdminPagePermission("manageNews");
+  const admin = await requireAdminPagePermission("viewNews");
+  const canManage = can(admin.role, "manageNews");
   const canDelete = can(admin.role, "deleteNews");
   const { saved, deleted } = await searchParams;
   const articles = await getAllNewsForAdmin();
@@ -34,12 +35,14 @@ export default async function AdminNewsListPage({ searchParams }: PageProps) {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl font-bold text-rf-fg">Actualités</h1>
-        <Link href="/admin/news/new">
-          <AdminButton>
-            <Plus size={18} />
-            Nouvel article
-          </AdminButton>
-        </Link>
+        {canManage && (
+          <Link href="/admin/news/new">
+            <AdminButton>
+              <Plus size={18} />
+              Nouvel article
+            </AdminButton>
+          </Link>
+        )}
       </div>
 
       {saved && <Banner kind="success">Article enregistré avec succès.</Banner>}
@@ -93,12 +96,14 @@ export default async function AdminNewsListPage({ searchParams }: PageProps) {
               </div>
 
               <div className="flex shrink-0 items-center gap-2">
-                <Link
-                  href={`/admin/news/${article.id}/edit`}
-                  className="rounded-lg border border-rf-border px-3 py-2 text-sm font-medium text-rf-fg transition-colors hover:border-rf-gold/40"
-                >
-                  Modifier
-                </Link>
+                {canManage && (
+                  <Link
+                    href={`/admin/news/${article.id}/edit`}
+                    className="rounded-lg border border-rf-border px-3 py-2 text-sm font-medium text-rf-fg transition-colors hover:border-rf-gold/40"
+                  >
+                    Modifier
+                  </Link>
+                )}
                 {canDelete && (
                   <DeleteButton
                     endpoint={`/api/admin/news/${article.id}`}
