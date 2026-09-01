@@ -28,6 +28,23 @@ export function createSyncQueue(): Queue {
 }
 
 /**
+ * BullMQ identifie un job répétable par son `jobId` COMBINÉ à ses options de
+ * répétition (`every`/`pattern`) — changer l'intervalle entre deux déploiements
+ * sans retirer l'ancien enregistrement laisse les deux tourner en parallèle
+ * indéfiniment ("job fantôme"). On purge donc tous les répétables existants
+ * à chaque démarrage avant de réenregistrer la config actuelle, pour que
+ * changer un intervalle dans le code soit toujours pris en compte proprement.
+ */
+async function removeAllRepeatableJobs(queue: Queue): Promise<void> {
+  const existing = await queue.getRepeatableJobs();
+  for (const job of existing) {
+    await queue.removeRepeatableByKey(job.key);
+  }
+}
+
+const DEFAULT_JOB_OPTS = { removeOnComplete: { count: 20 }, removeOnFail: { count: 50 } };
+
+/**
  * Enregistre les jobs répétables à cadence fixe (fixtures, classements,
  * stats) et amorce le cycle auto-planifié de syncLiveScores. Ce dernier ne
  * suit pas un cron fixe : chaque exécution replanifie la suivante avec un
@@ -35,25 +52,27 @@ export function createSyncQueue(): Queue {
  * index.ts où le résultat du job pilote `scheduleNextLiveScoresRun`.
  */
 export async function registerScheduledJobs(queue: Queue): Promise<void> {
+  await removeAllRepeatableJobs(queue);
+
   await queue.add(
     JobName.syncFixtures,
     {},
-    { repeat: { every: 6 * 60 * 60 * 1000 }, jobId: JobName.syncFixtures },
+    { repeat: { every: 6 * 60 * 60 * 1000 }, jobId: JobName.syncFixtures, ...DEFAULT_JOB_OPTS },
   );
   await queue.add(
     JobName.syncStandings,
     {},
-    { repeat: { every: 8 * 60 * 60 * 1000 }, jobId: JobName.syncStandings },
+    { repeat: { every: 8 * 60 * 60 * 1000 }, jobId: JobName.syncStandings, ...DEFAULT_JOB_OPTS },
   );
   await queue.add(
     JobName.syncPlayerStats,
     {},
-    { repeat: { every: 6 * 60 * 60 * 1000 }, jobId: JobName.syncPlayerStats },
+    { repeat: { every: 6 * 60 * 60 * 1000 }, jobId: JobName.syncPlayerStats, ...DEFAULT_JOB_OPTS },
   );
   await queue.add(
     JobName.syncRosters,
     {},
-    { repeat: { every: 6 * 60 * 60 * 1000 }, jobId: JobName.syncRosters },
+    { repeat: { every: 6 * 60 * 60 * 1000 }, jobId: JobName.syncRosters, ...DEFAULT_JOB_OPTS },
   );
 
   await scheduleNextLiveScoresRun(queue, false);
@@ -61,5 +80,9 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
 
 export async function scheduleNextLiveScoresRun(queue: Queue, hadLiveMatches: boolean): Promise<void> {
   const delay = hadLiveMatches ? LIVE_SCORES_INTERVAL_DURING_MATCHES_MS : LIVE_SCORES_INTERVAL_IDLE_MS;
-  await queue.add(JobName.syncLiveScores, {}, { delay, jobId: `${JobName.syncLiveScores}-${Date.now()}` });
+  await queue.add(
+    JobName.syncLiveScores,
+    {},
+    { delay, jobId: `${JobName.syncLiveScores}-${Date.now()}`, ...DEFAULT_JOB_OPTS },
+  );
 }

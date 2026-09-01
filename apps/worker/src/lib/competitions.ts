@@ -34,13 +34,19 @@ export async function resolveFeaturedCompetitions(
 
   for (const slug of FEATURED_COMPETITION_SLUGS) {
     const id = API_FOOTBALL_LEAGUE_IDS[slug];
-    const [dto] = await provider.getCompetitions({ id });
-    if (!dto) {
-      logger.warn({ slug, id }, "Compétition vedette introuvable chez le fournisseur");
-      continue;
+    try {
+      const [dto] = await provider.getCompetitions({ id });
+      if (!dto) {
+        logger.warn({ slug, id }, "Compétition vedette introuvable chez le fournisseur");
+        continue;
+      }
+      const competition = await upsertCompetition(dto);
+      resolved.push({ competition, externalId: dto.externalId });
+    } catch (err) {
+      // Une compétition en échec (quota, erreur réseau, etc.) ne doit pas
+      // empêcher la synchronisation des 6 autres.
+      logger.error({ slug, id, err }, "Échec de résolution d'une compétition vedette");
     }
-    const competition = await upsertCompetition(dto);
-    resolved.push({ competition, externalId: dto.externalId });
   }
 
   return resolved;

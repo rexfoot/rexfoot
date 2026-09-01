@@ -30,6 +30,22 @@ export interface ApiFootballConfig {
   apiHost: string;
 }
 
+/**
+ * API-Football est accessible par deux voies avec des conventions d'auth
+ * différentes : via le marketplace RapidAPI (host `*.rapidapi.com`, headers
+ * `x-rapidapi-key`/`x-rapidapi-host`), ou en direct via api-sports.io (host
+ * `v3.football.api-sports.io`, header unique `x-apisports-key`, pas de
+ * `x-rapidapi-host`). Envoyer les mauvais headers au mauvais host authentifie
+ * silencieusement en échec sur certains plans — l'API répond 200 avec un
+ * `response` vide plutôt qu'un 401/403 franc.
+ */
+function buildAuthHeaders(config: ApiFootballConfig): Record<string, string> {
+  if (config.apiHost.includes("rapidapi.com")) {
+    return { "x-rapidapi-key": config.apiKey, "x-rapidapi-host": config.apiHost };
+  }
+  return { "x-apisports-key": config.apiKey };
+}
+
 // Statuts courts renvoyés par l'API-Football (voir "Fixture Status" dans leur doc)
 // mappés vers notre enum interne. À vérifier/ajuster contre la doc live une fois
 // une vraie clé branchée — cette table couvre les codes documentés publiquement.
@@ -84,24 +100,27 @@ export class ApiFootballProvider implements FootballDataProvider {
 
     let response: Response;
     try {
-      response = await fetch(url, {
-        headers: {
-          "x-rapidapi-key": this.config.apiKey,
-          "x-rapidapi-host": this.config.apiHost,
-        },
-      });
+      response = await fetch(url, { headers: buildAuthHeaders(this.config) });
     } catch (cause) {
       throw new FootballProviderError(`Échec réseau vers API-Football (${path})`, cause);
     }
 
     if (!response.ok) {
+      const text = await response.text().catch(() => "");
       throw new FootballProviderError(
-        `API-Football a répondu ${response.status} pour ${path}`,
+        `API-Football a répondu ${response.status} pour ${path}${text ? `: ${text}` : ""}`,
       );
     }
 
-    const body = (await response.json()) as { response: T; errors?: unknown[] };
-    if (body.errors && Array.isArray(body.errors) && body.errors.length > 0) {
+    const body = (await response.json()) as { response: T; errors?: unknown[] | Record<string, unknown> };
+    // `errors` est un tableau VIDE quand tout va bien, mais un OBJET (pas un
+    // tableau) quand il y a une vraie erreur (ex: {"requests": "..."} pour un
+    // quota dépassé, {"token": "..."} pour une clé invalide) — un simple
+    // `Array.isArray` laisse passer ce cas en silence avec un `response` vide.
+    const hasErrors = Array.isArray(body.errors)
+      ? body.errors.length > 0
+      : body.errors !== undefined && Object.keys(body.errors).length > 0;
+    if (hasErrors) {
       throw new FootballProviderError(
         `API-Football a renvoyé des erreurs pour ${path}: ${JSON.stringify(body.errors)}`,
       );
