@@ -27,6 +27,15 @@ export function ChatWidget() {
     return () => clearTimeout(id);
   }, [messages, pending]);
 
+  useEffect(() => {
+    if (!open) return;
+    function handleKey(event: KeyboardEvent) {
+      if (event.key === "Escape") setOpen(false);
+    }
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [open]);
+
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     const content = input.trim();
