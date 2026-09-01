@@ -3,13 +3,14 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Newspaper, Film, UserCog } from "lucide-react";
+import { LayoutDashboard, Newspaper, ArrowLeftRight, Film, UserCog } from "lucide-react";
 import { LogoutButton } from "./LogoutButton";
 import { cn } from "@/lib/cn";
 
 const NAV_ITEMS = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
   { label: "Actualités", href: "/admin/news", icon: Newspaper },
+  { label: "Mercato", href: "/admin/transfers", icon: ArrowLeftRight },
   { label: "Vidéos", href: "/admin/videos", icon: Film },
   { label: "Mon compte", href: "/admin/account", icon: UserCog },
 ];

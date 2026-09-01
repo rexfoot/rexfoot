@@ -429,6 +429,45 @@ model MatchVote {
 }
 
 // ---------------------------------------------------------------------------
+// Mercato
+// ---------------------------------------------------------------------------
+
+enum TransferStatus {
+  OFFICIEL
+  AVANCE
+  EN_DISCUSSION
+  RUMEUR
+}
+
+/// Transfert au format "ticker mercato" — volontairement en texte libre pour
+/// le joueur et les clubs (playerName/fromClubName/toClubName) plutôt que des
+/// FK vers Player/Team : une rumeur de mercato concerne souvent un joueur ou
+/// un club qui n'existe pas encore dans les données synchronisées par
+/// apps/worker. Pas de statut "officiel" par défaut — voir @default(RUMEUR) :
+/// ne jamais présenter par erreur une rumeur comme confirmée (section 13 du plan).
+model Transfer {
+  id            String         @id @default(cuid())
+  playerName    String
+  fromClubName  String?
+  toClubName    String?
+  status        TransferStatus @default(RUMEUR)
+  feeMillionEur Float?
+  isFree        Boolean        @default(false)
+  transferDate  DateTime?
+  sourceName    String?
+  sourceUrl     String?
+  notes         String?
+  authorId      String?
+  author        User?          @relation(fields: [authorId], references: [id])
+  publishedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+// ---------------------------------------------------------------------------
 // Actualités
 // ---------------------------------------------------------------------------
 
@@ -619,6 +658,7 @@ model User {
   status       UserStatus @default(ACTIVE)
 
   articles         NewsArticle[]
+  transfers        Transfer[]
   videos           Video[]
   videoViews       VideoView[]
   videoLikes       VideoLike[]
