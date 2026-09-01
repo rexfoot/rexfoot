@@ -5,6 +5,7 @@ import { getLocale } from "next-intl/server";
 import { getNewsArticleBySlug } from "@/lib/data/news";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { TrackView } from "@/components/TrackView";
+import { ShareButtons } from "@/components/ShareButtons";
 import { buildAlternates } from "@/lib/seo/alternates";
 
 interface PageProps {
@@ -54,6 +55,8 @@ export default async function NewsArticlePage({ params }: PageProps) {
           {new Date(article.publishedAt).toLocaleDateString(toIntlLocale(locale), { dateStyle: "long" })}
         </p>
       )}
+
+      <ShareButtons title={article.title} />
 
       <div
         className="space-y-4 text-[15px] leading-relaxed text-rf-fg [&_a]:text-rf-gold [&_a]:underline [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold"

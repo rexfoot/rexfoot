@@ -187,6 +187,13 @@
     "title": "Notifications",
     "empty": "No notifications yet"
   },
+  "share": {
+    "label": "Share",
+    "whatsapp": "Share on WhatsApp",
+    "twitter": "Share on X",
+    "facebook": "Share on Facebook",
+    "copyLink": "Copy link"
+  },
   "home": {
     "featured": "Featured",
     "newsTitle": "News",

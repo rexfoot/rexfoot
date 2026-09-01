@@ -6,6 +6,7 @@ import { getRelatedVideos, getVideoBySlug } from "@/lib/data/videos";
 import { VideoCard } from "@/components/VideoCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { TrackView } from "@/components/TrackView";
+import { ShareButtons } from "@/components/ShareButtons";
 import { buildAlternates } from "@/lib/seo/alternates";
 
 interface PageProps {
@@ -56,6 +57,7 @@ export default async function VideoDetailPage({ params }: PageProps) {
         <h1 className="font-display text-xl font-bold text-rf-fg">{video.title}</h1>
         {video.description && <p className="mt-2 text-sm text-rf-fg-muted">{video.description}</p>}
         <p className="mt-2 text-xs text-rf-fg-subtle">{t("views", { count: video.viewCount })}</p>
+        <ShareButtons title={video.title} className="mt-3" />
       </div>
 
       {related.length > 0 && (
