@@ -35,6 +35,13 @@ export function VideoRail({ videos }: VideoRailProps) {
         ))}
       </div>
 
+      {/*
+        Positions et flèches restent volontairement en left-0/right-0 absolus
+        (pas start-/end- logiques) : `scrollBy` déplace toujours le viewport
+        vers l'écran physique gauche/droite quel que soit `dir`, donc faire
+        pivoter les chevrons en RTL sans changer leur position casserait la
+        cohérence flèche ↔ direction réelle du scroll.
+      */}
       <button
         type="button"
         onClick={() => scrollBy(-1)}
@@ -42,7 +49,7 @@ export function VideoRail({ videos }: VideoRailProps) {
         className="absolute top-0 bottom-8 left-0 hidden w-10 items-center justify-center bg-gradient-to-r from-rf-bg to-transparent opacity-0 transition-opacity group-hover/rail:opacity-100 sm:flex"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rf-bg-elevated text-rf-fg ring-1 ring-rf-border">
-          <ChevronLeft size={18} className="rtl:rotate-180" />
+          <ChevronLeft size={18} />
         </span>
       </button>
       <button
@@ -52,7 +59,7 @@ export function VideoRail({ videos }: VideoRailProps) {
         className="absolute top-0 right-0 bottom-8 hidden w-10 items-center justify-center bg-gradient-to-l from-rf-bg to-transparent opacity-0 transition-opacity group-hover/rail:opacity-100 sm:flex"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rf-bg-elevated text-rf-fg ring-1 ring-rf-border">
-          <ChevronRight size={18} className="rtl:rotate-180" />
+          <ChevronRight size={18} />
         </span>
       </button>
     </div>

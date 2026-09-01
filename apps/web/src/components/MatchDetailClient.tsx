@@ -92,7 +92,7 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
                 key={event.id}
                 className="flex items-center gap-3 rounded-xl border border-rf-border bg-rf-bg-card px-4 py-2.5 text-sm"
               >
-                <span className="w-10 shrink-0 text-right font-display font-semibold text-rf-fg-muted">
+                <span className="w-10 shrink-0 text-end font-display font-semibold text-rf-fg-muted">
                   {event.minute}
                   {event.extraMinute ? `+${event.extraMinute}` : ""}&apos;
                 </span>

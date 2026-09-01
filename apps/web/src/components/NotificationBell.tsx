@@ -90,7 +90,7 @@ export function NotificationBell({ variant = "header" }: NotificationBellProps) 
       >
         <Bell size={19} />
         {unreadCount > 0 && (
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rf-live" aria-hidden />
+          <span className="absolute top-1.5 end-1.5 h-2 w-2 rounded-full bg-rf-live" aria-hidden />
         )}
         <span className="sr-only">{t("title")}</span>
       </button>

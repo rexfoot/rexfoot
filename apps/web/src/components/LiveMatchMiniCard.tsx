@@ -49,7 +49,7 @@ export function LiveMatchMiniCard({ match }: { match: MatchSummary }) {
           <div className="h-1 overflow-hidden rounded-full bg-rf-bg-elevated">
             <div className="h-full rounded-full bg-rf-live" style={{ width: `${minutePercent}%` }} />
           </div>
-          <p className="mt-1 text-right text-[10px] font-semibold text-rf-live">{match.minute ?? 0}&apos;</p>
+          <p className="mt-1 text-end text-[10px] font-semibold text-rf-live">{match.minute ?? 0}&apos;</p>
         </div>
       )}
     </Link>

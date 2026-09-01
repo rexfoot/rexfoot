@@ -71,11 +71,11 @@ function VoteBar({
       type="button"
       onClick={onClick}
       className={cn(
-        "relative block w-full overflow-hidden rounded-lg border px-3 py-2 text-left text-sm transition-colors",
+        "relative block w-full overflow-hidden rounded-lg border px-3 py-2 text-start text-sm transition-colors",
         active ? "border-rf-gold/50" : "border-rf-border hover:border-rf-gold/30",
       )}
     >
-      <span className="absolute inset-y-0 left-0 bg-rf-gold/15 transition-all" style={{ width: `${percent}%` }} aria-hidden />
+      <span className="absolute inset-y-0 start-0 bg-rf-gold/15 transition-all" style={{ width: `${percent}%` }} aria-hidden />
       <span className="relative flex items-center justify-between gap-2 font-medium text-rf-fg">
         <span className="truncate">{label}</span>
         <span className="shrink-0 font-display font-bold text-rf-gold">{percent}%</span>
