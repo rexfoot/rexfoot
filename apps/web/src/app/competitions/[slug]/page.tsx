@@ -11,6 +11,7 @@ import { CompetitionBadge } from "@/components/CompetitionBadge";
 import { MatchCard } from "@/components/MatchCard";
 import { EmptyState } from "@/components/EmptyState";
 import { SectionHeader } from "@/components/SectionHeader";
+import { FormBadge } from "@/components/FormBadge";
 
 export const revalidate = 3600;
 
@@ -70,11 +71,17 @@ export default async function CompetitionPage({ params }: PageProps) {
                   <th className="px-3 py-2 font-medium">#</th>
                   <th className="px-3 py-2 font-medium">Équipe</th>
                   <th className="px-3 py-2 text-center font-medium">J</th>
+                  <th className="px-3 py-2 text-center font-medium">V</th>
+                  <th className="px-3 py-2 text-center font-medium">N</th>
+                  <th className="px-3 py-2 text-center font-medium">D</th>
+                  <th className="px-3 py-2 text-center font-medium">BP</th>
+                  <th className="px-3 py-2 text-center font-medium">BC</th>
                   <th className="px-3 py-2 text-center font-medium">Diff</th>
                   <th className="px-3 py-2 text-center font-medium">Pts</th>
+                  <th className="px-3 py-2 text-center font-medium">Forme</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="[font-variant-numeric:tabular-nums]">
                 {standings.map((row) => (
                   <tr key={row.id} className="border-t border-rf-border">
                     <td className="px-3 py-2 text-rf-fg-muted">{row.position}</td>
@@ -85,8 +92,16 @@ export default async function CompetitionPage({ params }: PageProps) {
                       </a>
                     </td>
                     <td className="px-3 py-2 text-center text-rf-fg-muted">{row.played}</td>
+                    <td className="px-3 py-2 text-center text-rf-fg-muted">{row.won}</td>
+                    <td className="px-3 py-2 text-center text-rf-fg-muted">{row.drawn}</td>
+                    <td className="px-3 py-2 text-center text-rf-fg-muted">{row.lost}</td>
+                    <td className="px-3 py-2 text-center text-rf-fg-muted">{row.goalsFor}</td>
+                    <td className="px-3 py-2 text-center text-rf-fg-muted">{row.goalsAgainst}</td>
                     <td className="px-3 py-2 text-center text-rf-fg-muted">{row.goalDifference}</td>
                     <td className="px-3 py-2 text-center font-bold text-rf-fg">{row.points}</td>
+                    <td className="px-3 py-2">
+                      <FormBadge form={row.form} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

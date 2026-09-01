@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, CalendarDays, PlayCircle, Newspaper } from "lucide-react";
+import { Home, CalendarDays, ListOrdered, PlayCircle, Newspaper } from "lucide-react";
 import { NAV_ITEMS, type NavItem } from "@/lib/nav";
 import { cn } from "@/lib/cn";
 
 const ICONS: Record<NavItem["icon"], typeof Home> = {
   home: Home,
   matches: CalendarDays,
+  standings: ListOrdered,
   video: PlayCircle,
   news: Newspaper,
   more: Home,
