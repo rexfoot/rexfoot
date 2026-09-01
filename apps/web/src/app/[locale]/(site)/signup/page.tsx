@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { AdminInput, AdminButton, Banner, FieldGroup } from "@/components/admin/ui";
 
 export default function SignupPage() {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -27,7 +29,7 @@ export default function SignupPage() {
 
     if (!response.ok) {
       const body = await response.json().catch(() => null);
-      setError(body?.error ?? "Impossible de créer le compte.");
+      setError(body?.error ?? t("signupError"));
       setLoading(false);
       return;
     }
@@ -44,31 +46,31 @@ export default function SignupPage() {
             <span className="text-rf-gold">Rex</span>
             <span className="text-rf-fg">Foot</span>
           </p>
-          <p className="mt-1 text-sm text-rf-fg-muted">Créer un compte</p>
+          <p className="mt-1 text-sm text-rf-fg-muted">{t("signup")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <FieldGroup label="Nom" htmlFor="displayName">
+          <FieldGroup label={t("nameLabel")} htmlFor="displayName">
             <AdminInput id="displayName" name="displayName" autoComplete="name" required autoFocus />
           </FieldGroup>
-          <FieldGroup label="Email" htmlFor="email">
+          <FieldGroup label={t("emailLabel")} htmlFor="email">
             <AdminInput id="email" name="email" type="email" autoComplete="username" required />
           </FieldGroup>
-          <FieldGroup label="Mot de passe" htmlFor="password" hint="8 caractères minimum.">
+          <FieldGroup label={t("passwordLabel")} htmlFor="password" hint={t("passwordHint")}>
             <AdminInput id="password" name="password" type="password" autoComplete="new-password" required minLength={8} />
           </FieldGroup>
 
           {error && <Banner kind="error">{error}</Banner>}
 
           <AdminButton type="submit" disabled={loading} className="w-full">
-            {loading ? "Création…" : "Créer mon compte"}
+            {loading ? t("signupButtonLoading") : t("signupButton")}
           </AdminButton>
         </form>
 
         <p className="mt-5 text-center text-sm text-rf-fg-muted">
-          Déjà un compte ?{" "}
+          {t("alreadyAccount")}{" "}
           <Link href="/login" className="font-medium text-rf-gold hover:underline">
-            Connecte-toi
+            {t("loginLink")}
           </Link>
         </p>
       </div>

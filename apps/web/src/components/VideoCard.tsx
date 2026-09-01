@@ -1,7 +1,9 @@
 import Image from "next/image";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { PlayCircle, Play, Loader2 } from "lucide-react";
 import type { VideoSummary } from "@/lib/types";
+import { toIntlLocale } from "@/lib/intl-locale";
 import { cn } from "@/lib/cn";
 
 function formatDuration(seconds: number | null): string | null {
@@ -11,10 +13,10 @@ function formatDuration(seconds: number | null): string | null {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
-function formatViews(count: number): string {
-  if (count >= 1_000_000) return `${(count / 1_000_000).toFixed(1)}M vues`;
-  if (count >= 1_000) return `${(count / 1_000).toFixed(1)}k vues`;
-  return `${count} vue${count > 1 ? "s" : ""}`;
+function formatViews(count: number, locale: string, t: ReturnType<typeof useTranslations>): string {
+  if (count < 1000) return t("views", { count });
+  const compact = new Intl.NumberFormat(locale, { notation: "compact", maximumFractionDigits: 1 }).format(count);
+  return t("viewsCompact", { count: compact });
 }
 
 interface VideoCardProps {
@@ -24,6 +26,8 @@ interface VideoCardProps {
 
 /** Carte vignette + durée + titre — état grisé/"en cours" si la vidéo n'est pas encore READY. */
 export function VideoCard({ video, className }: VideoCardProps) {
+  const t = useTranslations("video");
+  const locale = useLocale();
   const isReady = video.status === "READY";
   const duration = formatDuration(video.durationSeconds);
 
@@ -55,27 +59,27 @@ export function VideoCard({ video, className }: VideoCardProps) {
         {!isReady && (
           <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/50 text-xs font-medium text-rf-fg">
             <Loader2 size={14} className="animate-spin" />
-            En traitement
+            {t("processing")}
           </div>
         )}
 
         {isReady && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-colors group-hover:bg-black/30">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white ring-1 ring-white/30 transition-transform group-hover:scale-110">
-              <Play size={20} fill="currentColor" className="ml-0.5 text-white" />
+              <Play size={20} fill="currentColor" className="ms-0.5 text-white" />
             </span>
           </div>
         )}
 
         {duration && isReady && (
-          <span className="absolute bottom-1.5 right-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[11px] font-semibold text-rf-fg">
+          <span className="absolute end-1.5 bottom-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[11px] font-semibold text-rf-fg">
             {duration}
           </span>
         )}
       </div>
 
       <h3 className="mt-2 line-clamp-2 text-sm font-medium text-rf-fg">{video.title}</h3>
-      {isReady && <p className="mt-0.5 text-xs text-rf-fg-subtle">{formatViews(video.viewCount)}</p>}
+      {isReady && <p className="mt-0.5 text-xs text-rf-fg-subtle">{formatViews(video.viewCount, toIntlLocale(locale), t)}</p>}
     </Link>
   );
 }

@@ -1,8 +1,9 @@
 import Image from "next/image";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Newspaper } from "lucide-react";
 import { formatArticleDate } from "@/lib/date";
+import { toIntlLocale } from "@/lib/intl-locale";
 import { isCurrentlyBreaking } from "@/lib/breaking";
 import { BreakingBadge } from "@/components/BreakingBadge";
 
@@ -21,7 +22,8 @@ interface NewsHeroProps {
 /** Hero pleine largeur pour la une de l'accueil — image de fond, dégradé et titre en surimpression. */
 export function NewsHero({ article }: NewsHeroProps) {
   const t = useTranslations("home");
-  const date = formatArticleDate(article.publishedAt);
+  const locale = useLocale();
+  const date = formatArticleDate(article.publishedAt, toIntlLocale(locale));
   const breaking = isCurrentlyBreaking(article.isBreaking ?? false, article.breakingSince ?? null);
 
   return (

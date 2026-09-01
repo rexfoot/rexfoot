@@ -1,6 +1,7 @@
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import type { TransferStatus } from "@rexfoot/db";
-import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_VALUES } from "@/lib/transfer-status";
+import { TRANSFER_STATUS_VALUES } from "@/lib/transfer-status";
 import { cn } from "@/lib/cn";
 
 function href(status?: TransferStatus): string {
@@ -8,6 +9,8 @@ function href(status?: TransferStatus): string {
 }
 
 export function TransferStatusFilter({ selected }: { selected?: TransferStatus }) {
+  const t = useTranslations("mercato");
+
   return (
     <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
       <Link
@@ -19,7 +22,7 @@ export function TransferStatusFilter({ selected }: { selected?: TransferStatus }
             : "border-rf-border text-rf-fg-muted hover:border-rf-gold/40 hover:text-rf-fg",
         )}
       >
-        Tous
+        {t("allStatuses")}
       </Link>
       {TRANSFER_STATUS_VALUES.map((status) => (
         <Link
@@ -32,7 +35,7 @@ export function TransferStatusFilter({ selected }: { selected?: TransferStatus }
               : "border-rf-border text-rf-fg-muted hover:border-rf-gold/40 hover:text-rf-fg",
           )}
         >
-          {TRANSFER_STATUS_LABELS[status]}
+          {t(`status.${status}`)}
         </Link>
       ))}
     </div>

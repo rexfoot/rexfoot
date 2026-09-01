@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { ArrowLeftRight } from "lucide-react";
 import type { TransferStatus } from "@rexfoot/db";
 import { getPublishedTransfers } from "@/lib/data/transfers";
@@ -11,31 +12,28 @@ import { EmptyState } from "@/components/EmptyState";
 // page.tsx (accueil) pour le détail.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Mercato",
-  description: "Toutes les rumeurs et transferts officiels du mercato football, avec leur niveau de fiabilité.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("mercato");
+  return { title: t("title"), description: t("metaDescription") };
+}
 
 interface PageProps {
   searchParams: Promise<{ status?: string }>;
 }
 
 export default async function MercatoPage({ searchParams }: PageProps) {
+  const t = await getTranslations("mercato");
   const { status } = await searchParams;
   const selected: TransferStatus | undefined = isTransferStatus(status) ? status : undefined;
   const transfers = await getPublishedTransfers(selected);
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
-      <h1 className="font-display text-2xl font-bold text-rf-fg">Mercato</h1>
+      <h1 className="font-display text-2xl font-bold text-rf-fg">{t("title")}</h1>
       <TransferStatusFilter selected={selected} />
 
       {transfers.length === 0 ? (
-        <EmptyState
-          icon={ArrowLeftRight}
-          title="Aucun transfert pour l'instant"
-          description="Les rumeurs et transferts officiels apparaîtront ici dès qu'ils seront publiés."
-        />
+        <EmptyState icon={ArrowLeftRight} title={t("noTransfers")} description={t("noTransfersDescription")} />
       ) : (
         <div className="space-y-3">
           {transfers.map((transfer) => (

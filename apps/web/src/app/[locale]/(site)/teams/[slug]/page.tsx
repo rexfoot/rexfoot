@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Users } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getTeamBySlug, getTeamFixtures } from "@/lib/data/teams";
@@ -18,16 +19,17 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const team = await getTeamBySlug(slug);
+  const [team, t] = await Promise.all([getTeamBySlug(slug), getTranslations("teams")]);
   if (!team) return {};
   return {
     title: team.name,
-    description: `${team.name} — effectif, calendrier, résultats et statistiques sur RexFoot.`,
+    description: t("metaDescription", { name: team.name }),
   };
 }
 
 export default async function TeamPage({ params }: PageProps) {
   const { slug } = await params;
+  const t = await getTranslations("teams");
   const team = await getTeamBySlug(slug);
   if (!team) notFound();
 
@@ -57,9 +59,9 @@ export default async function TeamPage({ params }: PageProps) {
       </div>
 
       <section>
-        <SectionHeader title="Effectif" />
+        <SectionHeader title={t("squadTitle")} />
         {team.playerMemberships.length === 0 ? (
-          <EmptyState icon={Users} title="Effectif pas encore disponible" />
+          <EmptyState icon={Users} title={t("noSquad")} />
         ) : (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {team.playerMemberships.map((membership) => (
@@ -80,9 +82,9 @@ export default async function TeamPage({ params }: PageProps) {
       </section>
 
       <section>
-        <SectionHeader title="Matchs" />
+        <SectionHeader title={t("matchesTitle")} />
         {fixtures.length === 0 ? (
-          <EmptyState icon={Users} title="Aucun match trouvé pour cette équipe" />
+          <EmptyState icon={Users} title={t("noMatches")} />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {fixtures.map((fixture) => (

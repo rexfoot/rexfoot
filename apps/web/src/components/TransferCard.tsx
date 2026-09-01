@@ -1,28 +1,26 @@
+import { useTranslations, useLocale } from "next-intl";
 import { ArrowRight } from "lucide-react";
 import type { Transfer } from "@rexfoot/db";
-import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_STYLES } from "@/lib/transfer-status";
+import { TRANSFER_STATUS_STYLES } from "@/lib/transfer-status";
+import { toIntlLocale } from "@/lib/intl-locale";
 import { cn } from "@/lib/cn";
 
-function formatFee(transfer: Pick<Transfer, "isFree" | "feeMillionEur">): string | null {
-  if (transfer.isFree) return "Transfert libre";
-  if (transfer.feeMillionEur === null) return null;
-  return `${transfer.feeMillionEur}M€`;
-}
-
-function formatDate(date: Date | null): string | null {
+function formatDate(date: Date | null, locale: string): string | null {
   if (!date) return null;
-  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "short", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(date);
 }
 
 export function TransferCard({ transfer }: { transfer: Transfer }) {
-  const fee = formatFee(transfer);
-  const date = formatDate(transfer.transferDate);
+  const t = useTranslations("mercato");
+  const locale = useLocale();
+  const fee = transfer.isFree ? t("freeTransfer") : transfer.feeMillionEur !== null ? `${transfer.feeMillionEur}M€` : null;
+  const date = formatDate(transfer.transferDate, toIntlLocale(locale));
 
   return (
     <div className="rounded-2xl border border-rf-border bg-rf-bg-card p-4">
       <div className="mb-3 flex items-center justify-between gap-2">
         <span className={cn("rounded-full px-2.5 py-1 text-xs font-bold", TRANSFER_STATUS_STYLES[transfer.status])}>
-          {TRANSFER_STATUS_LABELS[transfer.status]}
+          {t(`status.${transfer.status}`)}
         </span>
         {date && <span className="text-xs text-rf-fg-subtle">{date}</span>}
       </div>
@@ -30,9 +28,9 @@ export function TransferCard({ transfer }: { transfer: Transfer }) {
       <p className="font-display text-lg font-bold text-rf-fg">{transfer.playerName}</p>
 
       <div className="mt-2 flex items-center gap-2 text-sm text-rf-fg-muted">
-        <span className="truncate">{transfer.fromClubName ?? "Club libre"}</span>
-        <ArrowRight size={14} className="shrink-0 text-rf-fg-subtle" />
-        <span className="truncate font-medium text-rf-fg">{transfer.toClubName ?? "Destination inconnue"}</span>
+        <span className="truncate">{transfer.fromClubName ?? t("freeClub")}</span>
+        <ArrowRight size={14} className="shrink-0 text-rf-fg-subtle rtl:rotate-180" />
+        <span className="truncate font-medium text-rf-fg">{transfer.toClubName ?? t("unknownDestination")}</span>
       </div>
 
       {fee && <p className="mt-2 text-sm font-semibold text-rf-gold">{fee}</p>}
@@ -40,7 +38,7 @@ export function TransferCard({ transfer }: { transfer: Transfer }) {
 
       {transfer.sourceName && (
         <p className="mt-3 text-xs text-rf-fg-subtle">
-          Source :{" "}
+          {t("source")} :{" "}
           {transfer.sourceUrl ? (
             <a
               href={transfer.sourceUrl}

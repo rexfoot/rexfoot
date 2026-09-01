@@ -2,12 +2,14 @@
 
 import { Suspense, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Link, useRouter } from "@/i18n/navigation";
 import { AdminInput, AdminButton, Banner, FieldGroup } from "@/components/admin/ui";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("auth");
   const next = searchParams.get("next") || "/account";
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -26,7 +28,7 @@ function LoginForm() {
 
     if (!response.ok) {
       const body = await response.json().catch(() => null);
-      setError(body?.error ?? "Impossible de se connecter.");
+      setError(body?.error ?? t("loginError"));
       setLoading(false);
       return;
     }
@@ -43,28 +45,28 @@ function LoginForm() {
             <span className="text-rf-gold">Rex</span>
             <span className="text-rf-fg">Foot</span>
           </p>
-          <p className="mt-1 text-sm text-rf-fg-muted">Connexion</p>
+          <p className="mt-1 text-sm text-rf-fg-muted">{t("login")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          <FieldGroup label="Email" htmlFor="email">
+          <FieldGroup label={t("emailLabel")} htmlFor="email">
             <AdminInput id="email" name="email" type="email" autoComplete="username" required autoFocus />
           </FieldGroup>
-          <FieldGroup label="Mot de passe" htmlFor="password">
+          <FieldGroup label={t("passwordLabel")} htmlFor="password">
             <AdminInput id="password" name="password" type="password" autoComplete="current-password" required />
           </FieldGroup>
 
           {error && <Banner kind="error">{error}</Banner>}
 
           <AdminButton type="submit" disabled={loading} className="w-full">
-            {loading ? "Connexion…" : "Se connecter"}
+            {loading ? t("loginButtonLoading") : t("loginButton")}
           </AdminButton>
         </form>
 
         <p className="mt-5 text-center text-sm text-rf-fg-muted">
-          Pas encore de compte ?{" "}
+          {t("noAccountYet")}{" "}
           <Link href="/signup" className="font-medium text-rf-gold hover:underline">
-            Inscris-toi
+            {t("signupLink")}
           </Link>
         </p>
       </div>

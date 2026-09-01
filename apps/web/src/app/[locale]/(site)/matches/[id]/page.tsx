@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { getMatchById } from "@/lib/data/matches";
 import { MatchDetailClient } from "@/components/MatchDetailClient";
 
@@ -9,13 +10,13 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params;
-  const match = await getMatchById(id);
+  const [match, t] = await Promise.all([getMatchById(id), getTranslations("matches")]);
   if (!match) return {};
 
   const title = `${match.homeTeam.name} vs ${match.awayTeam.name}`;
   return {
     title,
-    description: `${title} — ${match.competition.name}. Score, événements et statistiques en direct sur RexFoot.`,
+    description: `${title} — ${match.competition.name}. ${t("metaDescription")}`,
   };
 }
 

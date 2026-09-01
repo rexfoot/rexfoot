@@ -1,8 +1,10 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
+import { toIntlLocale } from "@/lib/intl-locale";
 
 function toISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
@@ -14,18 +16,6 @@ function addDays(iso: string, delta: number): string {
   return toISODate(date);
 }
 
-function formatLabel(iso: string): string {
-  const today = toISODate(new Date());
-  if (iso === today) return "Aujourd'hui";
-  if (iso === addDays(today, 1)) return "Demain";
-  if (iso === addDays(today, -1)) return "Hier";
-  return new Date(`${iso}T12:00:00`).toLocaleDateString("fr-FR", {
-    weekday: "short",
-    day: "numeric",
-    month: "short",
-  });
-}
-
 interface MatchesDateNavProps {
   selectedDate?: string;
 }
@@ -34,7 +24,21 @@ interface MatchesDateNavProps {
 export function MatchesDateNav({ selectedDate }: MatchesDateNavProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("matches");
+  const locale = useLocale();
   const current = selectedDate ?? toISODate(new Date());
+
+  function formatLabel(iso: string): string {
+    const today = toISODate(new Date());
+    if (iso === today) return t("today");
+    if (iso === addDays(today, 1)) return t("tomorrow");
+    if (iso === addDays(today, -1)) return t("yesterday");
+    return new Date(`${iso}T12:00:00`).toLocaleDateString(toIntlLocale(locale), {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
+  }
 
   function goTo(iso: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -48,10 +52,10 @@ export function MatchesDateNav({ selectedDate }: MatchesDateNavProps) {
       <button
         type="button"
         onClick={() => goTo(addDays(current, -1))}
-        aria-label="Jour précédent"
+        aria-label={t("previousDay")}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-rf-fg-muted transition-colors hover:bg-rf-bg-elevated hover:text-rf-fg"
       >
-        <ChevronLeft size={18} />
+        <ChevronLeft size={18} className="rtl:rotate-180" />
       </button>
 
       <div className="flex-1 text-center font-display text-sm font-bold text-rf-fg">{formatLabel(current)}</div>
@@ -62,7 +66,7 @@ export function MatchesDateNav({ selectedDate }: MatchesDateNavProps) {
           type="date"
           value={current}
           onChange={(event) => event.target.value && goTo(event.target.value)}
-          aria-label="Choisir une date"
+          aria-label={t("chooseDate")}
           className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
         />
       </label>
@@ -70,10 +74,10 @@ export function MatchesDateNav({ selectedDate }: MatchesDateNavProps) {
       <button
         type="button"
         onClick={() => goTo(addDays(current, 1))}
-        aria-label="Jour suivant"
+        aria-label={t("nextDay")}
         className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-rf-fg-muted transition-colors hover:bg-rf-bg-elevated hover:text-rf-fg"
       >
-        <ChevronRight size={18} />
+        <ChevronRight size={18} className="rtl:rotate-180" />
       </button>
     </div>
   );

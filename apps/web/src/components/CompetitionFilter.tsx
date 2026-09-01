@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 
 interface CompetitionFilterProps {
@@ -18,6 +19,8 @@ function buildHref(date: string | undefined, competitionSlug?: string): string {
 
 /** Filtre par compétition — simples liens (pas de JS nécessaire), l'état vient de l'URL. */
 export function CompetitionFilter({ competitions, selected, date }: CompetitionFilterProps) {
+  const t = useTranslations("matches");
+
   return (
     <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
       <Link
@@ -29,7 +32,7 @@ export function CompetitionFilter({ competitions, selected, date }: CompetitionF
             : "border-rf-border text-rf-fg-muted hover:border-rf-gold/40 hover:text-rf-fg",
         )}
       >
-        Toutes
+        {t("allCompetitions")}
       </Link>
       {competitions.map((competition) => (
         <Link

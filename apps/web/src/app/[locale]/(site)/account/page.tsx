@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Heart, Shield, Users, Trophy, type LucideIcon } from "lucide-react";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link, redirect } from "@/i18n/navigation";
 import type { FavoriteEntityType } from "@rexfoot/db";
 import { getCurrentUser } from "@/lib/auth/current-user";
@@ -14,6 +14,7 @@ import { PublicLogoutButton } from "@/components/PublicLogoutButton";
 export const dynamic = "force-dynamic";
 
 export default async function AccountPage() {
+  const t = await getTranslations("account");
   const user = await getCurrentUser();
   if (!user) {
     const locale = await getLocale();
@@ -35,18 +36,14 @@ export default async function AccountPage() {
       </div>
 
       <section className="space-y-5">
-        <h2 className="font-display text-lg font-bold text-rf-fg">Mes favoris</h2>
+        <h2 className="font-display text-lg font-bold text-rf-fg">{t("myFavorites")}</h2>
 
         {!hasFavorites ? (
-          <EmptyState
-            icon={Heart}
-            title="Aucun favori pour l'instant"
-            description="Ajoute des clubs, joueurs ou compétitions depuis leur fiche, avec le cœur en haut de la page."
-          />
+          <EmptyState icon={Heart} title={t("noFavorites")} description={t("noFavoritesDescription")} />
         ) : (
           <div className="space-y-6">
             {teams.length > 0 && (
-              <FavoriteSection icon={Shield} title="Clubs">
+              <FavoriteSection icon={Shield} title={t("clubs")}>
                 {teams.map((team) => (
                   <FavoriteRow
                     key={team.id}
@@ -61,7 +58,7 @@ export default async function AccountPage() {
             )}
 
             {players.length > 0 && (
-              <FavoriteSection icon={Users} title="Joueurs">
+              <FavoriteSection icon={Users} title={t("players")}>
                 {players.map((player) => (
                   <FavoriteRow
                     key={player.id}
@@ -76,7 +73,7 @@ export default async function AccountPage() {
             )}
 
             {competitions.length > 0 && (
-              <FavoriteSection icon={Trophy} title="Compétitions">
+              <FavoriteSection icon={Trophy} title={t("competitions")}>
                 {competitions.map((competition) => (
                   <FavoriteRow
                     key={competition.id}

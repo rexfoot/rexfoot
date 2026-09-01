@@ -1,11 +1,13 @@
 "use client";
 
 import { ListChecks } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
 import { EmptyState } from "./EmptyState";
 import { MatchVotePanel } from "./MatchVotePanel";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
+import { toIntlLocale } from "@/lib/intl-locale";
 import type { MatchDetail } from "@/lib/types";
 
 const EVENT_ICON: Record<string, string> = {
@@ -19,25 +21,30 @@ const EVENT_ICON: Record<string, string> = {
   VAR: "📺",
 };
 
-function statusLabel(match: MatchDetail): string {
+function useStatusLabel(match: MatchDetail): string {
+  const t = useTranslations("matches");
+  const locale = useLocale();
+
   switch (match.status) {
     case "LIVE":
-      return `${match.minute ?? 0}' — En direct`;
+      return `${match.minute ?? 0}' — ${t("live")}`;
     case "HALFTIME":
-      return "Mi-temps";
+      return t("halftime");
     case "FINISHED":
-      return "Terminé";
+      return t("finished");
     case "POSTPONED":
-      return "Reporté";
+      return t("postponed");
     case "CANCELLED":
-      return "Annulé";
+      return t("cancelled");
     default:
-      return new Date(match.kickoffAt).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" });
+      return new Date(match.kickoffAt).toLocaleString(toIntlLocale(locale), { dateStyle: "long", timeStyle: "short" });
   }
 }
 
 export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; initialMatch: MatchDetail }) {
+  const t = useTranslations("matches");
   const match = useMatchDetail(matchId, initialMatch);
+  const statusLabel = useStatusLabel(match);
   const isLive = match.status === "LIVE" || match.status === "HALFTIME";
   const hasScore = match.homeScore !== null && match.awayScore !== null;
 
@@ -57,11 +64,9 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
                 {match.homeScore} <span className="text-rf-fg-subtle">–</span> {match.awayScore}
               </p>
             ) : (
-              <p className="font-display text-2xl font-bold text-rf-fg-muted">vs</p>
+              <p className="font-display text-2xl font-bold text-rf-fg-muted">{t("vs")}</p>
             )}
-            <p className={`mt-2 text-sm font-semibold ${isLive ? "text-rf-live" : "text-rf-fg-muted"}`}>
-              {statusLabel(match)}
-            </p>
+            <p className={`mt-2 text-sm font-semibold ${isLive ? "text-rf-live" : "text-rf-fg-muted"}`}>{statusLabel}</p>
           </div>
           <TeamColumn name={match.awayTeam.name} crestUrl={match.awayTeam.crestUrl} />
         </div>
@@ -72,9 +77,9 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
       </div>
 
       <section>
-        <h2 className="mb-3 font-display text-lg font-bold text-rf-fg">Événements</h2>
+        <h2 className="mb-3 font-display text-lg font-bold text-rf-fg">{t("events")}</h2>
         {match.events.length === 0 ? (
-          <EmptyState icon={ListChecks} title="Aucun événement pour l'instant" />
+          <EmptyState icon={ListChecks} title={t("noEvents")} />
         ) : (
           <ol className="space-y-2">
             {match.events.map((event) => (

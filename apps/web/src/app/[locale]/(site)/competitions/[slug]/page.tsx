@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { ListOrdered, CalendarDays } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import {
@@ -23,16 +24,17 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const competition = await getCompetitionBySlug(slug);
+  const [competition, t] = await Promise.all([getCompetitionBySlug(slug), getTranslations("standings")]);
   if (!competition) return {};
   return {
     title: competition.name,
-    description: `${competition.name} — classement, calendrier et résultats sur RexFoot.`,
+    description: t("metaDescriptionDetail", { name: competition.name }),
   };
 }
 
 export default async function CompetitionPage({ params }: PageProps) {
   const { slug } = await params;
+  const t = await getTranslations("standings");
   const competition = await getCompetitionBySlug(slug);
   if (!competition) notFound();
 
@@ -63,25 +65,25 @@ export default async function CompetitionPage({ params }: PageProps) {
       <h1 className="font-display text-2xl font-bold text-rf-fg">{competition.name}</h1>
 
       <section>
-        <SectionHeader title="Classement" />
+        <SectionHeader title={t("standingsSectionTitle")} />
         {standings.length === 0 ? (
-          <EmptyState icon={ListOrdered} title="Classement pas encore disponible" />
+          <EmptyState icon={ListOrdered} title={t("noStandings")} />
         ) : (
           <div className="overflow-x-auto rounded-2xl border border-rf-border">
             <table className="w-full text-sm">
               <thead className="bg-rf-bg-elevated text-left text-rf-fg-muted">
                 <tr>
-                  <th className="px-3 py-2 font-medium">#</th>
-                  <th className="px-3 py-2 font-medium">Équipe</th>
-                  <th className="px-3 py-2 text-center font-medium">J</th>
-                  <th className="px-3 py-2 text-center font-medium">V</th>
-                  <th className="px-3 py-2 text-center font-medium">N</th>
-                  <th className="px-3 py-2 text-center font-medium">D</th>
-                  <th className="px-3 py-2 text-center font-medium">BP</th>
-                  <th className="px-3 py-2 text-center font-medium">BC</th>
-                  <th className="px-3 py-2 text-center font-medium">Diff</th>
-                  <th className="px-3 py-2 text-center font-medium">Pts</th>
-                  <th className="px-3 py-2 text-center font-medium">Forme</th>
+                  <th className="px-3 py-2 font-medium">{t("position")}</th>
+                  <th className="px-3 py-2 font-medium">{t("team")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("played")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("won")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("drawn")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("lost")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("goalsFor")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("goalsAgainst")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("goalDifference")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("points")}</th>
+                  <th className="px-3 py-2 text-center font-medium">{t("form")}</th>
                 </tr>
               </thead>
               <tbody className="[font-variant-numeric:tabular-nums]">
@@ -114,9 +116,9 @@ export default async function CompetitionPage({ params }: PageProps) {
       </section>
 
       <section>
-        <SectionHeader title="Calendrier" />
+        <SectionHeader title={t("calendarSectionTitle")} />
         {fixtures.length === 0 ? (
-          <EmptyState icon={CalendarDays} title="Aucun match programmé pour l'instant" />
+          <EmptyState icon={CalendarDays} title={t("noFixtures")} />
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {fixtures.map((fixture) => (

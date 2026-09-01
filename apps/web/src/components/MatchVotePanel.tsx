@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useMatchVotes } from "@/hooks/useMatchVotes";
 import { cn } from "@/lib/cn";
 
@@ -11,6 +12,7 @@ interface MatchVotePanelProps {
 
 /** Pronostic communautaire "qui va gagner ?" — vote anonyme, dédupliqué côté serveur par cookie. */
 export function MatchVotePanel({ matchId, homeTeam, awayTeam }: MatchVotePanelProps) {
+  const t = useTranslations("matches");
   const { totals, mutate } = useMatchVotes(matchId);
 
   async function vote(choice: "HOME" | "DRAW" | "AWAY") {
@@ -29,7 +31,7 @@ export function MatchVotePanel({ matchId, homeTeam, awayTeam }: MatchVotePanelPr
 
   return (
     <div className="space-y-2">
-      <p className="text-xs font-semibold tracking-wide text-rf-fg-subtle uppercase">Qui va gagner ?</p>
+      <p className="text-xs font-semibold tracking-wide text-rf-fg-subtle uppercase">{t("whoWillWin")}</p>
       <VoteBar
         label={homeTeam.name}
         percent={percent(totals?.home ?? 0)}
@@ -37,7 +39,7 @@ export function MatchVotePanel({ matchId, homeTeam, awayTeam }: MatchVotePanelPr
         onClick={() => vote("HOME")}
       />
       <VoteBar
-        label="Match nul"
+        label={t("draw")}
         percent={percent(totals?.draw ?? 0)}
         active={totals?.myChoice === "DRAW"}
         onClick={() => vote("DRAW")}
@@ -48,11 +50,7 @@ export function MatchVotePanel({ matchId, homeTeam, awayTeam }: MatchVotePanelPr
         active={totals?.myChoice === "AWAY"}
         onClick={() => vote("AWAY")}
       />
-      {total > 0 && (
-        <p className="text-xs text-rf-fg-subtle">
-          {total} vote{total > 1 ? "s" : ""}
-        </p>
-      )}
+      {total > 0 && <p className="text-xs text-rf-fg-subtle">{t("votes", { count: total })}</p>}
     </div>
   );
 }

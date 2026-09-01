@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { ListOrdered } from "lucide-react";
 import { getFeaturedCompetitions } from "@/lib/data/competitions";
 import { CompetitionCard } from "@/components/CompetitionCard";
@@ -8,20 +9,21 @@ import { EmptyState } from "@/components/EmptyState";
 // page.tsx (accueil) pour le détail.
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Classements",
-  description: "Classements des principaux championnats et compétitions de football.",
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("standings");
+  return { title: t("title"), description: t("metaDescription") };
+}
 
 export default async function StandingsIndexPage() {
+  const t = await getTranslations("standings");
   const competitions = await getFeaturedCompetitions();
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
-      <h1 className="font-display text-2xl font-bold text-rf-fg">Classements</h1>
+      <h1 className="font-display text-2xl font-bold text-rf-fg">{t("title")}</h1>
 
       {competitions.length === 0 ? (
-        <EmptyState icon={ListOrdered} title="Aucune compétition disponible pour l'instant" />
+        <EmptyState icon={ListOrdered} title={t("noCompetitions")} />
       ) : (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {competitions.map((competition) => (

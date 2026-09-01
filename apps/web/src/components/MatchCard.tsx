@@ -1,34 +1,38 @@
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
 import type { MatchSummary } from "@/lib/types";
+import { toIntlLocale } from "@/lib/intl-locale";
 import { cn } from "@/lib/cn";
 
-function formatKickoff(iso: string): string {
+function formatKickoff(iso: string, locale: string): string {
   const date = new Date(iso);
   const today = new Date();
   const isToday = date.toDateString() === today.toDateString();
-  const time = date.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  const time = date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
   if (isToday) return time;
-  return `${date.toLocaleDateString("fr-FR", { day: "2-digit", month: "short" })} · ${time}`;
+  return `${date.toLocaleDateString(locale, { day: "2-digit", month: "short" })} · ${time}`;
 }
 
 function StatusBadge({ status, minute }: { status: MatchSummary["status"]; minute: number | null }) {
+  const t = useTranslations("matches");
+
   switch (status) {
     case "LIVE":
     case "HALFTIME":
       return (
         <span className="inline-flex items-center gap-1.5 rounded-full bg-rf-live/15 px-2 py-0.5 text-xs font-bold text-rf-live">
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rf-live" />
-          {status === "HALFTIME" ? "MT" : `${minute ?? 0}'`}
+          {status === "HALFTIME" ? t("halftime") : `${minute ?? 0}'`}
         </span>
       );
     case "FINISHED":
-      return <span className="text-xs font-semibold text-rf-fg-subtle">Terminé</span>;
+      return <span className="text-xs font-semibold text-rf-fg-subtle">{t("finished")}</span>;
     case "POSTPONED":
-      return <span className="text-xs font-semibold text-rf-fg-subtle">Reporté</span>;
+      return <span className="text-xs font-semibold text-rf-fg-subtle">{t("postponed")}</span>;
     case "CANCELLED":
-      return <span className="text-xs font-semibold text-rf-fg-subtle">Annulé</span>;
+      return <span className="text-xs font-semibold text-rf-fg-subtle">{t("cancelled")}</span>;
     default:
       return null;
   }
@@ -41,6 +45,7 @@ interface MatchCardProps {
 
 /** Carte compacte score/statut — le composant le plus consulté de RexFoot (accueil, /matches). */
 export function MatchCard({ match, className }: MatchCardProps) {
+  const locale = useLocale();
   const isLive = match.status === "LIVE" || match.status === "HALFTIME";
   const hasScore = match.homeScore !== null && match.awayScore !== null;
 
@@ -56,7 +61,9 @@ export function MatchCard({ match, className }: MatchCardProps) {
       <div className="mb-3 flex items-center justify-between">
         <CompetitionBadge logoUrl={match.competition.logoUrl} name={match.competition.name} />
         {match.status === "SCHEDULED" ? (
-          <span className="text-xs font-semibold text-rf-fg-muted">{formatKickoff(match.kickoffAt)}</span>
+          <span className="text-xs font-semibold text-rf-fg-muted">
+            {formatKickoff(match.kickoffAt, toIntlLocale(locale))}
+          </span>
         ) : (
           <StatusBadge status={match.status} minute={match.minute} />
         )}

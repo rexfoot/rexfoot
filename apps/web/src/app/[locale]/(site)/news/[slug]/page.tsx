@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { getNewsArticleBySlug } from "@/lib/data/news";
+import { toIntlLocale } from "@/lib/intl-locale";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -20,7 +22,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function NewsArticlePage({ params }: PageProps) {
   const { slug } = await params;
-  const article = await getNewsArticleBySlug(slug);
+  const [article, locale] = await Promise.all([getNewsArticleBySlug(slug), getLocale()]);
   if (!article) notFound();
 
   const jsonLd = {
@@ -45,7 +47,7 @@ export default async function NewsArticlePage({ params }: PageProps) {
       <h1 className="font-display text-2xl font-bold text-rf-fg">{article.title}</h1>
       {article.publishedAt && (
         <p className="text-xs text-rf-fg-subtle">
-          {new Date(article.publishedAt).toLocaleDateString("fr-FR", { dateStyle: "long" })}
+          {new Date(article.publishedAt).toLocaleDateString(toIntlLocale(locale), { dateStyle: "long" })}
         </p>
       )}
 

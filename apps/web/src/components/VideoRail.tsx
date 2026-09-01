@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useTranslations } from "next-intl";
 import { Film, ChevronLeft, ChevronRight } from "lucide-react";
 import { VideoCard } from "./VideoCard";
 import { EmptyState } from "./EmptyState";
@@ -12,16 +13,11 @@ interface VideoRailProps {
 
 /** Carrousel horizontal de vidéos — section "🔥 RexFoot Video" de la page d'accueil. */
 export function VideoRail({ videos }: VideoRailProps) {
+  const t = useTranslations("video");
   const scrollerRef = useRef<HTMLDivElement>(null);
 
   if (videos.length === 0) {
-    return (
-      <EmptyState
-        icon={Film}
-        title="Pas encore de vidéos"
-        description="Les premières vidéos RexFoot (highlights, interviews, buts) apparaîtront ici."
-      />
-    );
+    return <EmptyState icon={Film} title={t("noVideosRail")} description={t("noVideosRailDescription")} />;
   }
 
   function scrollBy(direction: 1 | -1) {
@@ -42,21 +38,21 @@ export function VideoRail({ videos }: VideoRailProps) {
       <button
         type="button"
         onClick={() => scrollBy(-1)}
-        aria-label="Défiler vers la gauche"
+        aria-label={t("scrollLeft")}
         className="absolute top-0 bottom-8 left-0 hidden w-10 items-center justify-center bg-gradient-to-r from-rf-bg to-transparent opacity-0 transition-opacity group-hover/rail:opacity-100 sm:flex"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rf-bg-elevated text-rf-fg ring-1 ring-rf-border">
-          <ChevronLeft size={18} />
+          <ChevronLeft size={18} className="rtl:rotate-180" />
         </span>
       </button>
       <button
         type="button"
         onClick={() => scrollBy(1)}
-        aria-label="Défiler vers la droite"
+        aria-label={t("scrollRight")}
         className="absolute top-0 right-0 bottom-8 hidden w-10 items-center justify-center bg-gradient-to-l from-rf-bg to-transparent opacity-0 transition-opacity group-hover/rail:opacity-100 sm:flex"
       >
         <span className="flex h-9 w-9 items-center justify-center rounded-full bg-rf-bg-elevated text-rf-fg ring-1 ring-rf-border">
-          <ChevronRight size={18} />
+          <ChevronRight size={18} className="rtl:rotate-180" />
         </span>
       </button>
     </div>

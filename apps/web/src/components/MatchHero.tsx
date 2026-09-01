@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
 import { MatchVotePanel } from "./MatchVotePanel";
 import { useMatch } from "@/hooks/useMatch";
+import { toIntlLocale } from "@/lib/intl-locale";
 import type { MatchSummary } from "@/lib/types";
 
 function useCountdown(target: string | null): number | null {
@@ -37,7 +39,7 @@ function CountdownDisplay({ ms }: { ms: number }) {
 
   return (
     <div className="flex items-center justify-center gap-1.5 [font-variant-numeric:tabular-nums]">
-      <TimeUnit value={days} unit="j" />
+      <TimeUnit value={days} unit="d" />
       <span className="pb-3 text-rf-fg-subtle">:</span>
       <TimeUnit value={hours} unit="h" />
       <span className="pb-3 text-rf-fg-subtle">:</span>
@@ -63,6 +65,8 @@ interface MatchHeroProps {
 
 /** Match mis en avant sur l'accueil — score/minute en direct, compte à rebours avant coup d'envoi, pronostic. */
 export function MatchHero({ initialMatch }: MatchHeroProps) {
+  const t = useTranslations("matches");
+  const locale = useLocale();
   const match = useMatch(initialMatch.id, initialMatch);
   const isLive = match.status === "LIVE" || match.status === "HALFTIME";
   const isScheduled = match.status === "SCHEDULED";
@@ -75,7 +79,7 @@ export function MatchHero({ initialMatch }: MatchHeroProps) {
         {isLive ? (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-rf-live/15 px-2.5 py-1 text-xs font-bold text-rf-live">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rf-live" />
-            EN DIRECT
+            {t("live")}
           </span>
         ) : (
           <span />
@@ -92,12 +96,12 @@ export function MatchHero({ initialMatch }: MatchHeroProps) {
               {match.homeScore} <span className="text-rf-fg-subtle">–</span> {match.awayScore}
             </p>
           ) : (
-            <p className="font-display text-2xl font-bold text-rf-fg-muted">vs</p>
+            <p className="font-display text-2xl font-bold text-rf-fg-muted">{t("vs")}</p>
           )}
 
           {isLive && (
             <p className="mt-2 text-sm font-bold text-rf-live">
-              {match.status === "HALFTIME" ? "Mi-temps" : `${match.minute ?? 0}'`}
+              {match.status === "HALFTIME" ? t("halftime") : `${match.minute ?? 0}'`}
             </p>
           )}
 
@@ -108,11 +112,11 @@ export function MatchHero({ initialMatch }: MatchHeroProps) {
               </div>
             ) : (
               <p className="mt-2 text-sm text-rf-fg-muted">
-                {new Date(match.kickoffAt).toLocaleString("fr-FR", { dateStyle: "long", timeStyle: "short" })}
+                {new Date(match.kickoffAt).toLocaleString(toIntlLocale(locale), { dateStyle: "long", timeStyle: "short" })}
               </p>
             ))}
 
-          {!isLive && !isScheduled && <p className="mt-2 text-sm font-semibold text-rf-fg-subtle">Terminé</p>}
+          {!isLive && !isScheduled && <p className="mt-2 text-sm font-semibold text-rf-fg-subtle">{t("finished")}</p>}
         </div>
 
         <TeamColumn name={match.awayTeam.name} crestUrl={match.awayTeam.crestUrl} />
@@ -126,7 +130,7 @@ export function MatchHero({ initialMatch }: MatchHeroProps) {
         href={`/matches/${match.id}`}
         className="mt-5 block rounded-xl bg-rf-gold py-2.5 text-center text-sm font-bold text-rf-bg transition-colors hover:bg-rf-gold-soft"
       >
-        Voir les détails du match
+        {t("viewDetails")}
       </Link>
     </div>
   );

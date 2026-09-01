@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "@/i18n/navigation";
 import { Heart } from "lucide-react";
 import type { FavoriteEntityType } from "@rexfoot/db";
@@ -18,6 +19,7 @@ interface FavoriteButtonProps {
  * (`revalidate`), donc pas de `cookies()` côté serveur là-bas.
  */
 export function FavoriteButton({ entityType, entityId }: FavoriteButtonProps) {
+  const t = useTranslations("account");
   const router = useRouter();
   const pathname = usePathname();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -66,7 +68,7 @@ export function FavoriteButton({ entityType, entityId }: FavoriteButtonProps) {
       onClick={toggle}
       disabled={pending || !ready}
       aria-pressed={favorited}
-      title={favorited ? "Retirer des favoris" : "Ajouter aux favoris"}
+      title={favorited ? t("removeFavorite") : t("addFavorite")}
       className={cn(
         "flex h-11 w-11 shrink-0 items-center justify-center rounded-full border transition-colors disabled:opacity-50",
         favorited
