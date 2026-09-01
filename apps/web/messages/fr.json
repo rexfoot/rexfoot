@@ -183,6 +183,10 @@
     "login": "Se connecter",
     "account": "Mon compte"
   },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Pas encore de notification"
+  },
   "home": {
     "featured": "À la une",
     "newsTitle": "Actualités",

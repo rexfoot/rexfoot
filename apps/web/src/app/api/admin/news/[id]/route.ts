@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma, type NewsCategory, type BreakingPriority } from "@rexfoot/db";
 import { requirePermission, apiError } from "@/lib/api-response";
 import { storeImageAsset, deleteAssetFromUrl, AssetUploadError } from "@/lib/data/assets";
+import { notifyBreakingNews } from "@/lib/data/notifications-admin";
 import { NEWS_CATEGORY_VALUES } from "@/lib/news-categories";
 import { textToHtml } from "@/lib/text-to-html";
 
@@ -59,7 +60,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (isBreaking && !existing.isBreaking) breakingSince = new Date();
   if (!isBreaking) breakingSince = null;
 
-  await prisma.newsArticle.update({
+  const updated = await prisma.newsArticle.update({
     where: { id },
     data: {
       title,
@@ -74,6 +75,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       breakingSince,
     },
   });
+
+  // Ne notifie que quand l'alerte devient visible pour la première fois : soit
+  // le chrono breaking vient de démarrer, soit l'article passe de brouillon à
+  // publié alors qu'il était déjà marqué breaking — jamais à chaque modification
+  // d'une alerte déjà publiée et active.
+  const justBecameBreaking =
+    status === "PUBLISHED" && isBreaking && (existing.status !== "PUBLISHED" || breakingSince !== existing.breakingSince);
+  if (justBecameBreaking) {
+    await notifyBreakingNews(updated);
+  }
 
   return NextResponse.json({ ok: true });
 }

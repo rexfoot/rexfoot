@@ -5,6 +5,7 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { NAV_ITEMS } from "@/lib/nav";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { AccountMenuButton } from "@/components/AccountMenuButton";
+import { NotificationBell } from "@/components/NotificationBell";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SearchOverlay } from "@/components/SearchOverlay";
 import type { CurrentUser } from "@/lib/auth/current-user";
@@ -51,6 +52,7 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
       </nav>
 
       <LanguageSwitcher className="mb-3" />
+      {user && <NotificationBell variant="rail" />}
       <AccountMenuButton user={user} />
     </aside>
   );

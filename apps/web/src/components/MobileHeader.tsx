@@ -1,5 +1,6 @@
 import { Link } from "@/i18n/navigation";
 import { AccountMenuButton } from "./AccountMenuButton";
+import { NotificationBell } from "./NotificationBell";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { SearchOverlay } from "./SearchOverlay";
 import type { CurrentUser } from "@/lib/auth/current-user";
@@ -15,6 +16,7 @@ export function MobileHeader({ user }: { user: CurrentUser | null }) {
       <div className="flex items-center gap-2">
         <SearchOverlay />
         <LanguageSwitcher />
+        {user && <NotificationBell />}
         <AccountMenuButton user={user} />
       </div>
     </header>

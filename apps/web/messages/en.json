@@ -183,6 +183,10 @@
     "login": "Log in",
     "account": "My account"
   },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications yet"
+  },
   "home": {
     "featured": "Featured",
     "newsTitle": "News",

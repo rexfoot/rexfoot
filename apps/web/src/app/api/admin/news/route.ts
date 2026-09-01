@@ -4,6 +4,7 @@ import { prisma, type NewsCategory, type BreakingPriority } from "@rexfoot/db";
 import { requirePermission, apiError } from "@/lib/api-response";
 import { storeImageAsset, AssetUploadError } from "@/lib/data/assets";
 import { generateUniqueNewsSlug } from "@/lib/data/news-admin";
+import { notifyBreakingNews } from "@/lib/data/notifications-admin";
 import { NEWS_CATEGORY_VALUES } from "@/lib/news-categories";
 import { textToHtml } from "@/lib/text-to-html";
 
@@ -65,6 +66,10 @@ export async function POST(request: Request) {
       breakingSince: isBreaking ? new Date() : null,
     },
   });
+
+  if (status === "PUBLISHED" && isBreaking) {
+    await notifyBreakingNews(article);
+  }
 
   return NextResponse.json({ ok: true, id: article.id });
 }

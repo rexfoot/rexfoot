@@ -183,6 +183,10 @@
     "login": "تسجيل الدخول",
     "account": "حسابي"
   },
+  "notifications": {
+    "title": "الإشعارات",
+    "empty": "لا توجد إشعارات بعد"
+  },
   "home": {
     "featured": "الأبرز",
     "newsTitle": "الأخبار",

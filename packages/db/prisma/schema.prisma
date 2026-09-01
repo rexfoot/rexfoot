@@ -711,6 +711,7 @@ model User {
   blocksInitiated  UserBlock[]     @relation("BlockInitiator")
   blocksReceived   UserBlock[]     @relation("BlockTarget")
   auditLogEntries  AuditLog[]
+  notifications    Notification[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -726,6 +727,22 @@ model Favorite {
   createdAt  DateTime           @default(now())
 
   @@unique([userId, entityType, entityId])
+}
+
+/// Seul déclencheur réel pour l'instant : la publication d'une alerte "breaking"
+/// (voir notifyBreakingNews dans lib/data/notifications-admin.ts côté web) — pas
+/// de notif liée aux favoris, relatedTeamId/relatedPlayerId sur NewsArticle
+/// n'étant renseignés nulle part dans le panel admin.
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  linkUrl   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead, createdAt])
 }
 
 model UserBlock {
