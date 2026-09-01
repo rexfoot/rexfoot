@@ -14,6 +14,8 @@ export async function getAllNewsForAdmin() {
       coverImageUrl: true,
       publishedAt: true,
       createdAt: true,
+      isBreaking: true,
+      breakingSince: true,
     },
   });
 }

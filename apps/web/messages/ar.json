@@ -2,6 +2,10 @@
   "common": {
     "seeAll": "عرض الكل"
   },
+  "breakingNews": {
+    "label": "عاجل",
+    "dismiss": "إغلاق"
+  },
   "nav": {
     "home": "الرئيسية",
     "matches": "المباريات",
@@ -13,6 +17,7 @@
     "account": "حسابي"
   },
   "home": {
+    "featured": "الأبرز",
     "newsTitle": "الأخبار",
     "videoTitle": "فيديوهات RexFoot",
     "matchesTitle": "مباريات اليوم",

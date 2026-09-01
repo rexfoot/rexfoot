@@ -75,6 +75,13 @@ enum NewsCategory {
   AUTRE
 }
 
+/// Ordre déclaratif significatif : orderBy(desc) sur ce type place URGENT
+/// avant HIGH (Postgres trie les enums selon l'ordre de déclaration).
+enum BreakingPriority {
+  HIGH
+  URGENT
+}
+
 enum VideoStatus {
   UPLOADING
   PROCESSING
@@ -485,6 +492,14 @@ model NewsArticle {
   status         NewsStatus   @default(DRAFT)
   publishedAt    DateTime?
 
+  /// Section 12 du plan : jamais permanent — voir getActiveBreakingNews(), qui
+  /// ne considère un article "breaking" que dans les BREAKING_NEWS_WINDOW_HOURS
+  /// suivant breakingSince (pas publishedAt : marquer un vieil article comme
+  /// urgent doit le rendre actif immédiatement, pas selon sa date d'origine).
+  isBreaking       Boolean          @default(false)
+  breakingPriority BreakingPriority @default(HIGH)
+  breakingSince    DateTime?
+
   relatedCompetitionId String?
   relatedCompetition   Competition? @relation(fields: [relatedCompetitionId], references: [id])
   relatedTeamId        String?
@@ -496,6 +511,7 @@ model NewsArticle {
   updatedAt DateTime @updatedAt
 
   @@index([status, publishedAt])
+  @@index([isBreaking, breakingSince])
 }
 
 /// Fichier binaire uploadé depuis le panel admin (ex. image de couverture d'un

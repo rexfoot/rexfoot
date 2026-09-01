@@ -26,6 +26,8 @@ export default async function AdminNewsEditPage({ params }: PageProps) {
           summary: article.summary ?? "",
           content: htmlToText(article.contentHtml),
           coverImageUrl: article.coverImageUrl,
+          isBreaking: article.isBreaking,
+          breakingPriority: article.breakingPriority,
         }}
       />
     </div>

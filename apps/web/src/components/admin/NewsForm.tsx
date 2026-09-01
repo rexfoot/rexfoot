@@ -3,7 +3,8 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import type { NewsCategory } from "@rexfoot/db";
+import { AlertTriangle } from "lucide-react";
+import type { NewsCategory, BreakingPriority } from "@rexfoot/db";
 import { AdminInput, AdminTextarea, AdminSelect, AdminButton, Banner, FieldGroup } from "@/components/admin/ui";
 import { NEWS_CATEGORY_VALUES, NEWS_CATEGORY_LABELS } from "@/lib/news-categories";
 
@@ -15,6 +16,8 @@ interface NewsFormInitial {
   summary: string;
   content: string;
   coverImageUrl: string | null;
+  isBreaking: boolean;
+  breakingPriority: BreakingPriority;
 }
 
 interface NewsFormProps {
@@ -30,6 +33,7 @@ export function NewsForm({ mode, articleId, initial }: NewsFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<SaveStatus | null>(null);
   const [preview, setPreview] = useState<string | null>(initial?.coverImageUrl ?? null);
+  const [isBreaking, setIsBreaking] = useState(initial?.isBreaking ?? false);
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -88,6 +92,34 @@ export function NewsForm({ mode, articleId, initial }: NewsFormProps) {
       >
         <AdminTextarea id="summary" name="summary" defaultValue={initial?.summary} rows={2} placeholder="Résumé court" />
       </FieldGroup>
+
+      <div className="rounded-xl border border-rf-border bg-rf-bg-elevated p-4">
+        <label className="flex items-center gap-2 text-sm font-medium text-rf-fg">
+          <input
+            type="checkbox"
+            name="isBreaking"
+            checked={isBreaking}
+            onChange={(event) => setIsBreaking(event.target.checked)}
+            className="h-4 w-4 rounded border-rf-border accent-rf-live"
+          />
+          <AlertTriangle size={16} className="text-rf-live" />
+          Marquer comme information urgente (Breaking News)
+        </label>
+        <p className="mt-1.5 text-xs text-rf-fg-subtle">
+          Affiche un bandeau sur tout le site pendant 24h après la publication.
+        </p>
+
+        {isBreaking && (
+          <div className="mt-3">
+            <FieldGroup label="Niveau de priorité" htmlFor="breakingPriority">
+              <AdminSelect id="breakingPriority" name="breakingPriority" defaultValue={initial?.breakingPriority ?? "HIGH"}>
+                <option value="HIGH">Élevée</option>
+                <option value="URGENT">Urgente</option>
+              </AdminSelect>
+            </FieldGroup>
+          </div>
+        )}
+      </div>
 
       <FieldGroup label="Image de couverture" htmlFor="coverImage" hint="JPG, PNG ou WebP, 8 Mo maximum.">
         <input

@@ -2,6 +2,10 @@
   "common": {
     "seeAll": "Voir tout"
   },
+  "breakingNews": {
+    "label": "BREAKING",
+    "dismiss": "Fermer"
+  },
   "nav": {
     "home": "Accueil",
     "matches": "Matchs",
@@ -13,6 +17,7 @@
     "account": "Mon compte"
   },
   "home": {
+    "featured": "À la une",
     "newsTitle": "Actualités",
     "videoTitle": "RexFoot Video",
     "matchesTitle": "Matchs du jour",

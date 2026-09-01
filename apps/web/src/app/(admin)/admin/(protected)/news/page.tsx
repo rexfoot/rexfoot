@@ -1,12 +1,13 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Newspaper } from "lucide-react";
+import { Plus, Newspaper, AlertTriangle } from "lucide-react";
 import type { NewsStatus } from "@rexfoot/db";
 import { getAllNewsForAdmin } from "@/lib/data/news-admin";
 import { NEWS_CATEGORY_LABELS } from "@/lib/news-categories";
 import { AdminButton, Banner } from "@/components/admin/ui";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { EmptyState } from "@/components/EmptyState";
+import { isCurrentlyBreaking } from "@/lib/breaking";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
@@ -78,6 +79,12 @@ export default async function AdminNewsListPage({ searchParams }: PageProps) {
                   </span>
                   <span>{NEWS_CATEGORY_LABELS[article.category]}</span>
                   <span>{new Date(article.createdAt).toLocaleDateString("fr-FR")}</span>
+                  {isCurrentlyBreaking(article.isBreaking, article.breakingSince) && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-rf-live/15 px-2 py-0.5 font-semibold text-rf-live">
+                      <AlertTriangle size={11} />
+                      Urgent
+                    </span>
+                  )}
                 </div>
               </div>
 

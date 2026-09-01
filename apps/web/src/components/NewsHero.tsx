@@ -1,7 +1,10 @@
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Newspaper } from "lucide-react";
 import { formatArticleDate } from "@/lib/date";
+import { isCurrentlyBreaking } from "@/lib/breaking";
+import { BreakingBadge } from "@/components/BreakingBadge";
 
 interface NewsHeroProps {
   article: {
@@ -10,12 +13,16 @@ interface NewsHeroProps {
     summary: string | null;
     coverImageUrl: string | null;
     publishedAt: Date | null;
+    isBreaking?: boolean;
+    breakingSince?: Date | null;
   };
 }
 
 /** Hero pleine largeur pour la une de l'accueil — image de fond, dégradé et titre en surimpression. */
 export function NewsHero({ article }: NewsHeroProps) {
+  const t = useTranslations("home");
   const date = formatArticleDate(article.publishedAt);
+  const breaking = isCurrentlyBreaking(article.isBreaking ?? false, article.breakingSince ?? null);
 
   return (
     <Link
@@ -41,9 +48,13 @@ export function NewsHero({ article }: NewsHeroProps) {
       </div>
 
       <div className="absolute inset-x-0 bottom-0 p-5 sm:p-8">
-        <span className="inline-flex items-center rounded-full bg-rf-gold px-2.5 py-1 text-xs font-bold tracking-wide text-rf-bg uppercase">
-          À la une
-        </span>
+        {breaking ? (
+          <BreakingBadge />
+        ) : (
+          <span className="inline-flex items-center rounded-full bg-rf-gold px-2.5 py-1 text-xs font-bold tracking-wide text-rf-bg uppercase">
+            {t("featured")}
+          </span>
+        )}
         <h1 className="mt-3 line-clamp-3 font-display text-2xl font-extrabold text-white sm:text-4xl">
           {article.title}
         </h1>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma, type NewsCategory } from "@rexfoot/db";
+import { prisma, type NewsCategory, type BreakingPriority } from "@rexfoot/db";
 import { requireAdmin, apiError } from "@/lib/api-response";
 import { storeImageAsset, deleteAssetFromUrl, AssetUploadError } from "@/lib/data/assets";
 import { NEWS_CATEGORY_VALUES } from "@/lib/news-categories";
@@ -12,6 +12,8 @@ const fieldsSchema = z.object({
   summary: z.string().trim().optional(),
   content: z.string().trim().min(10, "Le contenu est trop court."),
   status: z.enum(["DRAFT", "PUBLISHED"]),
+  isBreaking: z.boolean(),
+  breakingPriority: z.enum(["HIGH", "URGENT"]),
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -29,6 +31,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     summary: formData.get("summary") || undefined,
     content: formData.get("content"),
     status: formData.get("status"),
+    isBreaking: formData.get("isBreaking") === "on",
+    breakingPriority: formData.get("breakingPriority") || "HIGH",
   });
   if (!parsed.success) {
     return apiError(400, parsed.error.issues[0]?.message ?? "Formulaire invalide.");
@@ -47,7 +51,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
   }
 
-  const { title, category, summary, content, status } = parsed.data;
+  const { title, category, summary, content, status, isBreaking, breakingPriority } = parsed.data;
+
+  // Le chrono des 24h repart uniquement quand isBreaking passe de false à true —
+  // le laisser actif entre deux modifications ne doit pas relancer la fenêtre.
+  let breakingSince = existing.breakingSince;
+  if (isBreaking && !existing.isBreaking) breakingSince = new Date();
+  if (!isBreaking) breakingSince = null;
 
   await prisma.newsArticle.update({
     where: { id },
@@ -59,6 +69,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       coverImageUrl,
       status,
       publishedAt: status === "PUBLISHED" ? (existing.publishedAt ?? new Date()) : existing.publishedAt,
+      isBreaking,
+      breakingPriority: breakingPriority as BreakingPriority,
+      breakingSince,
     },
   });
 

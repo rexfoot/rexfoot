@@ -2,6 +2,8 @@ import Image from "next/image";
 import { Link } from "@/i18n/navigation";
 import { Newspaper } from "lucide-react";
 import { formatArticleDate } from "@/lib/date";
+import { isCurrentlyBreaking } from "@/lib/breaking";
+import { BreakingBadge } from "@/components/BreakingBadge";
 
 interface NewsCardProps {
   article: {
@@ -10,11 +12,14 @@ interface NewsCardProps {
     summary: string | null;
     coverImageUrl: string | null;
     publishedAt: Date | null;
+    isBreaking?: boolean;
+    breakingSince?: Date | null;
   };
 }
 
 export function NewsCard({ article }: NewsCardProps) {
   const date = formatArticleDate(article.publishedAt);
+  const breaking = isCurrentlyBreaking(article.isBreaking ?? false, article.breakingSince ?? null);
 
   return (
     <Link
@@ -37,6 +42,7 @@ export function NewsCard({ article }: NewsCardProps) {
         )}
       </div>
       <div className="p-4">
+        {breaking && <BreakingBadge className="mb-2" />}
         <h3 className="line-clamp-2 font-medium text-rf-fg">{article.title}</h3>
         {article.summary && <p className="mt-1 line-clamp-2 text-sm text-rf-fg-muted">{article.summary}</p>}
         {date && <p className="mt-2 text-xs font-medium text-rf-fg-subtle">{date}</p>}

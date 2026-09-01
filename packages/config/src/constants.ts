@@ -34,3 +34,11 @@ export const CACHE_TTL_SECONDS = {
 
 /** Intervalle de polling client (ms) recommandé pour les pages qui affichent du direct. */
 export const LIVE_POLL_INTERVAL_MS = 15_000;
+
+/**
+ * Fenêtre (heures) pendant laquelle un article marqué isBreaking=true est
+ * effectivement traité comme urgent (bandeau, badge) après sa publication —
+ * passé ce délai, il redevient un article normal même si le flag n'a pas été
+ * désactivé à la main (section 12 du plan : jamais d'alerte périmée).
+ */
+export const BREAKING_NEWS_WINDOW_HOURS = 24;
