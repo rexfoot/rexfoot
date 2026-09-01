@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Heart, Shield, Users, Trophy, type LucideIcon } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -11,8 +12,14 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { EmptyState } from "@/components/EmptyState";
 import { PublicLogoutButton } from "@/components/PublicLogoutButton";
 import { PublicProfileToggle } from "@/components/PublicProfileToggle";
+import { buildAlternates } from "@/lib/seo/alternates";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const [t, locale] = await Promise.all([getTranslations("account"), getLocale()]);
+  return { title: t("myFavorites"), alternates: buildAlternates("/account", locale) };
+}
 
 export default async function AccountPage() {
   const t = await getTranslations("account");
