@@ -11,6 +11,12 @@ const envSchema = z.object({
   CLOUDFLARE_ACCOUNT_ID: z.string().optional().default(""),
   CLOUDFLARE_STREAM_API_TOKEN: z.string().optional().default(""),
 
+  // Fournisseurs IA (RexFoot AI) — tous optionnels, essayés dans cet ordre
+  // (voir @rexfoot/ai-provider) ; aucun configuré = fonctionnalités IA désactivées.
+  GEMINI_API_KEY: z.string().optional().default(""),
+  GROQ_API_KEY: z.string().optional().default(""),
+  OPENROUTER_API_KEY: z.string().optional().default(""),
+
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),

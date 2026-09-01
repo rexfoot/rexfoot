@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@rexfoot/ai-provider": "*",
     "@rexfoot/config": "*",
     "@rexfoot/db": "*",
     "@rexfoot/football-provider": "*",

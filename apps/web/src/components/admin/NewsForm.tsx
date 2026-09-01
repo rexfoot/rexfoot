@@ -3,7 +3,7 @@
 import { useRef, useState, type ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Sparkles } from "lucide-react";
 import type { NewsCategory, BreakingPriority } from "@rexfoot/db";
 import { AdminInput, AdminTextarea, AdminSelect, AdminButton, Banner, FieldGroup } from "@/components/admin/ui";
 import { NEWS_CATEGORY_VALUES, NEWS_CATEGORY_LABELS } from "@/lib/news-categories";
@@ -30,10 +30,44 @@ interface NewsFormProps {
 export function NewsForm({ mode, articleId, initial }: NewsFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const titleRef = useRef<HTMLInputElement>(null);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+  const summaryRef = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<SaveStatus | null>(null);
   const [preview, setPreview] = useState<string | null>(initial?.coverImageUrl ?? null);
   const [isBreaking, setIsBreaking] = useState(initial?.isBreaking ?? false);
+  const [aiPending, setAiPending] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  async function handleGenerateSummary() {
+    const title = titleRef.current?.value.trim();
+    const content = contentRef.current?.value.trim();
+    if (!title || !content) {
+      setAiError("Remplis le titre et le contenu avant de générer un résumé.");
+      return;
+    }
+
+    setAiPending(true);
+    setAiError(null);
+
+    const response = await fetch("/api/admin/news/ai-summary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title, content }),
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      setAiError(body?.error ?? "Échec de la génération, réessaie.");
+      setAiPending(false);
+      return;
+    }
+
+    const { summary } = (await response.json()) as { summary: string };
+    if (summaryRef.current) summaryRef.current.value = summary;
+    setAiPending(false);
+  }
 
   function handleImageChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -69,6 +103,7 @@ export function NewsForm({ mode, articleId, initial }: NewsFormProps) {
         <AdminInput
           id="title"
           name="title"
+          ref={titleRef}
           defaultValue={initial?.title}
           required
           placeholder="Ex. Le PSG s'impose 3-1 face à Marseille"
@@ -90,7 +125,24 @@ export function NewsForm({ mode, articleId, initial }: NewsFormProps) {
         htmlFor="summary"
         hint="Une ou deux phrases, affichées sous le titre dans les listes."
       >
-        <AdminTextarea id="summary" name="summary" defaultValue={initial?.summary} rows={2} placeholder="Résumé court" />
+        <AdminTextarea
+          id="summary"
+          name="summary"
+          ref={summaryRef}
+          defaultValue={initial?.summary}
+          rows={2}
+          placeholder="Résumé court"
+        />
+        <button
+          type="button"
+          onClick={handleGenerateSummary}
+          disabled={aiPending}
+          className="mt-2 inline-flex items-center gap-1.5 text-sm font-semibold text-rf-gold transition-colors hover:text-rf-gold-soft disabled:opacity-50"
+        >
+          <Sparkles size={15} />
+          {aiPending ? "Génération…" : "Générer avec l'IA"}
+        </button>
+        {aiError && <p className="mt-1 text-xs text-rf-live">{aiError}</p>}
       </FieldGroup>
 
       <div className="rounded-xl border border-rf-border bg-rf-bg-elevated p-4">
@@ -141,6 +193,7 @@ export function NewsForm({ mode, articleId, initial }: NewsFormProps) {
         <AdminTextarea
           id="content"
           name="content"
+          ref={contentRef}
           defaultValue={initial?.content}
           rows={14}
           required
