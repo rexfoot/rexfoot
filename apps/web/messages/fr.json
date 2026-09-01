@@ -6,6 +6,17 @@
     "label": "BREAKING",
     "dismiss": "Fermer"
   },
+  "search": {
+    "open": "Rechercher",
+    "placeholder": "Rechercher un article, un joueur, un club…",
+    "articles": "Actualités",
+    "videos": "Vidéos",
+    "teams": "Clubs",
+    "players": "Joueurs",
+    "competitions": "Compétitions",
+    "minChars": "Tape au moins 2 caractères",
+    "noResults": "Aucun résultat pour « {query} »"
+  },
   "nav": {
     "home": "Accueil",
     "matches": "Matchs",

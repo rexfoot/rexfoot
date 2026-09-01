@@ -6,6 +6,17 @@
     "label": "عاجل",
     "dismiss": "إغلاق"
   },
+  "search": {
+    "open": "بحث",
+    "placeholder": "ابحث عن خبر أو لاعب أو نادٍ…",
+    "articles": "الأخبار",
+    "videos": "الفيديوهات",
+    "teams": "الأندية",
+    "players": "اللاعبون",
+    "competitions": "البطولات",
+    "minChars": "اكتب حرفين على الأقل",
+    "noResults": "لا توجد نتائج لـ «{query}»"
+  },
   "nav": {
     "home": "الرئيسية",
     "matches": "المباريات",

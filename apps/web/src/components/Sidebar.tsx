@@ -6,6 +6,7 @@ import { NAV_ITEMS } from "@/lib/nav";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { AccountMenuButton } from "@/components/AccountMenuButton";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SearchOverlay } from "@/components/SearchOverlay";
 import type { CurrentUser } from "@/lib/auth/current-user";
 import { cn } from "@/lib/cn";
 
@@ -23,6 +24,8 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
       >
         R
       </Link>
+
+      <SearchOverlay className="mb-4" />
 
       <nav className="flex flex-1 flex-col items-center gap-2" aria-label="Navigation principale">
         {NAV_ITEMS.map((item) => {

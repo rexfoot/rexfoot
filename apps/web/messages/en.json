@@ -6,6 +6,17 @@
     "label": "BREAKING",
     "dismiss": "Dismiss"
   },
+  "search": {
+    "open": "Search",
+    "placeholder": "Search for an article, a player, a club…",
+    "articles": "News",
+    "videos": "Videos",
+    "teams": "Clubs",
+    "players": "Players",
+    "competitions": "Competitions",
+    "minChars": "Type at least 2 characters",
+    "noResults": "No results for \"{query}\""
+  },
   "nav": {
     "home": "Home",
     "matches": "Matches",
