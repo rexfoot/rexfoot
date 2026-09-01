@@ -12,6 +12,7 @@ import { MatchCard } from "@/components/MatchCard";
 import { EmptyState } from "@/components/EmptyState";
 import { SectionHeader } from "@/components/SectionHeader";
 import { FormBadge } from "@/components/FormBadge";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 export const revalidate = 3600;
 
@@ -54,8 +55,9 @@ export default async function CompetitionPage({ params }: PageProps) {
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-3">
         <CompetitionBadge logoUrl={competition.logoUrl} name={competition.name} className="text-base" />
+        <FavoriteButton entityType="COMPETITION" entityId={competition.id} />
       </div>
       <h1 className="font-display text-2xl font-bold text-rf-fg">{competition.name}</h1>
 

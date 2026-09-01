@@ -1,14 +1,15 @@
 import { randomBytes } from "node:crypto";
 import { getRedis } from "@/lib/redis";
 
-export const SESSION_COOKIE_NAME = "rf_admin_session";
+export const ADMIN_SESSION_COOKIE_NAME = "rf_admin_session";
+export const PUBLIC_SESSION_COOKIE_NAME = "rf_session";
 const SESSION_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 jours
 
 function sessionKey(token: string): string {
-  return `admin-session:${token}`;
+  return `session:${token}`;
 }
 
-/** Crée une session admin (stockée dans Redis, jamais côté client) et renvoie le token à mettre en cookie. */
+/** Crée une session (stockée dans Redis, jamais côté client) et renvoie le token à mettre en cookie. */
 export async function createSession(userId: string): Promise<string> {
   const token = randomBytes(32).toString("hex");
   await getRedis().set(sessionKey(token), userId, "EX", SESSION_TTL_SECONDS);

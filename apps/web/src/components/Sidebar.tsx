@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { NAV_ITEMS } from "@/lib/nav";
 import { NAV_ICONS } from "@/components/nav-icons";
+import { AccountMenuButton } from "@/components/AccountMenuButton";
+import type { CurrentUser } from "@/lib/auth/current-user";
 import { cn } from "@/lib/cn";
 
 /** Rail d'icônes fixe — nav principale desktop, remplace le header texte dès `md`. */
-export function Sidebar() {
+export function Sidebar({ user }: { user: CurrentUser | null }) {
   const pathname = usePathname();
 
   return (
@@ -41,6 +43,8 @@ export function Sidebar() {
           );
         })}
       </nav>
+
+      <AccountMenuButton user={user} />
     </aside>
   );
 }

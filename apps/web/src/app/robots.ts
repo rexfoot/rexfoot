@@ -4,7 +4,7 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rexfoot.com";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/admin"] },
+    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/admin", "/account"] },
     sitemap: `${siteUrl}/sitemap.xml`,
   };
 }

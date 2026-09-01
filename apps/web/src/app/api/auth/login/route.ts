@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@rexfoot/db";
 import { enforceRateLimit, apiError } from "@/lib/api-response";
 import { verifyPassword } from "@/lib/auth/password";
-import { createSession, ADMIN_SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "@/lib/auth/session";
+import { createSession, PUBLIC_SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "@/lib/auth/session";
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -11,7 +11,7 @@ const bodySchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const rateLimitResponse = await enforceRateLimit(request, "api:admin-login");
+  const rateLimitResponse = await enforceRateLimit(request, "api:login");
   if (rateLimitResponse) return rateLimitResponse;
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));
@@ -22,17 +22,14 @@ export async function POST(request: Request) {
 
   const invalidCredentials = () => apiError(401, "Email ou mot de passe incorrect.");
 
-  if (!user || !user.passwordHash || user.role !== "ADMIN" || user.status !== "ACTIVE") {
-    return invalidCredentials();
-  }
+  if (!user || !user.passwordHash || user.status !== "ACTIVE") return invalidCredentials();
 
   const valid = await verifyPassword(password, user.passwordHash);
   if (!valid) return invalidCredentials();
 
   const token = await createSession(user.id);
-
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(ADMIN_SESSION_COOKIE_NAME, token, {
+  response.cookies.set(PUBLIC_SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",

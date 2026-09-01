@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { prisma } from "@rexfoot/db";
-import { SESSION_COOKIE_NAME, getSessionUserId } from "./session";
+import { ADMIN_SESSION_COOKIE_NAME, getSessionUserId } from "./session";
 
 export interface CurrentAdmin {
   id: string;
@@ -10,7 +10,7 @@ export interface CurrentAdmin {
 
 /** À utiliser dans les Server Components (layout/page) protégés — lit le cookie via `next/headers`. */
 export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
-  const token = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
+  const token = (await cookies()).get(ADMIN_SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
   return resolveAdmin(token);
 }
@@ -18,7 +18,7 @@ export async function getCurrentAdmin(): Promise<CurrentAdmin | null> {
 /** À utiliser dans les Route Handlers `/api/admin/*` — lit le cookie via l'objet `Request`. */
 export async function getCurrentAdminFromRequest(request: Request): Promise<CurrentAdmin | null> {
   const cookieHeader = request.headers.get("cookie") ?? "";
-  const match = cookieHeader.match(new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`));
+  const match = cookieHeader.match(new RegExp(`${ADMIN_SESSION_COOKIE_NAME}=([^;]+)`));
   const token = match?.[1];
   if (!token) return null;
   return resolveAdmin(token);

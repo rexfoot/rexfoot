@@ -1,8 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Outfit } from "next/font/google";
 import { SITE_NAME, SITE_TAGLINE } from "@rexfoot/config";
-import { BottomNav } from "@/components/BottomNav";
-import { Sidebar } from "@/components/Sidebar";
 import "./globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -39,14 +37,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="fr" className={`${inter.variable} ${outfit.variable} h-full antialiased`}>
-      <body className="min-h-full">
-        <div className="flex min-h-screen flex-col md:flex-row">
-          <Sidebar />
-          <main className="min-w-0 flex-1">{children}</main>
-        </div>
-        <BottomNav />
-        <div className="rf-mobile-nav-spacer" aria-hidden />
-      </body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

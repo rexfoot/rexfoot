@@ -7,6 +7,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { MatchCard } from "@/components/MatchCard";
 import { EmptyState } from "@/components/EmptyState";
 import { SectionHeader } from "@/components/SectionHeader";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 export const revalidate = 3600;
 
@@ -43,12 +44,15 @@ export default async function TeamPage({ params }: PageProps) {
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="flex items-center gap-4">
-        <TeamCrest crestUrl={team.crestUrl} teamName={team.name} size="lg" />
-        <div>
-          <h1 className="font-display text-2xl font-bold text-rf-fg">{team.name}</h1>
-          {team.venueName && <p className="text-sm text-rf-fg-muted">{team.venueName}</p>}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <TeamCrest crestUrl={team.crestUrl} teamName={team.name} size="lg" />
+          <div>
+            <h1 className="font-display text-2xl font-bold text-rf-fg">{team.name}</h1>
+            {team.venueName && <p className="text-sm text-rf-fg-muted">{team.venueName}</p>}
+          </div>
         </div>
+        <FavoriteButton entityType="TEAM" entityId={team.id} />
       </div>
 
       <section>

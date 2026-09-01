@@ -5,6 +5,7 @@ import { getPlayerBySlug } from "@/lib/data/players";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { EmptyState } from "@/components/EmptyState";
 import { SectionHeader } from "@/components/SectionHeader";
+import { FavoriteButton } from "@/components/FavoriteButton";
 
 export const revalidate = 3600;
 
@@ -48,16 +49,19 @@ export default async function PlayerPage({ params }: PageProps) {
     <div className="mx-auto max-w-3xl space-y-8 px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
 
-      <div className="flex items-center gap-4">
-        <PlayerAvatar photoUrl={player.photoUrl} displayName={player.displayName} size="lg" />
-        <div>
-          <h1 className="font-display text-2xl font-bold text-rf-fg">{player.displayName}</h1>
-          <p className="text-sm text-rf-fg-muted">
-            {player.position ? POSITION_LABEL[player.position] : "Poste inconnu"}
-            {currentTeam && ` · ${currentTeam.name}`}
-            {player.nationality && ` · ${player.nationality}`}
-          </p>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <PlayerAvatar photoUrl={player.photoUrl} displayName={player.displayName} size="lg" />
+          <div>
+            <h1 className="font-display text-2xl font-bold text-rf-fg">{player.displayName}</h1>
+            <p className="text-sm text-rf-fg-muted">
+              {player.position ? POSITION_LABEL[player.position] : "Poste inconnu"}
+              {currentTeam && ` · ${currentTeam.name}`}
+              {player.nationality && ` · ${player.nationality}`}
+            </p>
+          </div>
         </div>
+        <FavoriteButton entityType="PLAYER" entityId={player.id} />
       </div>
 
       <section>
