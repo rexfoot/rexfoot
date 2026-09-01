@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
+import { ChatWidget } from "@/components/ChatWidget";
 
 /**
  * Chrome du site public (sidebar desktop, bottom nav + header mobile) —
@@ -23,6 +24,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
       </div>
       <BottomNav />
       <div className="rf-mobile-nav-spacer" aria-hidden />
+      <ChatWidget />
     </>
   );
 }

@@ -207,6 +207,15 @@
     "facebook": "Partager sur Facebook",
     "copyLink": "Copier le lien"
   },
+  "chat": {
+    "open": "Assistant RexFoot",
+    "title": "Assistant RexFoot",
+    "welcome": "Pose-moi une question sur les matchs du jour, les dernières actus ou le mercato — je réponds uniquement à partir des données réelles de RexFoot.",
+    "placeholder": "Écris ton message…",
+    "send": "Envoyer",
+    "thinking": "L'assistant réfléchit…",
+    "error": "Impossible de répondre pour l'instant, réessaie."
+  },
   "home": {
     "featured": "À la une",
     "newsTitle": "Actualités",
