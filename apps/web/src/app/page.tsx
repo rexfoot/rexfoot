@@ -1,54 +1,43 @@
+import { Suspense } from "react";
 import { TrendingUp } from "lucide-react";
-import { getMatchesOfTheDay } from "@/lib/data/matches";
-import { getPublishedVideos } from "@/lib/data/videos";
-import { getPublishedNews } from "@/lib/data/news";
 import { SectionHeader } from "@/components/SectionHeader";
-import { VideoRail } from "@/components/VideoRail";
-import { MatchesListClient } from "@/components/MatchesListClient";
 import { EmptyState } from "@/components/EmptyState";
-import { NewsCard } from "@/components/NewsCard";
+import { NewsSection } from "@/components/home/NewsSection";
+import { MatchesSection } from "@/components/home/MatchesSection";
+import { VideoSection } from "@/components/home/VideoSection";
+import { NewsSectionSkeleton, MatchesSkeleton, VideoRailSkeleton } from "@/components/home/HomeSkeletons";
 
 // Dynamique plutôt que statique/ISR : Railway n'injecte DATABASE_URL qu'au
 // runtime du conteneur, pas pendant `docker build` — un prerendering statique
 // ferait planter le build faute de connexion DB disponible à ce stade.
 export const dynamic = "force-dynamic";
 
-export default async function HomePage() {
-  const todayIso = new Date().toISOString();
-  const [matches, videos, news] = await Promise.all([
-    getMatchesOfTheDay(),
-    getPublishedVideos(10),
-    getPublishedNews(6),
-  ]);
-
+// Chaque section a son propre composant serveur async + limite <Suspense> :
+// la page streame dès que le shell est prêt, et chaque bloc affiche son
+// skeleton animé (jamais de texte "chargement…") jusqu'à ce que sa requête
+// Prisma résolve, indépendamment des autres sections.
+export default function HomePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-6">
       <section>
+        <SectionHeader title="Actualités" href="/news" />
+        <Suspense fallback={<NewsSectionSkeleton />}>
+          <NewsSection />
+        </Suspense>
+      </section>
+
+      <section>
         <SectionHeader title="🔥 RexFoot Video" href="/video" />
-        <VideoRail videos={videos} />
+        <Suspense fallback={<VideoRailSkeleton />}>
+          <VideoSection />
+        </Suspense>
       </section>
 
       <section>
         <SectionHeader title="Matchs du jour" href="/matches" />
-        <MatchesListClient
-          apiUrl={`/api/matches?date=${encodeURIComponent(todayIso)}`}
-          initialMatches={matches}
-          emptyTitle="Aucun match aujourd'hui"
-          emptyDescription="Reviens plus tard, ou consulte le calendrier complet des compétitions."
-        />
-      </section>
-
-      <section>
-        <SectionHeader title="Actualités" href="/news" />
-        {news.length === 0 ? (
-          <EmptyState icon={TrendingUp} title="Pas encore d'actualités publiées" />
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {news.map((article) => (
-              <NewsCard key={article.id} article={article} />
-            ))}
-          </div>
-        )}
+        <Suspense fallback={<MatchesSkeleton />}>
+          <MatchesSection />
+        </Suspense>
       </section>
 
       <section>

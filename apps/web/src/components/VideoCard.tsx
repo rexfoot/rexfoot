@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { PlayCircle, Loader2 } from "lucide-react";
+import { PlayCircle, Play, Loader2 } from "lucide-react";
 import type { VideoSummary } from "@/lib/types";
 import { cn } from "@/lib/cn";
 
@@ -56,6 +56,14 @@ export function VideoCard({ video, className }: VideoCardProps) {
           <div className="absolute inset-0 flex items-center justify-center gap-1.5 bg-black/50 text-xs font-medium text-rf-fg">
             <Loader2 size={14} className="animate-spin" />
             En traitement
+          </div>
+        )}
+
+        {isReady && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/10 transition-colors group-hover:bg-black/30">
+            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/60 text-white ring-1 ring-white/30 transition-transform group-hover:scale-110">
+              <Play size={20} fill="currentColor" className="ml-0.5 text-white" />
+            </span>
           </div>
         )}
 

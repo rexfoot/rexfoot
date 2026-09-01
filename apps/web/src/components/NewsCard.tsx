@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Newspaper } from "lucide-react";
+import { formatArticleDate } from "@/lib/date";
 
 interface NewsCardProps {
   article: {
@@ -13,14 +14,22 @@ interface NewsCardProps {
 }
 
 export function NewsCard({ article }: NewsCardProps) {
+  const date = formatArticleDate(article.publishedAt);
+
   return (
     <Link
       href={`/news/${article.slug}`}
-      className="block overflow-hidden rounded-2xl border border-rf-border bg-rf-bg-card transition-colors hover:border-rf-gold/40"
+      className="group block overflow-hidden rounded-2xl border border-rf-border bg-rf-bg-card transition-colors hover:border-rf-gold/40"
     >
-      <div className="relative aspect-video bg-rf-bg-elevated">
+      <div className="relative aspect-video overflow-hidden bg-rf-bg-elevated">
         {article.coverImageUrl ? (
-          <Image src={article.coverImageUrl} alt={article.title} fill unoptimized className="object-cover" />
+          <Image
+            src={article.coverImageUrl}
+            alt={article.title}
+            fill
+            unoptimized
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <Newspaper className="text-rf-fg-subtle" size={24} />
@@ -30,6 +39,7 @@ export function NewsCard({ article }: NewsCardProps) {
       <div className="p-4">
         <h3 className="line-clamp-2 font-medium text-rf-fg">{article.title}</h3>
         {article.summary && <p className="mt-1 line-clamp-2 text-sm text-rf-fg-muted">{article.summary}</p>}
+        {date && <p className="mt-2 text-xs font-medium text-rf-fg-subtle">{date}</p>}
       </div>
     </Link>
   );
