@@ -697,6 +697,8 @@ model User {
   avatarUrl    String?
   role         UserRole   @default(USER)
   status       UserStatus @default(ACTIVE)
+  /// Opt-in explicite : la page /u/[id] renvoie 404 tant que ce n'est pas activé depuis /account.
+  publicProfile Boolean   @default(false)
 
   articles         NewsArticle[]
   transfers        Transfer[]

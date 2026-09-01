@@ -153,7 +153,20 @@
     "clubs": "Clubs",
     "players": "Players",
     "competitions": "Competitions",
-    "logout": "Log out"
+    "logout": "Log out",
+    "privacy": "Privacy",
+    "publicProfileToggle": "Make my profile public",
+    "publicProfileHint": "A public profile shows your name, photo and favorites to anyone with the link — off by default.",
+    "viewPublicProfile": "View my public profile"
+  },
+  "profile": {
+    "metaTitle": "{name}'s profile",
+    "memberSince": "Member since {date}",
+    "favorites": "Favorites",
+    "noFavorites": "No favorites yet",
+    "clubs": "Clubs",
+    "players": "Players",
+    "competitions": "Competitions"
   },
   "trending": {
     "badge": "Trending now",

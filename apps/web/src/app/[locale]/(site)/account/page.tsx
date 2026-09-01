@@ -10,6 +10,7 @@ import { PlayerAvatar } from "@/components/PlayerAvatar";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { EmptyState } from "@/components/EmptyState";
 import { PublicLogoutButton } from "@/components/PublicLogoutButton";
+import { PublicProfileToggle } from "@/components/PublicProfileToggle";
 
 export const dynamic = "force-dynamic";
 
@@ -34,6 +35,11 @@ export default async function AccountPage() {
         </div>
         <PublicLogoutButton />
       </div>
+
+      <section>
+        <h2 className="mb-2 font-display text-lg font-bold text-rf-fg">{t("privacy")}</h2>
+        <PublicProfileToggle userId={user.id} initialValue={user.publicProfile} />
+      </section>
 
       <section className="space-y-5">
         <h2 className="font-display text-lg font-bold text-rf-fg">{t("myFavorites")}</h2>

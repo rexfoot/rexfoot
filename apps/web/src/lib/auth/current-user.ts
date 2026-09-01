@@ -7,6 +7,7 @@ export interface CurrentUser {
   email: string;
   displayName: string;
   avatarUrl: string | null;
+  publicProfile: boolean;
 }
 
 /** À utiliser dans les Server Components (layout/page) — compte public, distinct de getCurrentAdmin(). */
@@ -32,5 +33,11 @@ async function resolveUser(token: string): Promise<CurrentUser | null> {
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user || user.status !== "ACTIVE") return null;
 
-  return { id: user.id, email: user.email, displayName: user.displayName, avatarUrl: user.avatarUrl };
+  return {
+    id: user.id,
+    email: user.email,
+    displayName: user.displayName,
+    avatarUrl: user.avatarUrl,
+    publicProfile: user.publicProfile,
+  };
 }

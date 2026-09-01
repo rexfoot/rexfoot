@@ -153,7 +153,20 @@
     "clubs": "الأندية",
     "players": "اللاعبون",
     "competitions": "البطولات",
-    "logout": "تسجيل الخروج"
+    "logout": "تسجيل الخروج",
+    "privacy": "الخصوصية",
+    "publicProfileToggle": "جعل ملفي الشخصي عامًا",
+    "publicProfileHint": "الملف الشخصي العام يعرض اسمك وصورتك ومفضلاتك لأي شخص لديه الرابط — معطّل افتراضيًا.",
+    "viewPublicProfile": "عرض ملفي الشخصي العام"
+  },
+  "profile": {
+    "metaTitle": "الملف الشخصي لـ {name}",
+    "memberSince": "عضو منذ {date}",
+    "favorites": "المفضلة",
+    "noFavorites": "لا توجد مفضلات بعد",
+    "clubs": "الأندية",
+    "players": "اللاعبون",
+    "competitions": "البطولات"
   },
   "trending": {
     "badge": "الأكثر تداولاً الآن",

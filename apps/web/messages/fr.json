@@ -153,7 +153,20 @@
     "clubs": "Clubs",
     "players": "Joueurs",
     "competitions": "Compétitions",
-    "logout": "Déconnexion"
+    "logout": "Déconnexion",
+    "privacy": "Confidentialité",
+    "publicProfileToggle": "Rendre mon profil public",
+    "publicProfileHint": "Un profil public affiche ton nom, ta photo et tes favoris à toute personne ayant le lien — désactivé par défaut.",
+    "viewPublicProfile": "Voir mon profil public"
+  },
+  "profile": {
+    "metaTitle": "Profil de {name}",
+    "memberSince": "Membre depuis {date}",
+    "favorites": "Favoris",
+    "noFavorites": "Pas encore de favori",
+    "clubs": "Clubs",
+    "players": "Joueurs",
+    "competitions": "Compétitions"
   },
   "trending": {
     "badge": "En hausse maintenant",
