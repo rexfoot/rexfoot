@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Newspaper } from "lucide-react";
+import { Newspaper, BarChart3, ChevronRight } from "lucide-react";
 import { getPublishedNews } from "@/lib/data/news";
 import { NewsCard } from "@/components/NewsCard";
 import { EmptyState } from "@/components/EmptyState";
 import { buildAlternates } from "@/lib/seo/alternates";
+import { Link } from "@/i18n/navigation";
 
 // Dynamique : évite tout appel Prisma au moment du `docker build` — voir
 // page.tsx (accueil) pour le détail.
@@ -16,12 +17,25 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function NewsIndexPage() {
-  const t = await getTranslations("news");
-  const articles = await getPublishedNews(30);
+  const [t, tAnalysis, articles] = await Promise.all([
+    getTranslations("news"),
+    getTranslations("analysis"),
+    getPublishedNews(30),
+  ]);
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-4 py-6">
-      <h1 className="font-display text-2xl font-bold text-rf-fg">{t("title")}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-display text-2xl font-bold text-rf-fg">{t("title")}</h1>
+        <Link
+          href="/analysis"
+          className="inline-flex items-center gap-1.5 rounded-full border border-rf-gold/30 bg-rf-gold/10 px-3.5 py-1.5 text-sm font-semibold text-rf-gold transition-colors hover:bg-rf-gold/20"
+        >
+          <BarChart3 size={16} />
+          {tAnalysis("title")}
+          <ChevronRight size={14} />
+        </Link>
+      </div>
 
       {articles.length === 0 ? (
         <EmptyState icon={Newspaper} title={t("noArticles")} />

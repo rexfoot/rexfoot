@@ -85,6 +85,14 @@
     "metaDescription": "International football news: transfers, results, analysis and interviews.",
     "noArticles": "No articles published yet"
   },
+  "analysis": {
+    "title": "RexFoot Analysis",
+    "subtitle": "Tactical breakdowns and in-depth analysis, beyond the raw news.",
+    "metaDescription": "RexFoot's tactical breakdowns and football analysis: playing systems, stats, trends.",
+    "badge": "Analysis",
+    "noArticles": "No analysis published yet",
+    "noArticlesDescription": "RexFoot's tactical breakdowns and in-depth analysis will show up here soon."
+  },
   "mercato": {
     "title": "Transfers",
     "metaDescription": "All official football transfers and rumors, with their reliability level.",

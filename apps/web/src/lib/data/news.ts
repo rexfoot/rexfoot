@@ -14,6 +14,25 @@ export async function getPublishedNews(limit = PAGE_SIZE_DEFAULT) {
       publishedAt: true,
       isBreaking: true,
       breakingSince: true,
+      category: true,
+    },
+    take: limit,
+  });
+}
+
+/** RexFoot Analysis — sous-section éditoriale de l'actualité, filtrée sur NewsCategory.ANALYSES. */
+export async function getAnalysisArticles(limit = PAGE_SIZE_DEFAULT) {
+  return prisma.newsArticle.findMany({
+    where: { status: "PUBLISHED", publishedAt: { not: null }, category: "ANALYSES" },
+    orderBy: { publishedAt: "desc" },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      summary: true,
+      coverImageUrl: true,
+      publishedAt: true,
+      category: true,
     },
     take: limit,
   });

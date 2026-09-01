@@ -85,6 +85,14 @@
     "metaDescription": "L'actualité football internationale : transferts, résultats, analyses et interviews.",
     "noArticles": "Pas encore d'actualités publiées"
   },
+  "analysis": {
+    "title": "RexFoot Analysis",
+    "subtitle": "Décryptages tactiques et analyses de fond, au-delà de l'actualité brute.",
+    "metaDescription": "Analyses tactiques et décryptages football signés RexFoot : systèmes de jeu, statistiques, tendances.",
+    "badge": "Analyse",
+    "noArticles": "Pas encore d'analyse publiée",
+    "noArticlesDescription": "Les décryptages tactiques et analyses de fond RexFoot arriveront ici prochainement."
+  },
   "mercato": {
     "title": "Mercato",
     "metaDescription": "Toutes les rumeurs et transferts officiels du mercato football, avec leur niveau de fiabilité.",

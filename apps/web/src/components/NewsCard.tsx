@@ -2,10 +2,12 @@ import Image from "next/image";
 import { useLocale } from "next-intl";
 import { Link } from "@/i18n/navigation";
 import { Newspaper } from "lucide-react";
+import type { NewsCategory } from "@rexfoot/db";
 import { formatArticleDate } from "@/lib/date";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { isCurrentlyBreaking } from "@/lib/breaking";
 import { BreakingBadge } from "@/components/BreakingBadge";
+import { AnalysisBadge } from "@/components/AnalysisBadge";
 
 interface NewsCardProps {
   article: {
@@ -16,6 +18,7 @@ interface NewsCardProps {
     publishedAt: Date | null;
     isBreaking?: boolean;
     breakingSince?: Date | null;
+    category?: NewsCategory;
   };
 }
 
@@ -46,6 +49,7 @@ export function NewsCard({ article }: NewsCardProps) {
       </div>
       <div className="p-4">
         {breaking && <BreakingBadge className="mb-2" />}
+        {!breaking && article.category === "ANALYSES" && <AnalysisBadge className="mb-2" />}
         <h3 className="line-clamp-2 font-medium text-rf-fg">{article.title}</h3>
         {article.summary && <p className="mt-1 line-clamp-2 text-sm text-rf-fg-muted">{article.summary}</p>}
         {date && <p className="mt-2 text-xs font-medium text-rf-fg-subtle">{date}</p>}
