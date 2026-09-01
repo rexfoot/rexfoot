@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma, type NewsCategory, type BreakingPriority } from "@rexfoot/db";
-import { requireAdmin, apiError } from "@/lib/api-response";
+import { requirePermission, apiError } from "@/lib/api-response";
 import { storeImageAsset, deleteAssetFromUrl, AssetUploadError } from "@/lib/data/assets";
 import { NEWS_CATEGORY_VALUES } from "@/lib/news-categories";
 import { textToHtml } from "@/lib/text-to-html";
@@ -17,7 +17,7 @@ const fieldsSchema = z.object({
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, response } = await requireAdmin(request);
+  const { admin, response } = await requirePermission(request, "manageNews");
   if (!admin) return response;
 
   const { id } = await params;
@@ -79,7 +79,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, response } = await requireAdmin(request);
+  const { admin, response } = await requirePermission(request, "deleteNews");
   if (!admin) return response;
 
   const { id } = await params;

@@ -1,11 +1,14 @@
 import { cookies } from "next/headers";
 import { prisma } from "@rexfoot/db";
+import type { UserRole } from "@rexfoot/db";
 import { ADMIN_SESSION_COOKIE_NAME, getSessionUserId } from "./session";
+import { isAdminRole } from "./permissions";
 
 export interface CurrentAdmin {
   id: string;
   email: string;
   displayName: string;
+  role: UserRole;
 }
 
 /** À utiliser dans les Server Components (layout/page) protégés — lit le cookie via `next/headers`. */
@@ -29,7 +32,7 @@ async function resolveAdmin(token: string): Promise<CurrentAdmin | null> {
   if (!userId) return null;
 
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user || user.role !== "ADMIN" || user.status !== "ACTIVE") return null;
+  if (!user || !isAdminRole(user.role) || user.status !== "ACTIVE") return null;
 
-  return { id: user.id, email: user.email, displayName: user.displayName };
+  return { id: user.id, email: user.email, displayName: user.displayName, role: user.role };
 }

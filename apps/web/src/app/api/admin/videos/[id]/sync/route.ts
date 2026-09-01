@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@rexfoot/db";
 import { createVideoProvider, VideoProviderError } from "@rexfoot/video-provider";
-import { requireAdmin, apiError } from "@/lib/api-response";
+import { requirePermission, apiError } from "@/lib/api-response";
 
 /**
  * Interroge le fournisseur vidéo pour l'état de transcodage courant et met à
@@ -10,7 +10,7 @@ import { requireAdmin, apiError } from "@/lib/api-response";
  * restées bloquées en traitement.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, response } = await requireAdmin(request);
+  const { admin, response } = await requirePermission(request, "manageVideos");
   if (!admin) return response;
 
   const { id } = await params;

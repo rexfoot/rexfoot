@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@rexfoot/db";
 import { createVideoProvider } from "@rexfoot/video-provider";
-import { requireAdmin, apiError } from "@/lib/api-response";
+import { requirePermission, apiError } from "@/lib/api-response";
 
 const bodySchema = z.object({
   title: z.string().trim().min(3, "Le titre doit contenir au moins 3 caractères."),
@@ -10,7 +10,7 @@ const bodySchema = z.object({
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, response } = await requireAdmin(request);
+  const { admin, response } = await requirePermission(request, "manageVideos");
   if (!admin) return response;
 
   const { id } = await params;
@@ -31,7 +31,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, response } = await requireAdmin(request);
+  const { admin, response } = await requirePermission(request, "manageVideos");
   if (!admin) return response;
 
   const { id } = await params;

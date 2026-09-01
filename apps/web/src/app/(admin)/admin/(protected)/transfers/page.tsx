@@ -5,6 +5,7 @@ import { TRANSFER_STATUS_LABELS, TRANSFER_STATUS_STYLES } from "@/lib/transfer-s
 import { AdminButton, Banner } from "@/components/admin/ui";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { EmptyState } from "@/components/EmptyState";
+import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ interface PageProps {
 }
 
 export default async function AdminTransfersListPage({ searchParams }: PageProps) {
+  await requireAdminPagePermission("manageTransfers");
   const { saved, deleted } = await searchParams;
   const transfers = await getAllTransfersForAdmin();
 

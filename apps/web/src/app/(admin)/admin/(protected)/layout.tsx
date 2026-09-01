@@ -8,5 +8,9 @@ export default async function AdminProtectedLayout({ children }: { children: Rea
   const admin = await getCurrentAdmin();
   if (!admin) redirect("/admin/login");
 
-  return <AdminShell adminName={admin.displayName}>{children}</AdminShell>;
+  return (
+    <AdminShell adminName={admin.displayName} role={admin.role}>
+      {children}
+    </AdminShell>
+  );
 }

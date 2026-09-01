@@ -4,6 +4,7 @@ import { prisma } from "@rexfoot/db";
 import { enforceRateLimit, apiError } from "@/lib/api-response";
 import { verifyPassword } from "@/lib/auth/password";
 import { createSession, ADMIN_SESSION_COOKIE_NAME, SESSION_TTL_SECONDS } from "@/lib/auth/session";
+import { isAdminRole } from "@/lib/auth/permissions";
 
 const bodySchema = z.object({
   email: z.string().email(),
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
 
   const invalidCredentials = () => apiError(401, "Email ou mot de passe incorrect.");
 
-  if (!user || !user.passwordHash || user.role !== "ADMIN" || user.status !== "ACTIVE") {
+  if (!user || !user.passwordHash || !isAdminRole(user.role) || user.status !== "ACTIVE") {
     return invalidCredentials();
   }
 

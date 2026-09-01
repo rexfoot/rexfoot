@@ -7,6 +7,7 @@ import { AdminButton, Banner } from "@/components/admin/ui";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { SyncButton } from "@/components/admin/SyncButton";
 import { EmptyState } from "@/components/EmptyState";
+import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +24,7 @@ interface PageProps {
 }
 
 export default async function AdminVideosListPage({ searchParams }: PageProps) {
+  await requireAdminPagePermission("manageVideos");
   const { saved, deleted } = await searchParams;
   const videos = await getAllVideosForAdmin();
 

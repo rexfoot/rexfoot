@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma, type NewsCategory, type BreakingPriority } from "@rexfoot/db";
-import { requireAdmin, apiError } from "@/lib/api-response";
+import { requirePermission, apiError } from "@/lib/api-response";
 import { storeImageAsset, AssetUploadError } from "@/lib/data/assets";
 import { generateUniqueNewsSlug } from "@/lib/data/news-admin";
 import { NEWS_CATEGORY_VALUES } from "@/lib/news-categories";
@@ -18,7 +18,7 @@ const fieldsSchema = z.object({
 });
 
 export async function POST(request: Request) {
-  const { admin, response } = await requireAdmin(request);
+  const { admin, response } = await requirePermission(request, "manageNews");
   if (!admin) return response;
 
   const formData = await request.formData();

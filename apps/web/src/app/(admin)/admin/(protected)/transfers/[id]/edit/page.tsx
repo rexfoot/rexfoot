@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { getTransferByIdForAdmin } from "@/lib/data/transfers-admin";
 import { TransferForm } from "@/components/admin/TransferForm";
+import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,7 @@ interface PageProps {
 }
 
 export default async function AdminTransferEditPage({ params }: PageProps) {
+  await requireAdminPagePermission("manageTransfers");
   const { id } = await params;
   const transfer = await getTransferByIdForAdmin(id);
   if (!transfer) notFound();

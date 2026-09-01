@@ -3,7 +3,7 @@ import { z } from "zod";
 import { prisma } from "@rexfoot/db";
 import { getEnv } from "@rexfoot/config";
 import { createVideoProvider, VideoProviderError } from "@rexfoot/video-provider";
-import { requireAdmin, apiError } from "@/lib/api-response";
+import { requirePermission, apiError } from "@/lib/api-response";
 import { generateUniqueVideoSlug } from "@/lib/data/videos-admin";
 
 const bodySchema = z.object({
@@ -13,7 +13,7 @@ const bodySchema = z.object({
 
 /** Crée la fiche vidéo et renvoie l'URL d'upload direct Cloudflare Stream (le fichier ne passe pas par ce serveur). */
 export async function POST(request: Request) {
-  const { admin, response } = await requireAdmin(request);
+  const { admin, response } = await requirePermission(request, "manageVideos");
   if (!admin) return response;
 
   const parsed = bodySchema.safeParse(await request.json().catch(() => null));

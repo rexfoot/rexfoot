@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma, type TransferStatus } from "@rexfoot/db";
-import { requireAdmin, apiError } from "@/lib/api-response";
+import { requirePermission, apiError } from "@/lib/api-response";
 import { TRANSFER_STATUS_VALUES } from "@/lib/transfer-status";
 
 const bodySchema = z.object({
@@ -19,7 +19,7 @@ const bodySchema = z.object({
 });
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, response } = await requireAdmin(request);
+  const { admin, response } = await requirePermission(request, "manageTransfers");
   if (!admin) return response;
 
   const { id } = await params;
@@ -53,7 +53,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 }
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const { admin, response } = await requireAdmin(request);
+  const { admin, response } = await requirePermission(request, "manageTransfers");
   if (!admin) return response;
 
   const { id } = await params;

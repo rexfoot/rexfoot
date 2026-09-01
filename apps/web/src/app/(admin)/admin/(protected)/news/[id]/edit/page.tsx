@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getNewsArticleByIdForAdmin } from "@/lib/data/news-admin";
 import { htmlToText } from "@/lib/text-to-html";
 import { NewsForm } from "@/components/admin/NewsForm";
+import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,7 @@ interface PageProps {
 }
 
 export default async function AdminNewsEditPage({ params }: PageProps) {
+  await requireAdminPagePermission("manageNews");
   const { id } = await params;
   const article = await getNewsArticleByIdForAdmin(id);
   if (!article) notFound();

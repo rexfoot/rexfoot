@@ -8,6 +8,8 @@ import { AdminButton, Banner } from "@/components/admin/ui";
 import { DeleteButton } from "@/components/admin/DeleteButton";
 import { EmptyState } from "@/components/EmptyState";
 import { isCurrentlyBreaking } from "@/lib/breaking";
+import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
+import { can } from "@/lib/auth/permissions";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +25,8 @@ interface PageProps {
 }
 
 export default async function AdminNewsListPage({ searchParams }: PageProps) {
+  const admin = await requireAdminPagePermission("manageNews");
+  const canDelete = can(admin.role, "deleteNews");
   const { saved, deleted } = await searchParams;
   const articles = await getAllNewsForAdmin();
 
@@ -95,11 +99,13 @@ export default async function AdminNewsListPage({ searchParams }: PageProps) {
                 >
                   Modifier
                 </Link>
-                <DeleteButton
-                  endpoint={`/api/admin/news/${article.id}`}
-                  redirectTo="/admin/news?deleted=1"
-                  confirmMessage={`Supprimer définitivement « ${article.title} » ?`}
-                />
+                {canDelete && (
+                  <DeleteButton
+                    endpoint={`/api/admin/news/${article.id}`}
+                    redirectTo="/admin/news?deleted=1"
+                    confirmMessage={`Supprimer définitivement « ${article.title} » ?`}
+                  />
+                )}
               </div>
             </div>
           ))}

@@ -3,25 +3,38 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Newspaper, ArrowLeftRight, Film, UserCog } from "lucide-react";
+import { LayoutDashboard, Newspaper, ArrowLeftRight, Film, Users, UserCog } from "lucide-react";
+import type { UserRole } from "@rexfoot/db";
+import { can } from "@/lib/auth/permissions";
 import { LogoutButton } from "./LogoutButton";
 import { cn } from "@/lib/cn";
 
-const NAV_ITEMS = [
+interface NavEntry {
+  label: string;
+  href: string;
+  icon: typeof LayoutDashboard;
+  /** Omis = visible pour tous les rôles admin. */
+  requires?: "manageNews" | "manageTransfers" | "manageVideos" | "manageUsers";
+}
+
+const NAV_ITEMS: NavEntry[] = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
-  { label: "Actualités", href: "/admin/news", icon: Newspaper },
-  { label: "Mercato", href: "/admin/transfers", icon: ArrowLeftRight },
-  { label: "Vidéos", href: "/admin/videos", icon: Film },
+  { label: "Actualités", href: "/admin/news", icon: Newspaper, requires: "manageNews" },
+  { label: "Mercato", href: "/admin/transfers", icon: ArrowLeftRight, requires: "manageTransfers" },
+  { label: "Vidéos", href: "/admin/videos", icon: Film, requires: "manageVideos" },
+  { label: "Utilisateurs", href: "/admin/users", icon: Users, requires: "manageUsers" },
   { label: "Mon compte", href: "/admin/account", icon: UserCog },
 ];
 
 interface AdminShellProps {
   adminName: string;
+  role: UserRole;
   children: ReactNode;
 }
 
-export function AdminShell({ adminName, children }: AdminShellProps) {
+export function AdminShell({ adminName, role, children }: AdminShellProps) {
   const pathname = usePathname();
+  const visibleItems = NAV_ITEMS.filter((item) => !item.requires || can(role, item.requires));
 
   return (
     <div className="min-h-screen bg-rf-bg">
@@ -38,7 +51,7 @@ export function AdminShell({ adminName, children }: AdminShellProps) {
           </div>
         </div>
         <nav className="mx-auto flex max-w-5xl gap-1 overflow-x-auto px-4 pb-2 sm:px-6" aria-label="Navigation admin">
-          {NAV_ITEMS.map((item) => {
+          {visibleItems.map((item) => {
             const isActive = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
             const Icon = item.icon;
             return (

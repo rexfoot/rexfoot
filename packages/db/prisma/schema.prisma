@@ -129,10 +129,14 @@ enum VideoReportStatus {
   ACTIONED
 }
 
+/// ADMIN = "Super Admin" dans l'UI — la valeur d'enum reste ADMIN pour ne pas
+/// invalider le compte admin existant (voir packages/db/prisma/create-admin.ts).
 enum UserRole {
   USER
+  JOURNALIST
   EDITOR
   MODERATOR
+  ANALYST
   ADMIN
 }
 
