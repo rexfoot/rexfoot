@@ -147,6 +147,13 @@
     "competitions": "Compétitions",
     "logout": "Déconnexion"
   },
+  "trending": {
+    "badge": "En hausse maintenant",
+    "topArticle": "Article le plus lu",
+    "topVideo": "Vidéo la plus regardée",
+    "topTeam": "Club le plus consulté",
+    "topPlayer": "Joueur le plus recherché"
+  },
   "search": {
     "open": "Rechercher",
     "placeholder": "Rechercher un article, un joueur, un club…",

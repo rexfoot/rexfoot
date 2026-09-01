@@ -82,6 +82,13 @@ enum BreakingPriority {
   URGENT
 }
 
+enum TrendingEntityType {
+  ARTICLE
+  VIDEO
+  TEAM
+  PLAYER
+}
+
 enum VideoStatus {
   UPLOADING
   PROCESSING
@@ -433,6 +440,20 @@ model MatchVote {
 
   @@unique([fixtureId, voterKey])
   @@index([fixtureId])
+}
+
+/// Log d'affichage anonyme pour calculer les tendances (section 19 du plan) —
+/// jamais de classement inventé : uniquement des vues réelles, comptées sur
+/// une fenêtre glissante côté requête (voir lib/data/trending.ts), et
+/// dédupliquées par visiteur côté API pour qu'un simple rafraîchissement de
+/// page ne fausse pas le classement.
+model PageView {
+  id         String             @id @default(cuid())
+  entityType TrendingEntityType
+  entityId   String
+  createdAt  DateTime           @default(now())
+
+  @@index([entityType, createdAt])
 }
 
 // ---------------------------------------------------------------------------

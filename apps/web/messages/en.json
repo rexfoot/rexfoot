@@ -147,6 +147,13 @@
     "competitions": "Competitions",
     "logout": "Log out"
   },
+  "trending": {
+    "badge": "Trending now",
+    "topArticle": "Most read article",
+    "topVideo": "Most watched video",
+    "topTeam": "Most viewed club",
+    "topPlayer": "Most searched player"
+  },
   "search": {
     "open": "Search",
     "placeholder": "Search for an article, a player, a club…",

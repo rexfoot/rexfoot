@@ -1,12 +1,16 @@
 import { Suspense } from "react";
 import { useTranslations } from "next-intl";
-import { TrendingUp } from "lucide-react";
 import { SectionHeader } from "@/components/SectionHeader";
-import { EmptyState } from "@/components/EmptyState";
 import { NewsSection } from "@/components/home/NewsSection";
 import { MatchesHeroSection } from "@/components/home/MatchesHeroSection";
 import { VideoSection } from "@/components/home/VideoSection";
-import { NewsSectionSkeleton, MatchesHeroSkeleton, VideoRailSkeleton } from "@/components/home/HomeSkeletons";
+import { TrendingSection } from "@/components/home/TrendingSection";
+import {
+  NewsSectionSkeleton,
+  MatchesHeroSkeleton,
+  VideoRailSkeleton,
+  TrendingSkeleton,
+} from "@/components/home/HomeSkeletons";
 
 // Dynamique plutôt que statique/ISR : Railway n'injecte DATABASE_URL qu'au
 // runtime du conteneur, pas pendant `docker build` — un prerendering statique
@@ -45,7 +49,9 @@ export default function HomePage() {
 
       <section>
         <SectionHeader title={t("trendingTitle")} />
-        <EmptyState icon={TrendingUp} title={t("trendingEmptyTitle")} description={t("trendingEmptyDescription")} />
+        <Suspense fallback={<TrendingSkeleton />}>
+          <TrendingSection />
+        </Suspense>
       </section>
     </div>
   );

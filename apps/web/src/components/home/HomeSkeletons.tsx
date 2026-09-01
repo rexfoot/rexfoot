@@ -92,3 +92,19 @@ export function MatchesHeroSkeleton() {
     </div>
   );
 }
+
+export function TrendingSkeleton() {
+  return (
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {Array.from({ length: 4 }).map((_, i) => (
+        <div key={i} className="flex items-center gap-3 rounded-2xl border border-rf-border bg-rf-bg-card p-3">
+          <Skeleton className="h-12 w-12 shrink-0 rounded-xl" />
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <Skeleton className="h-3 w-2/3" />
+            <Skeleton className="h-4 w-full" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}

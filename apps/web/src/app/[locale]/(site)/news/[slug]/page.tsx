@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getNewsArticleBySlug } from "@/lib/data/news";
 import { toIntlLocale } from "@/lib/intl-locale";
+import { TrackView } from "@/components/TrackView";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -37,6 +38,7 @@ export default async function NewsArticlePage({ params }: PageProps) {
   return (
     <article className="mx-auto max-w-2xl space-y-6 px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <TrackView entityType="ARTICLE" entityId={article.id} />
 
       {article.coverImageUrl && (
         <div className="relative aspect-video overflow-hidden rounded-2xl bg-rf-bg-card">

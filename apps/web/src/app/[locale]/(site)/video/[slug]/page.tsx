@@ -5,6 +5,7 @@ import { Loader2 } from "lucide-react";
 import { getRelatedVideos, getVideoBySlug } from "@/lib/data/videos";
 import { VideoCard } from "@/components/VideoCard";
 import { SectionHeader } from "@/components/SectionHeader";
+import { TrackView } from "@/components/TrackView";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -31,6 +32,7 @@ export default async function VideoDetailPage({ params }: PageProps) {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
+      <TrackView entityType="VIDEO" entityId={video.id} />
       <div className="overflow-hidden rounded-2xl bg-rf-bg-card">
         {video.playbackUrl ? (
           <iframe

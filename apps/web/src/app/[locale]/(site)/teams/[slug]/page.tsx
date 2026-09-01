@@ -10,6 +10,7 @@ import { MatchCard } from "@/components/MatchCard";
 import { EmptyState } from "@/components/EmptyState";
 import { SectionHeader } from "@/components/SectionHeader";
 import { FavoriteButton } from "@/components/FavoriteButton";
+import { TrackView } from "@/components/TrackView";
 
 export const revalidate = 3600;
 
@@ -46,6 +47,7 @@ export default async function TeamPage({ params }: PageProps) {
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <TrackView entityType="TEAM" entityId={team.id} />
 
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-4">
