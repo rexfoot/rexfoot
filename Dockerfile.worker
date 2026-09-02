@@ -44,4 +44,7 @@ COPY --from=build /app/packages ./packages
 COPY --from=build /app/apps/worker ./apps/worker
 
 WORKDIR /app/apps/worker
-CMD ["npm", "run", "start"]
+# Voir Dockerfile (apps/web) pour le détail : `migrate deploy` est idempotent
+# et sûr en concurrence, donc les deux services peuvent l'exécuter au démarrage
+# sans risque de course, même s'ils démarrent en même temps sur Railway.
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=/app/packages/db/prisma/schema.prisma && npm run start"]

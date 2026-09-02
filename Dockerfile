@@ -39,4 +39,9 @@ COPY --from=build /app/apps/web/next.config.ts ./apps/web/next.config.ts
 
 WORKDIR /app/apps/web
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+# `migrate deploy` applique les migrations en attente avant de démarrer —
+# sans ça, un déploiement de code qui suppose un nouveau schéma casse tant que
+# personne ne pense à lancer la migration à la main contre la base de prod.
+# Idempotent et sûr en concurrence (verrou au niveau base sur _prisma_migrations),
+# donc pas de souci à ce que web et worker l'exécutent tous les deux au démarrage.
+CMD ["sh", "-c", "npx prisma migrate deploy --schema=/app/packages/db/prisma/schema.prisma && npm run start"]
