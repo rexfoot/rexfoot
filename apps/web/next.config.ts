@@ -12,7 +12,9 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "img-src 'self' data: https:",
+      // blob: est nécessaire à l'aperçu d'image côté client dans les formulaires
+      // admin (URL.createObjectURL sur le fichier sélectionné, avant upload).
+      "img-src 'self' data: blob: https:",
       "media-src 'self' https:",
       "style-src 'self' 'unsafe-inline'",
       "script-src 'self' 'unsafe-inline'",
