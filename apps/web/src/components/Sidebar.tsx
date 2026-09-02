@@ -1,6 +1,6 @@
 "use client";
 
-import { CrownIcon } from "@/components/CrownIcon";
+import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { NAV_ITEMS } from "@/lib/nav";
@@ -21,11 +21,11 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
     <aside className="sticky top-0 z-40 hidden h-screen w-20 shrink-0 flex-col items-center border-e border-rf-border bg-rf-bg-elevated py-5 md:flex">
       <Link
         href="/"
-          className="mb-8 flex h-10 w-10 items-center justify-center rounded-xl font-display text-lg font-extrabold text-rf-bg"
+          className="relative mb-8 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl"
           style={{ background: "linear-gradient(135deg, var(--rf-gold) 50%, var(--rf-orange) 50%)" }}
                   aria-label="RexFoot — Accueil"
         >
-          <CrownIcon id="sidebar-logo" size={20} />
+          <Image src="/logo-crown.png" alt="RexFoot" fill sizes="40px" className="object-cover" />
       </Link>
 
       <SearchOverlay className="mb-4" />
