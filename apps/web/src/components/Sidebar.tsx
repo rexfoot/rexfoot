@@ -1,5 +1,6 @@
 "use client";
 
+import { CrownIcon } from "@/components/CrownIcon";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { NAV_ITEMS } from "@/lib/nav";
@@ -24,7 +25,7 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
           style={{ background: "linear-gradient(135deg, var(--rf-gold) 50%, var(--rf-orange) 50%)" }}
                   aria-label="RexFoot — Accueil"
         >
-        R
+          <CrownIcon id="sidebar-logo" size={20} />
       </Link>
 
       <SearchOverlay className="mb-4" />
