@@ -23,8 +23,7 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
       <Link
         href="/"
           className="relative mb-8 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full"
-          style={{ background: "linear-gradient(135deg, var(--rf-gold) 50%, var(--rf-orange) 50%)" }}
-                  aria-label="RexFoot — Accueil"
+          aria-label="RexFoot — Accueil"
         >
           <Image src="/logo-crown.png" alt="RexFoot" fill sizes="40px" className="object-cover" />
       </Link>
