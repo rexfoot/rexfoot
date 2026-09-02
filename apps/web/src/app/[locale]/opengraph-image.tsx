@@ -56,7 +56,7 @@ export default async function OpengraphImage({ params }: { params: Promise<{ loc
         }}
       >
         <div style={{ display: "flex", fontSize: 100, fontWeight: 700, letterSpacing: -2 }}>
-          <span style={{ color: "#d4af37" }}>Rex</span>
+          <span style={{ color: "#00e676" }}>Rex</span>
           <span style={{ color: "#f3f4f6" }}>Foot</span>
         </div>
         {tagline && <div style={{ marginTop: 28, fontSize: 34, color: "#9ca3af" }}>{tagline}</div>}

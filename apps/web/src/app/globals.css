@@ -2,9 +2,12 @@
 
 /*
  * RexFoot — design tokens. Dark-mode uniquement en v1 (pas de thème clair) :
- * fond charbon quasi-noir + accent or ("Roi du football") + rouge profond en
- * secondaire. Volontairement distinct des teintes teal/lime-sur-bleu de
- * SofaScore/Flashscore/OneFootball.
+ * fond charbon quasi-noir + accent vert vif + rouge profond en secondaire.
+ *
+ * Les tokens gardent le nom `rf-gold`/`rf-gold-soft` même si la couleur n'est
+ * plus dorée : des centaines de classes Tailwind (`text-rf-gold`, `bg-rf-gold`,
+ * etc.) référencent ce nom dans tout le site, donc changer uniquement la
+ * valeur ici met à jour la couleur partout sans avoir à renommer chaque usage.
  */
 :root {
   --rf-bg: #0a0b0d;
@@ -16,8 +19,9 @@
   --rf-fg-muted: #9ca3af;
   --rf-fg-subtle: #6b7280;
 
-  --rf-gold: #d4af37;
-  --rf-gold-soft: #e8c766;
+  /* Vert vif volontairement distinct de --rf-success (plus sourd, sémantique "réussite"). */
+  --rf-gold: #00e676;
+  --rf-gold-soft: #5cffaa;
   --rf-crimson: #9a1f2e;
 
   --rf-live: #ef4444;

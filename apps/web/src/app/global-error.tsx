@@ -9,7 +9,7 @@ export default function GlobalError({ reset }: { error: Error & { digest?: strin
           <p style={{ color: "#9ca3af", fontSize: "0.875rem" }}>RexFoot a rencontré un problème inattendu.</p>
           <button
             onClick={reset}
-            style={{ borderRadius: "9999px", background: "#d4af37", color: "#0a0b0d", padding: "0.5rem 1.25rem", fontWeight: 600, border: "none", cursor: "pointer" }}
+            style={{ borderRadius: "9999px", background: "#00e676", color: "#0a0b0d", padding: "0.5rem 1.25rem", fontWeight: 600, border: "none", cursor: "pointer" }}
           >
             Réessayer
           </button>
