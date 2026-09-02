@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { Sparkles, ExternalLink, Film } from "lucide-react";
+import { Sparkles, ExternalLink, Film, ImageIcon } from "lucide-react";
 import { getNewsArticleByIdForAdmin } from "@/lib/data/news-admin";
 import { htmlToText } from "@/lib/text-to-html";
 import { NewsForm } from "@/components/admin/NewsForm";
@@ -62,6 +62,26 @@ export default async function AdminNewsEditPage({ params }: PageProps) {
               <Film size={14} />
               Vidéo suggérée (à intégrer manuellement si pertinent)
             </a>
+          )}
+
+          {article.suggestedCoverImageUrl && (
+            <div className="space-y-1.5">
+              <a
+                href={article.suggestedCoverImageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-sm font-medium text-rf-fg hover:text-rf-gold hover:underline"
+              >
+                <ImageIcon size={14} />
+                Image suggérée (à reprendre manuellement dans le champ image de couverture si pertinent)
+              </a>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={article.suggestedCoverImageUrl}
+                alt=""
+                className="h-32 w-auto rounded-lg border border-rf-gold/20 object-cover"
+              />
+            </div>
           )}
         </div>
       )}

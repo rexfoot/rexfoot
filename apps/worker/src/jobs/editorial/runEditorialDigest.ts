@@ -67,6 +67,7 @@ export async function runEditorialDigest(): Promise<void> {
         status: "DRAFT",
         isAiDraft: true,
         suggestedVideoUrl: draft.suggestedVideoUrl,
+        suggestedCoverImageUrl: draft.suggestedCoverImageUrl,
         sources: {
           create: topic.items.map((item) => ({
             url: item.link,

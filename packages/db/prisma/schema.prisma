@@ -535,10 +535,12 @@ model NewsArticle {
   /// Agent éditorial autonome (apps/worker/src/jobs/editorial) : brouillon
   /// jamais publié automatiquement — voir isAiDraft pour le badge de revue
   /// admin, sources pour les liens consultés, suggestedVideoUrl pour un clip
-  /// officiel proposé (jamais auto-intégré) que l'admin peut reprendre à la main.
-  isAiDraft         Boolean         @default(false)
-  suggestedVideoUrl String?
-  sources           ArticleSource[]
+  /// officiel proposé et suggestedCoverImageUrl pour une image glanée dans le
+  /// flux RSS source (jamais auto-intégrés) que l'admin peut reprendre à la main.
+  isAiDraft              Boolean         @default(false)
+  suggestedVideoUrl      String?
+  suggestedCoverImageUrl String?
+  sources                ArticleSource[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

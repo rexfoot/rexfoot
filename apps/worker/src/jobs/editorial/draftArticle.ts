@@ -19,6 +19,7 @@ export interface ArticleDraft {
   content: string;
   category: NewsCategoryValue;
   suggestedVideoUrl: string | null;
+  suggestedCoverImageUrl: string | null;
 }
 
 const SYSTEM_PROMPT = `Tu es journaliste pour RexFoot, un média sportif francophone. On te donne une liste de titres et résumés courts glanés sur plusieurs sites d'actualité sportive — jamais le corps de leurs articles.
@@ -49,6 +50,18 @@ function extractSuggestedVideoUrl(topic: TopicCandidate): string | null {
   for (const item of topic.items) {
     const match = item.summary.match(YOUTUBE_URL_PATTERN) ?? item.link.match(YOUTUBE_URL_PATTERN);
     if (match) return match[0];
+  }
+  return null;
+}
+
+/**
+ * Best-effort, même logique que extractSuggestedVideoUrl : on prend la
+ * première image trouvée parmi les sources du sujet (voir extractImageUrl
+ * dans fetchFeeds.ts) — jamais d'image générée ou devinée.
+ */
+function extractSuggestedCoverImageUrl(topic: TopicCandidate): string | null {
+  for (const item of topic.items) {
+    if (item.imageUrl) return item.imageUrl;
   }
   return null;
 }
@@ -91,6 +104,7 @@ export async function draftArticle(topic: TopicCandidate): Promise<ArticleDraft 
       content: parsed.content,
       category: isValidCategory(parsed.category) ? parsed.category : "AUTRE",
       suggestedVideoUrl: extractSuggestedVideoUrl(topic),
+      suggestedCoverImageUrl: extractSuggestedCoverImageUrl(topic),
     };
   } catch (cause) {
     logger.warn({ topic: topic.title, cause }, "Agent éditorial : JSON invalide, sujet ignoré");

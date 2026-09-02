@@ -8,10 +8,11 @@ export interface FeedItem {
   summary: string;
   publisherName: string;
   publishedAt: Date | null;
+  imageUrl: string | null;
 }
 
 const FETCH_TIMEOUT_MS = 15_000;
-const parser = new XMLParser({ ignoreAttributes: true, trimValues: true });
+const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_", trimValues: true });
 
 function stripHtml(text: string): string {
   return text.replace(/<[^>]*>/g, "").trim();
@@ -20,6 +21,39 @@ function stripHtml(text: string): string {
 function toArray<T>(value: T | T[] | undefined): T[] {
   if (value === undefined) return [];
   return Array.isArray(value) ? value : [value];
+}
+
+/**
+ * Best-effort, comme extractSuggestedVideoUrl côté draftArticle : un flux RSS
+ * classique n'expose une image que via <enclosure>, le namespace Media RSS
+ * (media:content/media:thumbnail), ou parfois une <img> collée dans la
+ * description HTML. On tente les trois, dans cet ordre, et on renvoie `null`
+ * sans bruit si aucun ne donne rien — jamais d'image devinée ou générée ici.
+ */
+function extractImageUrl(item: Record<string, unknown>, rawDescription: string): string | null {
+  const enclosures = toArray(item.enclosure as { "@_url"?: string; "@_type"?: string } | Array<{ "@_url"?: string; "@_type"?: string }> | undefined);
+  for (const enclosure of enclosures) {
+    if (enclosure?.["@_url"] && (!enclosure["@_type"] || enclosure["@_type"].startsWith("image/"))) {
+      return enclosure["@_url"];
+    }
+  }
+
+  const mediaContents = toArray(
+    item["media:content"] as { "@_url"?: string; "@_medium"?: string } | Array<{ "@_url"?: string; "@_medium"?: string }> | undefined,
+  );
+  for (const media of mediaContents) {
+    if (media?.["@_url"] && (!media["@_medium"] || media["@_medium"] === "image")) {
+      return media["@_url"];
+    }
+  }
+
+  const thumbnails = toArray(item["media:thumbnail"] as { "@_url"?: string } | Array<{ "@_url"?: string }> | undefined);
+  if (thumbnails[0]?.["@_url"]) return thumbnails[0]["@_url"];
+
+  const imgMatch = rawDescription.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (imgMatch) return imgMatch[1] ?? null;
+
+  return null;
 }
 
 /**
@@ -71,6 +105,7 @@ async function fetchOneFeed(feed: { publisherName: string; url: string }): Promi
         summary: stripHtml(rawSummary).slice(0, 500),
         publisherName: feed.publisherName,
         publishedAt: pubDate && !Number.isNaN(pubDate.getTime()) ? pubDate : null,
+        imageUrl: extractImageUrl(item, rawSummary),
       };
     })
     .filter((item): item is FeedItem => item !== null);
