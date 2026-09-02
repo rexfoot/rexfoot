@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { Plus, Newspaper, AlertTriangle } from "lucide-react";
+import { Plus, Newspaper, AlertTriangle, Sparkles } from "lucide-react";
 import type { NewsStatus } from "@rexfoot/db";
 import { getAllNewsForAdmin } from "@/lib/data/news-admin";
 import { NEWS_CATEGORY_LABELS } from "@/lib/news-categories";
@@ -94,6 +94,15 @@ export default async function AdminNewsListPage({ searchParams }: PageProps) {
                     <span className="inline-flex items-center gap-1 rounded-full bg-rf-live/15 px-2 py-0.5 font-semibold text-rf-live">
                       <AlertTriangle size={11} />
                       Urgent
+                    </span>
+                  )}
+                  {article.isAiDraft && (
+                    <span
+                      className="inline-flex items-center gap-1 rounded-full bg-rf-gold/15 px-2 py-0.5 font-semibold text-rf-gold"
+                      title="Rédigé par l'agent éditorial IA — à vérifier avant publication"
+                    >
+                      <Sparkles size={11} />
+                      IA — à vérifier
                     </span>
                   )}
                 </div>

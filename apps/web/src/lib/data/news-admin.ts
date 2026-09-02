@@ -16,12 +16,16 @@ export async function getAllNewsForAdmin() {
       createdAt: true,
       isBreaking: true,
       breakingSince: true,
+      isAiDraft: true,
     },
   });
 }
 
 export async function getNewsArticleByIdForAdmin(id: string) {
-  return prisma.newsArticle.findUnique({ where: { id } });
+  return prisma.newsArticle.findUnique({
+    where: { id },
+    include: { sources: { orderBy: { retrievedAt: "asc" } } },
+  });
 }
 
 /** Ajoute un suffixe numérique si le slug dérivé du titre existe déjà. */

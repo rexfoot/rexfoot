@@ -9,10 +9,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@rexfoot/ai-provider": "*",
     "@rexfoot/config": "*",
     "@rexfoot/db": "*",
     "@rexfoot/football-provider": "*",
     "bullmq": "^5.34.4",
+    "fast-xml-parser": "^5.7.0",
     "ioredis": "^5.4.1",
     "pino": "^9.6.0"
   },

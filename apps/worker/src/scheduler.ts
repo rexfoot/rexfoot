@@ -9,6 +9,7 @@ export const JobName = {
   syncStandings: "sync-standings",
   syncPlayerStats: "sync-player-stats",
   syncRosters: "sync-rosters",
+  editorialDigest: "editorial-digest",
 } as const;
 
 // Calibré pour le plan gratuit API-Football (100 requêtes/jour, 7 compétitions
@@ -73,6 +74,13 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     JobName.syncRosters,
     {},
     { repeat: { every: 6 * 60 * 60 * 1000 }, jobId: JobName.syncRosters, ...DEFAULT_JOB_OPTS },
+  );
+  // Agent éditorial (apps/worker/src/jobs/editorial) : une fois par jour à 7h
+  // heure serveur — jamais de publication automatique, voir runEditorialDigest.
+  await queue.add(
+    JobName.editorialDigest,
+    {},
+    { repeat: { pattern: "0 7 * * *" }, jobId: JobName.editorialDigest, ...DEFAULT_JOB_OPTS },
   );
 
   await scheduleNextLiveScoresRun(queue, false);

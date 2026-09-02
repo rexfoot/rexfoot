@@ -42,3 +42,21 @@ export const LIVE_POLL_INTERVAL_MS = 15_000;
  * désactivé à la main (section 12 du plan : jamais d'alerte périmée).
  */
 export const BREAKING_NEWS_WINDOW_HOURS = 24;
+
+/**
+ * Flux RSS publics surveillés par l'agent éditorial (apps/worker/src/jobs/editorial)
+ * pour détecter des sujets — jamais pour en recopier le contenu : un flux RSS ne
+ * fournit que titre + résumé court + lien, jamais le corps de l'article. Foot
+ * Mercato (demandé par l'utilisateur) n'a pas de flux RSS public exploitable au
+ * moment de l'écriture (toutes les URLs testées redirigent vers une page d'erreur) —
+ * à réessayer plus tard si le site republie un flux valide.
+ */
+export const EDITORIAL_SOURCE_FEEDS = [
+  { publisherName: "L'Équipe", url: "https://dwh.lequipe.fr/api/edito/rss?path=/Football" },
+  { publisherName: "RMC Sport", url: "https://rmcsport.bfmtv.com/rss/football/" },
+  { publisherName: "BBC Sport", url: "https://feeds.bbci.co.uk/sport/football/rss.xml" },
+  { publisherName: "Sky Sports", url: "https://www.skysports.com/rss/12040" },
+  { publisherName: "Marca", url: "https://www.marca.com/rss/futbol.xml" },
+  { publisherName: "AS", url: "https://as.com/rss/futbol/portada.xml" },
+  { publisherName: "ESPN FC", url: "https://www.espn.com/espn/rss/soccer/news" },
+] as const;

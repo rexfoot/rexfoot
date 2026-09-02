@@ -1,5 +1,6 @@
 import { Worker, type Job } from "bullmq";
 import { getEnv, hasFootballApiKey } from "@rexfoot/config";
+import { hasAiProviderConfigured } from "@rexfoot/ai-provider";
 import { createBullMqConnection } from "./lib/redis.js";
 import { logger } from "./lib/logger.js";
 import { SYNC_QUEUE_NAME, JobName, createSyncQueue, registerScheduledJobs, scheduleNextLiveScoresRun } from "./scheduler.js";
@@ -8,6 +9,7 @@ import { syncLiveScores } from "./jobs/syncLiveScores.js";
 import { syncStandings } from "./jobs/syncStandings.js";
 import { syncPlayerStats } from "./jobs/syncPlayerStats.js";
 import { syncRosters } from "./jobs/syncRosters.js";
+import { runEditorialDigest } from "./jobs/editorial/runEditorialDigest.js";
 
 async function main(): Promise<void> {
   getEnv(); // valide les variables d'env dès le démarrage, échoue vite si mal configuré
@@ -16,6 +18,12 @@ async function main(): Promise<void> {
     logger.info(
       "RAPIDAPI_KEY non configurée — le worker démarre quand même, tous les jobs de " +
         "synchronisation seront no-op jusqu'à ce qu'une clé soit fournie via Railway.",
+    );
+  }
+  if (!hasAiProviderConfigured()) {
+    logger.info(
+      "Aucune clé IA configurée (GEMINI/GROQ/OPENROUTER) — l'agent éditorial démarre " +
+        "quand même mais restera no-op tant qu'une clé n'est pas fournie via Railway.",
     );
   }
 
@@ -33,6 +41,8 @@ async function main(): Promise<void> {
           return syncPlayerStats();
         case JobName.syncRosters:
           return syncRosters();
+        case JobName.editorialDigest:
+          return runEditorialDigest();
         case JobName.syncLiveScores: {
           const hadLiveMatches = await syncLiveScores();
           await scheduleNextLiveScoresRun(queue, hadLiveMatches);

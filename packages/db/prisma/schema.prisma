@@ -532,11 +532,44 @@ model NewsArticle {
   relatedPlayerId      String?
   relatedPlayer        Player?      @relation(fields: [relatedPlayerId], references: [id])
 
+  /// Agent éditorial autonome (apps/worker/src/jobs/editorial) : brouillon
+  /// jamais publié automatiquement — voir isAiDraft pour le badge de revue
+  /// admin, sources pour les liens consultés, suggestedVideoUrl pour un clip
+  /// officiel proposé (jamais auto-intégré) que l'admin peut reprendre à la main.
+  isAiDraft         Boolean         @default(false)
+  suggestedVideoUrl String?
+  sources           ArticleSource[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status, publishedAt])
   @@index([isBreaking, breakingSince])
+}
+
+/// Sources RSS consultées par l'agent éditorial pour un article donné —
+/// affichées en lecture seule dans l'admin pour que la relecture humaine
+/// puisse vérifier ce qui a été utilisé (jamais le corps des articles sources,
+/// seulement titre + lien : voir EDITORIAL_SOURCE_FEEDS).
+model ArticleSource {
+  id            String      @id @default(cuid())
+  articleId     String
+  article       NewsArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  url           String
+  title         String
+  publisherName String
+  retrievedAt   DateTime    @default(now())
+}
+
+/// Mémoire anti-doublon de l'agent éditorial : un sujet déjà rédigé (même lors
+/// d'un run précédent) n'est jamais rédigé une deuxième fois. `topicKey` est un
+/// titre normalisé (minuscules, sans accents) — comparaison volontairement simple.
+model CoveredTopic {
+  id          String   @id @default(cuid())
+  topicKey    String   @unique
+  articleId   String?
+  sourceUrls  String[]
+  firstSeenAt DateTime @default(now())
 }
 
 /// Fichier binaire uploadé depuis le panel admin (ex. image de couverture d'un
