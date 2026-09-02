@@ -30,13 +30,19 @@ export default function HomePage() {
     <div className="mx-auto max-w-6xl space-y-10 px-4 py-6">
       <Link
         href="/now"
-        className="flex items-center justify-between gap-3 rounded-2xl border border-rf-gold/30 bg-rf-gold/10 px-4 py-3.5 transition-colors hover:bg-rf-gold/15"
+        className="rf-now-pulse group relative flex items-center justify-between gap-3 overflow-hidden rounded-2xl border border-rf-orange/50 bg-gradient-to-r from-rf-orange/25 via-rf-orange/10 to-transparent px-4 py-4 transition-transform hover:scale-[1.01]"
       >
-        <span className="flex items-center gap-2.5 font-display text-base font-bold text-rf-gold">
-          <Zap size={19} />
-          {t("nowTitle")}
+        <span className="flex items-center gap-2.5">
+          <span className="relative flex h-2.5 w-2.5 shrink-0">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rf-orange opacity-75" />
+            <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rf-orange" />
+          </span>
+          <span className="flex items-center gap-2 font-display text-lg font-extrabold tracking-tight text-rf-orange">
+            <Zap size={20} className="shrink-0" fill="currentColor" />
+            {t("nowTitle")}
+          </span>
         </span>
-        <span className="flex items-center gap-1 text-sm font-medium text-rf-gold">
+        <span className="flex shrink-0 items-center gap-1 rounded-full bg-rf-orange px-3 py-1.5 text-sm font-bold text-rf-bg transition-transform group-hover:translate-x-0.5">
           {t("nowCta")}
           <ChevronRight size={16} className="rtl:rotate-180" />
         </span>
