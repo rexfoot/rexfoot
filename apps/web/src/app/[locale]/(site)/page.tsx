@@ -57,7 +57,7 @@ export default function HomePage() {
       </section>
 
       <section>
-        <SectionHeader title={`🔥 ${t("videoTitle")}`} href="/video" />
+        <SectionHeader title={t("videoTitle")} href="/video" />
         <Suspense fallback={<VideoRailSkeleton />}>
           <VideoSection />
         </Suspense>
