@@ -11,7 +11,7 @@ export function MobileHeader({ user }: { user: CurrentUser | null }) {
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-rf-border bg-rf-bg/95 px-4 py-2.5 backdrop-blur md:hidden">
       <Link href="/" className="flex items-center gap-1.5 font-display text-lg font-extrabold tracking-tight">
-          <Image src="/logo-crown.png" alt="RexFoot" width={22} height={22} className="rounded-md object-cover" />
+          <Image src="/logo-crown.png" alt="RexFoot" width={22} height={22} className="rounded-full object-cover" />
         <span className="text-rf-gold">Rex</span>
         <span className="text-rf-fg">Foot</span>
       </Link>
