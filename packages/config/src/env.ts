@@ -4,8 +4,16 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL est requis"),
   REDIS_URL: z.string().min(1, "REDIS_URL est requis"),
 
+  // API-Football (RapidAPI ou direct) — conservé en repli, mais
+  // FOOTBALL_DATA_ORG_API_KEY est préféré quand les deux sont configurées
+  // (voir createFootballProvider dans @rexfoot/football-provider).
   RAPIDAPI_KEY: z.string().optional().default(""),
   RAPIDAPI_HOST: z.string().default("v3.football.api-sports.io"),
+
+  // football-data.org — gratuit sans carte bancaire, limite 10 req/min (pas
+  // de plafond quotidien), 6 des 7 compétitions vedettes (pas d'Europa League
+  // sur le plan gratuit). Voir packages/football-provider/src/providers/footballDataOrg.ts.
+  FOOTBALL_DATA_ORG_API_KEY: z.string().optional().default(""),
 
   VIDEO_PROVIDER: z.enum(["stub", "cloudflare-stream"]).default("stub"),
   CLOUDFLARE_ACCOUNT_ID: z.string().optional().default(""),
@@ -51,6 +59,15 @@ export function getEnv(): Env {
 
 export function hasFootballApiKey(env: Env = getEnv()): boolean {
   return env.RAPIDAPI_KEY.trim().length > 0;
+}
+
+export function hasFootballDataOrgApiKey(env: Env = getEnv()): boolean {
+  return env.FOOTBALL_DATA_ORG_API_KEY.trim().length > 0;
+}
+
+/** Vrai si un fournisseur de données football (peu importe lequel) est configuré. */
+export function hasAnyFootballProviderKey(env: Env = getEnv()): boolean {
+  return hasFootballDataOrgApiKey(env) || hasFootballApiKey(env);
 }
 
 export function hasCloudflareStreamConfig(env: Env = getEnv()): boolean {

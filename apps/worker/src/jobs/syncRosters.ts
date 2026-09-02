@@ -1,5 +1,5 @@
 import { prisma } from "@rexfoot/db";
-import { hasFootballApiKey } from "@rexfoot/config";
+import { hasAnyFootballProviderKey } from "@rexfoot/config";
 import { createFootballProvider } from "@rexfoot/football-provider";
 import { upsertPlayer } from "../lib/upsert.js";
 import { logger } from "../lib/logger.js";
@@ -18,8 +18,8 @@ const MAX_TEAMS_PER_RUN = 12;
  * acceptée pour rester dans le plan gratuit API-Football).
  */
 export async function syncRosters(): Promise<void> {
-  if (!hasFootballApiKey()) {
-    logger.info("RAPIDAPI_KEY absent — syncRosters ignoré (aucune fausse donnée générée)");
+  if (!hasAnyFootballProviderKey()) {
+    logger.info("Aucune clé de fournisseur football — syncRosters ignoré (aucune fausse donnée générée)");
     return;
   }
 

@@ -1,17 +1,29 @@
 import { prisma, type Competition, type Player, type Season, type Team } from "@rexfoot/db";
-import type { CompetitionDTO, PlayerDTO, SeasonDTO, TeamDTO } from "@rexfoot/football-provider";
+import { getActiveProviderName, type CompetitionDTO, type PlayerDTO, type SeasonDTO, type TeamDTO } from "@rexfoot/football-provider";
 import { slugify } from "./slugify.js";
 
-const PROVIDER_NAME = "api-football";
+const PROVIDER_NAME = getActiveProviderName();
 
-export async function upsertCompetition(dto: CompetitionDTO): Promise<Competition> {
+/**
+ * `slugOverride` : le nom renvoyé par le fournisseur ne correspond pas
+ * toujours au slug attendu par le reste du site (ex. football-data.org
+ * nomme La Liga "Primera Division" → slugify donnerait "primera-division",
+ * pas "la-liga" — la compétition existe alors en base mais devient invisible
+ * partout où le site filtre par FEATURED_COMPETITION_SLUGS). Quand l'appelant
+ * connaît déjà le slug attendu (resolveFeaturedCompetitions), on le fige
+ * plutôt que de le dériver du nom. Inclus dans `update` aussi, pas seulement
+ * `create` : une compétition déjà mal sluggée (créée avant ce fix) se corrige
+ * au prochain sync plutôt que de rester cassée indéfiniment.
+ */
+export async function upsertCompetition(dto: CompetitionDTO, slugOverride?: string): Promise<Competition> {
+  const slug = slugOverride ?? slugify(dto.name);
   return prisma.competition.upsert({
     where: { provider_externalId: { provider: PROVIDER_NAME, externalId: dto.externalId } },
     create: {
       provider: PROVIDER_NAME,
       externalId: dto.externalId,
       name: dto.name,
-      slug: slugify(dto.name),
+      slug,
       type: dto.type,
       logoUrl: dto.logoUrl,
       countryName: dto.countryName,
@@ -19,6 +31,7 @@ export async function upsertCompetition(dto: CompetitionDTO): Promise<Competitio
     },
     update: {
       name: dto.name,
+      slug,
       type: dto.type,
       logoUrl: dto.logoUrl,
       countryName: dto.countryName,

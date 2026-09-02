@@ -1,9 +1,9 @@
 import { prisma } from "@rexfoot/db";
-import { hasFootballApiKey } from "@rexfoot/config";
-import { createFootballProvider, type FixtureEventDTO } from "@rexfoot/football-provider";
+import { hasAnyFootballProviderKey } from "@rexfoot/config";
+import { createFootballProvider, getActiveProviderName, type FixtureEventDTO } from "@rexfoot/football-provider";
 import { logger } from "../lib/logger.js";
 
-const PROVIDER_NAME = "api-football";
+const PROVIDER_NAME = getActiveProviderName();
 
 /**
  * Rafraîchit score/minute/statut des matchs actuellement en direct, et
@@ -13,8 +13,8 @@ const PROVIDER_NAME = "api-football";
  */
 /** Renvoie `true` si des matchs étaient en direct — pilote la cadence de replanification (voir scheduler.ts). */
 export async function syncLiveScores(): Promise<boolean> {
-  if (!hasFootballApiKey()) {
-    logger.info("RAPIDAPI_KEY absent — syncLiveScores ignoré (aucune fausse donnée générée)");
+  if (!hasAnyFootballProviderKey()) {
+    logger.info("Aucune clé de fournisseur football — syncLiveScores ignoré (aucune fausse donnée générée)");
     return false;
   }
 

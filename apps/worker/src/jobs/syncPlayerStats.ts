@@ -1,5 +1,5 @@
 import { prisma } from "@rexfoot/db";
-import { hasFootballApiKey } from "@rexfoot/config";
+import { hasAnyFootballProviderKey } from "@rexfoot/config";
 import { createFootballProvider } from "@rexfoot/football-provider";
 import { logger } from "../lib/logger.js";
 
@@ -10,12 +10,16 @@ const LOOKBACK_HOURS = 48;
  * (2 appels par match : domicile + extérieur). Volontairement limité à une
  * fenêtre glissante (dernières 48h). Les statistiques par joueur ne sont PAS
  * synchronisées ici : un appel getPlayerStatistics par membre d'effectif
- * exploserait le quota du plan gratuit API-Football (100 req/jour) — à
- * reconsidérer si le plan est mis à niveau.
+ * exploserait le quota d'un plan gratuit.
+ *
+ * Avec football-data.org (fournisseur actif par défaut), getTeamStatistics
+ * renvoie toujours `null` — ce plan n'expose pas ces données. Le job continue
+ * de tourner sans erreur (juste sans effet), plutôt que d'ajouter une
+ * détection de capacité par fournisseur pour ce cas mineur.
  */
 export async function syncPlayerStats(): Promise<void> {
-  if (!hasFootballApiKey()) {
-    logger.info("RAPIDAPI_KEY absent — syncPlayerStats ignoré (aucune fausse donnée générée)");
+  if (!hasAnyFootballProviderKey()) {
+    logger.info("Aucune clé de fournisseur football — syncPlayerStats ignoré (aucune fausse donnée générée)");
     return;
   }
 

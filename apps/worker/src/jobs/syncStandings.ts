@@ -1,5 +1,5 @@
 import { prisma } from "@rexfoot/db";
-import { hasFootballApiKey } from "@rexfoot/config";
+import { hasAnyFootballProviderKey } from "@rexfoot/config";
 import { createFootballProvider } from "@rexfoot/football-provider";
 import { resolveFeaturedCompetitions } from "../lib/competitions.js";
 import { findSeasonByExternalId, findTeamByExternalId } from "../lib/upsert.js";
@@ -11,8 +11,8 @@ import { logger } from "../lib/logger.js";
  * ne changent qu'après des matchs terminés, pas besoin d'un polling serré).
  */
 export async function syncStandings(): Promise<void> {
-  if (!hasFootballApiKey()) {
-    logger.info("RAPIDAPI_KEY absent — syncStandings ignoré (aucune fausse donnée générée)");
+  if (!hasAnyFootballProviderKey()) {
+    logger.info("Aucune clé de fournisseur football — syncStandings ignoré (aucune fausse donnée générée)");
     return;
   }
 

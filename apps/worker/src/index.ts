@@ -1,5 +1,5 @@
 import { Worker, type Job } from "bullmq";
-import { getEnv, hasFootballApiKey } from "@rexfoot/config";
+import { getEnv, hasAnyFootballProviderKey } from "@rexfoot/config";
 import { hasAiProviderConfigured } from "@rexfoot/ai-provider";
 import { createBullMqConnection } from "./lib/redis.js";
 import { logger } from "./lib/logger.js";
@@ -14,10 +14,10 @@ import { runEditorialDigest } from "./jobs/editorial/runEditorialDigest.js";
 async function main(): Promise<void> {
   getEnv(); // valide les variables d'env dès le démarrage, échoue vite si mal configuré
 
-  if (!hasFootballApiKey()) {
+  if (!hasAnyFootballProviderKey()) {
     logger.info(
-      "RAPIDAPI_KEY non configurée — le worker démarre quand même, tous les jobs de " +
-        "synchronisation seront no-op jusqu'à ce qu'une clé soit fournie via Railway.",
+      "Aucune clé de fournisseur football (FOOTBALL_DATA_ORG_API_KEY / RAPIDAPI_KEY) — le worker " +
+        "démarre quand même, tous les jobs de synchronisation seront no-op jusqu'à ce qu'une clé soit fournie via Railway.",
     );
   }
   if (!hasAiProviderConfigured()) {

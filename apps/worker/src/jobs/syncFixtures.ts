@@ -1,9 +1,11 @@
 import { prisma } from "@rexfoot/db";
-import { hasFootballApiKey } from "@rexfoot/config";
-import { createFootballProvider } from "@rexfoot/football-provider";
+import { hasAnyFootballProviderKey } from "@rexfoot/config";
+import { createFootballProvider, getActiveProviderName } from "@rexfoot/football-provider";
 import { resolveFeaturedCompetitions } from "../lib/competitions.js";
 import { upsertSeason, upsertTeam } from "../lib/upsert.js";
 import { logger } from "../lib/logger.js";
+
+const PROVIDER_NAME = getActiveProviderName();
 
 const WINDOW_DAYS_PAST = 3;
 const WINDOW_DAYS_FUTURE = 14;
@@ -18,8 +20,8 @@ const WINDOW_DAYS_FUTURE = 14;
  * API-Football (100 req/jour), inutile de le refaire à chaque cycle.
  */
 export async function syncFixtures(): Promise<void> {
-  if (!hasFootballApiKey()) {
-    logger.info("RAPIDAPI_KEY absent — syncFixtures ignoré (aucune fausse donnée générée)");
+  if (!hasAnyFootballProviderKey()) {
+    logger.info("Aucune clé de fournisseur football — syncFixtures ignoré (aucune fausse donnée générée)");
     return;
   }
 
@@ -80,9 +82,9 @@ export async function syncFixtures(): Promise<void> {
       }
 
       await prisma.fixture.upsert({
-        where: { provider_externalId: { provider: "api-football", externalId: fixtureDto.externalId } },
+        where: { provider_externalId: { provider: PROVIDER_NAME, externalId: fixtureDto.externalId } },
         create: {
-          provider: "api-football",
+          provider: PROVIDER_NAME,
           externalId: fixtureDto.externalId,
           competitionId: competition.id,
           seasonId: season.id,
