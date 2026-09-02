@@ -54,15 +54,47 @@ function extractSuggestedVideoUrl(topic: TopicCandidate): string | null {
   return null;
 }
 
+const OG_IMAGE_FETCH_TIMEOUT_MS = 10_000;
+
 /**
- * Best-effort, même logique que extractSuggestedVideoUrl : on prend la
- * première image trouvée parmi les sources du sujet (voir extractImageUrl
- * dans fetchFeeds.ts) — jamais d'image générée ou devinée.
+ * Repli pour les flux RSS qui n'exposent aucune image exploitable (ex. L'Équipe) :
+ * visite la page de la source et lit sa balise <meta property="og:image">.
+ * Best-effort — un site lent, bloquant les bots, ou sans balise og:image ne doit
+ * jamais faire échouer la rédaction, on continue simplement sans image.
  */
-function extractSuggestedCoverImageUrl(topic: TopicCandidate): string | null {
+async function fetchOgImage(url: string): Promise<string | null> {
+  try {
+    const response = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (compatible; RexFootBot/1.0)" },
+      signal: AbortSignal.timeout(OG_IMAGE_FETCH_TIMEOUT_MS),
+    });
+    if (!response.ok) return null;
+
+    const html = await response.text();
+    const match = html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i);
+    return match?.[1] ?? null;
+  } catch (cause) {
+    logger.warn({ url, cause }, "Agent éditorial : échec récupération og:image, ignoré");
+    return null;
+  }
+}
+
+/**
+ * Best-effort, même logique que extractSuggestedVideoUrl : on prend d'abord
+ * une image déjà trouvée dans le flux RSS (voir extractImageUrl dans
+ * fetchFeeds.ts) ; si aucune source du sujet n'en a, on tente l'og:image de
+ * la première page source. Jamais d'image générée ou devinée.
+ */
+async function extractSuggestedCoverImageUrl(topic: TopicCandidate): Promise<string | null> {
   for (const item of topic.items) {
     if (item.imageUrl) return item.imageUrl;
   }
+
+  for (const item of topic.items) {
+    const ogImage = await fetchOgImage(item.link);
+    if (ogImage) return ogImage;
+  }
+
   return null;
 }
 
@@ -104,7 +136,7 @@ export async function draftArticle(topic: TopicCandidate): Promise<ArticleDraft 
       content: parsed.content,
       category: isValidCategory(parsed.category) ? parsed.category : "AUTRE",
       suggestedVideoUrl: extractSuggestedVideoUrl(topic),
-      suggestedCoverImageUrl: extractSuggestedCoverImageUrl(topic),
+      suggestedCoverImageUrl: await extractSuggestedCoverImageUrl(topic),
     };
   } catch (cause) {
     logger.warn({ topic: topic.title, cause }, "Agent éditorial : JSON invalide, sujet ignoré");
