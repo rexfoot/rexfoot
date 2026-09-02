@@ -1,3 +1,4 @@
+import { Crown } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { AccountMenuButton } from "./AccountMenuButton";
 import { NotificationBell } from "./NotificationBell";
@@ -9,7 +10,8 @@ import type { CurrentUser } from "@/lib/auth/current-user";
 export function MobileHeader({ user }: { user: CurrentUser | null }) {
   return (
     <header className="sticky top-0 z-40 flex items-center justify-between border-b border-rf-border bg-rf-bg/95 px-4 py-2.5 backdrop-blur md:hidden">
-      <Link href="/" className="font-display text-lg font-extrabold tracking-tight">
+      <Link href="/" className="flex items-center gap-1.5 font-display text-lg font-extrabold tracking-tight">
+                  <Crown size={18} className="text-rf-gold" fill="currentColor" aria-hidden="true" />
         <span className="text-rf-gold">Rex</span>
         <span className="text-rf-fg">Foot</span>
       </Link>
