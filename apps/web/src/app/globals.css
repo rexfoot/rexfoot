@@ -23,6 +23,8 @@
   --rf-gold: #00e676;
   --rf-gold-soft: #5cffaa;
   --rf-crimson: #9a1f2e;
+    /* Naranja pour le logo bicolore RexFoot (mitad verde, mitad naranja) — utilisé uniquement pour ce logo. */
+    --rf-orange: #ff7a1a;
 
   --rf-live: #ef4444;
   --rf-success: #22c55e;
@@ -44,6 +46,7 @@
   --color-rf-gold: var(--rf-gold);
   --color-rf-gold-soft: var(--rf-gold-soft);
   --color-rf-crimson: var(--rf-crimson);
+    --color-rf-orange: var(--rf-orange);
   --color-rf-live: var(--rf-live);
   --color-rf-success: var(--rf-success);
 
