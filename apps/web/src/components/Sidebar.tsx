@@ -22,10 +22,10 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
     <aside className="sticky top-0 z-40 hidden h-screen w-20 shrink-0 flex-col items-center border-e border-rf-border bg-rf-bg-elevated py-5 md:flex">
       <Link
         href="/"
-          className="relative mb-8 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full"
+          className="relative mb-8 flex h-14 w-14 items-center justify-center overflow-hidden rounded-full"
           aria-label="RexFoot — Accueil"
         >
-          <Image src="/logo-crown.png" alt="RexFoot" fill sizes="40px" className="object-cover" />
+          <Image src="/logo-crown.png" alt="RexFoot" fill sizes="56px" className="object-cover" />
       </Link>
 
       <SearchOverlay className="mb-4" />
