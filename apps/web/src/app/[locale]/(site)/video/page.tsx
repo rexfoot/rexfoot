@@ -21,7 +21,10 @@ export default async function VideoIndexPage() {
 
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-4 py-6">
-      <h1 className="font-display text-2xl font-bold text-rf-fg">{t("pageTitle")}</h1>
+      <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-rf-fg">
+        <Film className="text-rf-video" size={22} />
+        {t("pageTitle")}
+      </h1>
 
       {videos.length === 0 ? (
         <EmptyState icon={Film} title={t("noVideos")} description={t("noVideosDescription")} />

@@ -21,7 +21,10 @@ export default async function StandingsIndexPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
-      <h1 className="font-display text-2xl font-bold text-rf-fg">{t("title")}</h1>
+      <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-rf-fg">
+        <ListOrdered className="text-rf-standings" size={22} />
+        {t("title")}
+      </h1>
 
       {competitions.length === 0 ? (
         <EmptyState icon={ListOrdered} title={t("noCompetitions")} />

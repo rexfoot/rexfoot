@@ -49,21 +49,21 @@ export default function HomePage() {
       </Link>
 
       <section>
-        <SectionHeader title={t("matchesTitle")} href="/matches" />
+        <SectionHeader title={t("matchesTitle")} href="/matches" accent="matches" />
         <Suspense fallback={<MatchesHeroSkeleton />}>
           <MatchesHeroSection />
         </Suspense>
       </section>
 
       <section>
-        <SectionHeader title={t("newsTitle")} href="/news" />
+        <SectionHeader title={t("newsTitle")} href="/news" accent="news" />
         <Suspense fallback={<NewsSectionSkeleton />}>
           <NewsSection />
         </Suspense>
       </section>
 
       <section>
-        <SectionHeader title={t("videoTitle")} href="/video" />
+        <SectionHeader title={t("videoTitle")} href="/video" accent="video" />
         <Suspense fallback={<VideoRailSkeleton />}>
           <VideoSection />
         </Suspense>

@@ -29,6 +29,16 @@
   --rf-live: #ef4444;
   --rf-success: #22c55e;
 
+  /* Couleur d'identité par section (icônes de nav, titres de page, "voir tout")
+     — le vert (--rf-gold) reste la couleur générale du site (boutons, liens,
+     focus) partout ailleurs ; ces tokens ne remplacent que l'accent propre à
+     chaque grande section pour la rendre reconnaissable d'un coup d'œil. */
+  --rf-matches: #3b9eff;
+  --rf-standings: #ffb020;
+  --rf-mercato: #b06cff;
+  --rf-video: #ff4fa3;
+  --rf-news: #22d3ee;
+
   --rf-radius: 1rem;
 }
 
@@ -49,6 +59,12 @@
     --color-rf-orange: var(--rf-orange);
   --color-rf-live: var(--rf-live);
   --color-rf-success: var(--rf-success);
+
+  --color-rf-matches: var(--rf-matches);
+  --color-rf-standings: var(--rf-standings);
+  --color-rf-mercato: var(--rf-mercato);
+  --color-rf-video: var(--rf-video);
+  --color-rf-news: var(--rf-news);
 
   --font-sans: var(--font-inter);
   --font-display: var(--font-outfit);

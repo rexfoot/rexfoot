@@ -30,7 +30,10 @@ export default async function MercatoPage({ searchParams }: PageProps) {
 
   return (
     <div className="mx-auto max-w-3xl space-y-4 px-4 py-6">
-      <h1 className="font-display text-2xl font-bold text-rf-fg">{t("title")}</h1>
+      <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-rf-fg">
+        <ArrowLeftRight className="text-rf-mercato" size={22} />
+        {t("title")}
+      </h1>
       <TransferStatusFilter selected={selected} />
 
       {transfers.length === 0 ? (

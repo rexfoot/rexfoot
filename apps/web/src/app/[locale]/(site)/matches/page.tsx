@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTranslations, getLocale } from "next-intl/server";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, CalendarDays } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getMatches } from "@/lib/data/matches";
 import { getFeaturedCompetitions } from "@/lib/data/competitions";
@@ -49,7 +49,10 @@ export default async function MatchesPage({ searchParams }: PageProps) {
 
   return (
     <div className="mx-auto max-w-6xl space-y-5 px-4 py-6">
-      <h1 className="font-display text-2xl font-bold text-rf-fg">{t("title")}</h1>
+      <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-rf-fg">
+        <CalendarDays className="text-rf-matches" size={22} />
+        {t("title")}
+      </h1>
 
       <MatchesDateNav selectedDate={date} />
       <CompetitionFilter competitions={competitions} selected={competition} date={date} />

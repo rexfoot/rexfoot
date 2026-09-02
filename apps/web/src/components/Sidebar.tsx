@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { NAV_ITEMS } from "@/lib/nav";
+import { NAV_ACCENT } from "@/lib/nav-colors";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { AccountMenuButton } from "@/components/AccountMenuButton";
 import { NotificationBell } from "@/components/NotificationBell";
@@ -35,6 +36,7 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
           const Icon = NAV_ICONS[item.icon];
           const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           const label = t(item.icon);
+          const accent = NAV_ACCENT[item.icon];
           return (
             <Link
               key={item.href}
@@ -43,7 +45,7 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
-                isActive ? "bg-rf-gold/15 text-rf-gold" : "text-rf-fg-muted hover:bg-rf-bg-card hover:text-rf-fg",
+                isActive ? `${accent.bg} ${accent.text}` : "text-rf-fg-muted hover:bg-rf-bg-card hover:text-rf-fg",
               )}
             >
               <Icon size={21} strokeWidth={isActive ? 2.25 : 1.75} />

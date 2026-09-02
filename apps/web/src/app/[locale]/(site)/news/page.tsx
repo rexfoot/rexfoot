@@ -26,7 +26,10 @@ export default async function NewsIndexPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-4 px-4 py-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-display text-2xl font-bold text-rf-fg">{t("title")}</h1>
+        <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-rf-fg">
+          <Newspaper className="text-rf-news" size={22} />
+          {t("title")}
+        </h1>
         <Link
           href="/analysis"
           className="inline-flex items-center gap-1.5 rounded-full border border-rf-gold/30 bg-rf-gold/10 px-3.5 py-1.5 text-sm font-semibold text-rf-gold transition-colors hover:bg-rf-gold/20"

@@ -3,6 +3,7 @@
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { NAV_ITEMS } from "@/lib/nav";
+import { NAV_ACCENT } from "@/lib/nav-colors";
 import { NAV_ICONS } from "@/components/nav-icons";
 import { cn } from "@/lib/cn";
 
@@ -21,13 +22,14 @@ export function BottomNav() {
         {NAV_ITEMS.map((item) => {
           const Icon = NAV_ICONS[item.icon];
           const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          const accent = NAV_ACCENT[item.icon];
           return (
             <li key={item.href} className="min-w-0 flex-1">
               <Link
                 href={item.href}
                 className={cn(
                   "flex flex-col items-center gap-1 px-0.5 py-2.5 text-[10px] font-medium transition-colors",
-                  isActive ? "text-rf-gold" : "text-rf-fg-muted",
+                  isActive ? accent.text : "text-rf-fg-muted",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
