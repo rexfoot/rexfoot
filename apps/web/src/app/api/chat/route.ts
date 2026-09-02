@@ -24,6 +24,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ reply });
   } catch (error) {
     if (error instanceof AiProviderError) return apiError(502, error.message);
-    throw error;
+    // Ne jamais relancer ici : une erreur non gérée dans un route handler peut
+    // casser la réponse HTTP au niveau du runtime (observé en prod comme un
+    // 502 brut de Cloudflare, sans passer par notre JSON d'erreur). On logue
+    // le vrai message/stack pour diagnostiquer, et on répond proprement.
+    console.error("[api/chat] erreur inattendue", error);
+    return apiError(502, "Une erreur inattendue est survenue, réessaie dans un instant.");
   }
 }
