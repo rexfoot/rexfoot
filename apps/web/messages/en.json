@@ -207,15 +207,6 @@
     "facebook": "Share on Facebook",
     "copyLink": "Copy link"
   },
-  "chat": {
-    "open": "RexFoot Assistant",
-    "title": "RexFoot Assistant",
-    "welcome": "Ask me about today's matches, the latest news or transfers — I only answer from RexFoot's real data.",
-    "placeholder": "Type your message…",
-    "send": "Send",
-    "thinking": "The assistant is thinking…",
-    "error": "Can't reply right now, try again."
-  },
   "home": {
     "featured": "Featured",
     "newsTitle": "News",
