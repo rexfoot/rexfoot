@@ -22,7 +22,7 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
     <aside className="sticky top-0 z-40 hidden h-screen w-20 shrink-0 flex-col items-center border-e border-rf-border bg-rf-bg-elevated py-5 md:flex">
       <Link
         href="/"
-          className="relative mb-8 flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl"
+          className="relative mb-8 flex h-10 w-10 items-center justify-center overflow-hidden rounded-full"
           style={{ background: "linear-gradient(135deg, var(--rf-gold) 50%, var(--rf-orange) 50%)" }}
                   aria-label="RexFoot — Accueil"
         >
