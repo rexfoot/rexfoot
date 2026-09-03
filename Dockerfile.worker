@@ -16,7 +16,12 @@ WORKDIR /app
 # Le moteur de requête Prisma a besoin de libssl pour détecter la version
 # openssl du système — sans ça il retombe sur une valeur par défaut avec un
 # warning au démarrage (inoffensif mais évitable).
-RUN apt-get update && apt-get install -y --no-install-recommends openssl \
+# fontconfig + fonts-liberation : node:22-slim n'embarque aucune police par
+# défaut — le rendu SVG->PNG des slides du résumé hebdo (apps/worker/src/jobs/
+# weeklyRecap, via sharp/librsvg) afficherait sinon du texte manquant ou une
+# police de repli non voulue. Liberation Sans est métriquement compatible
+# Arial (la police demandée dans les SVG générés).
+RUN apt-get update && apt-get install -y --no-install-recommends openssl fontconfig fonts-liberation \
     && rm -rf /var/lib/apt/lists/*
 
 FROM base AS deps

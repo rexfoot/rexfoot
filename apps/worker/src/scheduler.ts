@@ -11,6 +11,7 @@ export const JobName = {
   syncRosters: "sync-rosters",
   editorialDigest: "editorial-digest",
   syncYoutubeVideos: "sync-youtube-videos",
+  weeklyRecap: "weekly-recap",
 } as const;
 
 // Calibré pour le plan gratuit API-Football (100 requêtes/jour, 7 compétitions
@@ -89,6 +90,12 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     JobName.syncYoutubeVideos,
     {},
     { repeat: { every: 15 * 60 * 1000 }, jobId: JobName.syncYoutubeVideos, ...DEFAULT_JOB_OPTS },
+  );
+  // Lundi 8h : la semaine précédente (vendredi-dimanche compris) est terminée.
+  await queue.add(
+    JobName.weeklyRecap,
+    {},
+    { repeat: { pattern: "0 8 * * 1" }, jobId: JobName.weeklyRecap, ...DEFAULT_JOB_OPTS },
   );
 
   await scheduleNextLiveScoresRun(queue, false);
