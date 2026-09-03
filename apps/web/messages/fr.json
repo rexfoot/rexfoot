@@ -36,6 +36,16 @@
     "events": "Événements",
     "noEvents": "Aucun événement pour l'instant",
     "vs": "vs",
+    "eventTypes": {
+      "GOAL": "But",
+      "OWN_GOAL": "But contre son camp",
+      "PENALTY": "Penalty",
+      "MISSED_PENALTY": "Penalty manqué",
+      "YELLOW_CARD": "Carton jaune",
+      "RED_CARD": "Carton rouge",
+      "SUBSTITUTION": "Remplacement",
+      "VAR": "VAR"
+    },
     "lineups": "Compositions",
     "substitutes": "Remplaçants",
     "statistics": "Statistiques",

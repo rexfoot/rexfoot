@@ -26,6 +26,8 @@ const FOOTBALL_DATA_ORG_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug,
   "serie-a": "2019",
   bundesliga: "2002",
   "champions-league": "2001",
+  "european-championship": "2018",
+  "world-cup": "2000",
 };
 
 /**
