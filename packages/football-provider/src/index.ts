@@ -13,7 +13,15 @@ export { ApiFootballProvider } from "./providers/apiFootball";
 export { FootballDataOrgProvider } from "./providers/footballDataOrg";
 export { NullFootballProvider } from "./providers/nullProvider";
 export { RedisCachingProvider } from "./cache/redisCachingProvider";
-export { HighlightlyClient, HighlightlyProviderError, type HighlightlyEvent } from "./highlightly";
+export {
+  HighlightlyClient,
+  HighlightlyProviderError,
+  type HighlightlyEvent,
+  type HighlightlyLineups,
+  type HighlightlyLineupPlayer,
+  type HighlightlyTeamLineup,
+  type HighlightlyTeamStatistics,
+} from "./highlightly";
 
 let cachedHighlightlyClient: HighlightlyClient | undefined | null;
 

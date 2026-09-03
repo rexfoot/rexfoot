@@ -1,6 +1,6 @@
 import { prisma, Prisma } from "@rexfoot/db";
 import { PAGE_SIZE_MATCHES } from "@rexfoot/config";
-import type { MatchDetail, MatchSummary } from "@/lib/types";
+import type { LineupPlayer, MatchDetail, MatchSummary } from "@/lib/types";
 
 const matchSelect = {
   id: true,
@@ -9,8 +9,8 @@ const matchSelect = {
   minute: true,
   homeScore: true,
   awayScore: true,
-  homeTeam: { select: { name: true, slug: true, crestUrl: true } },
-  awayTeam: { select: { name: true, slug: true, crestUrl: true } },
+  homeTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
+  awayTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
   competition: { select: { name: true, slug: true, logoUrl: true } },
 } as const;
 
@@ -109,6 +109,16 @@ const matchDetailSelect = {
       offsides: true,
       yellowCards: true,
       redCards: true,
+      expectedGoals: true,
+      bigChancesCreated: true,
+    },
+  },
+  lineups: {
+    select: {
+      teamId: true,
+      formation: true,
+      startingXI: true,
+      substitutes: true,
     },
   },
 } as const;
@@ -116,7 +126,15 @@ const matchDetailSelect = {
 export async function getMatchById(id: string): Promise<MatchDetail | null> {
   const row = await prisma.fixture.findUnique({ where: { id }, select: matchDetailSelect });
   if (!row) return null;
-  return { ...row, kickoffAt: row.kickoffAt.toISOString() };
+  return {
+    ...row,
+    kickoffAt: row.kickoffAt.toISOString(),
+    lineups: row.lineups.map((l) => ({
+      ...l,
+      startingXI: l.startingXI as unknown as LineupPlayer[],
+      substitutes: l.substitutes as unknown as LineupPlayer[],
+    })),
+  };
 }
 
 export async function getLiveMatchIds(): Promise<string[]> {

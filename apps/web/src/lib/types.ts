@@ -8,8 +8,8 @@ export interface MatchSummary {
   minute: number | null;
   homeScore: number | null;
   awayScore: number | null;
-  homeTeam: { name: string; slug: string; crestUrl: string | null };
-  awayTeam: { name: string; slug: string; crestUrl: string | null };
+  homeTeam: { id: string; name: string; slug: string; crestUrl: string | null };
+  awayTeam: { id: string; name: string; slug: string; crestUrl: string | null };
   competition: { name: string; slug: string; logoUrl: string | null };
 }
 
@@ -34,6 +34,21 @@ export interface TeamStatisticsSummary {
   offsides: number | null;
   yellowCards: number | null;
   redCards: number | null;
+  expectedGoals: number | null;
+  bigChancesCreated: number | null;
+}
+
+export interface LineupPlayer {
+  name: string;
+  number: number | null;
+  position: string | null;
+}
+
+export interface LineupSummary {
+  teamId: string;
+  formation: string | null;
+  startingXI: LineupPlayer[];
+  substitutes: LineupPlayer[];
 }
 
 /** Détail complet d'un match — forme JSON renvoyée par /api/matches/[id] (dates sérialisées en ISO string). */
@@ -43,6 +58,7 @@ export interface MatchDetail extends MatchSummary {
   referee: string | null;
   events: MatchEventSummary[];
   teamStatistics: TeamStatisticsSummary[];
+  lineups: LineupSummary[];
 }
 
 /** Forme allégée d'une vidéo, utilisée par VideoCard et les pages /video. */

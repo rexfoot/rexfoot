@@ -8,7 +8,7 @@ import { EmptyState } from "./EmptyState";
 import { ShareButtons } from "./ShareButtons";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
-import type { MatchDetail } from "@/lib/types";
+import type { LineupPlayer, MatchDetail, TeamStatisticsSummary } from "@/lib/types";
 
 const EVENT_ICON: Record<string, string> = {
   GOAL: "⚽",
@@ -99,6 +99,112 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
           </ol>
         )}
       </section>
+
+      {match.lineups.length > 0 && (
+        <section>
+          <h2 className="mb-3 font-display text-lg font-bold text-rf-fg">{t("lineups")}</h2>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {match.lineups.map((lineup) => {
+              const team = lineup.teamId === match.homeTeam.id ? match.homeTeam : match.awayTeam;
+              return (
+                <div key={lineup.teamId} className="rounded-xl border border-rf-border bg-rf-bg-card p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <TeamCrest crestUrl={team.crestUrl} teamName={team.name} size="sm" />
+                    <span className="font-display text-sm font-semibold text-rf-fg">{team.name}</span>
+                    {lineup.formation && (
+                      <span className="ms-auto text-xs font-medium text-rf-fg-subtle">{lineup.formation}</span>
+                    )}
+                  </div>
+                  <ul className="space-y-1.5">
+                    {lineup.startingXI.map((player, i) => (
+                      <LineupRow key={`${lineup.teamId}-xi-${i}`} player={player} />
+                    ))}
+                  </ul>
+                  {lineup.substitutes.length > 0 && (
+                    <>
+                      <p className="mb-1.5 mt-3 text-xs font-semibold uppercase tracking-wide text-rf-fg-subtle">
+                        {t("substitutes")}
+                      </p>
+                      <ul className="space-y-1.5">
+                        {lineup.substitutes.map((player, i) => (
+                          <LineupRow key={`${lineup.teamId}-sub-${i}`} player={player} />
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
+      {match.teamStatistics.length > 0 && (
+        <section>
+          <h2 className="mb-3 font-display text-lg font-bold text-rf-fg">{t("statistics")}</h2>
+          <div className="rounded-xl border border-rf-border bg-rf-bg-card p-4">
+            <StatisticsTable match={match} />
+          </div>
+        </section>
+      )}
+    </div>
+  );
+}
+
+function LineupRow({ player }: { player: LineupPlayer }) {
+  return (
+    <li className="flex items-center gap-2 text-sm text-rf-fg">
+      <span className="w-6 shrink-0 text-end font-display text-xs font-semibold text-rf-fg-subtle">
+        {player.number ?? "-"}
+      </span>
+      <span className="truncate">{player.name}</span>
+      {player.position && <span className="ms-auto text-xs text-rf-fg-subtle">{player.position}</span>}
+    </li>
+  );
+}
+
+function StatisticsTable({ match }: { match: MatchDetail }) {
+  const t = useTranslations("matches");
+  const home = match.teamStatistics.find((s) => s.teamId === match.homeTeam.id);
+  const away = match.teamStatistics.find((s) => s.teamId === match.awayTeam.id);
+  if (!home && !away) return null;
+
+  const rows: Array<{ label: string; key: Exclude<keyof TeamStatisticsSummary, "teamId">; suffix?: string }> = [
+    { label: t("possession"), key: "possession", suffix: "%" },
+    { label: t("expectedGoals"), key: "expectedGoals" },
+    { label: t("shots"), key: "shotsTotal" },
+    { label: t("shotsOnTarget"), key: "shotsOnTarget" },
+    { label: t("bigChancesCreated"), key: "bigChancesCreated" },
+    { label: t("corners"), key: "corners" },
+    { label: t("fouls"), key: "fouls" },
+    { label: t("offsides"), key: "offsides" },
+    { label: t("yellowCards"), key: "yellowCards" },
+    { label: t("redCards"), key: "redCards" },
+  ];
+
+  return (
+    <div className="space-y-3">
+      {rows.map(({ label, key, suffix }) => {
+        const homeVal = home?.[key] ?? null;
+        const awayVal = away?.[key] ?? null;
+        if (homeVal === null && awayVal === null) return null;
+        const total = (homeVal ?? 0) + (awayVal ?? 0);
+        const homeShare = total > 0 ? ((homeVal ?? 0) / total) * 100 : 50;
+
+        return (
+          <div key={key}>
+            <div className="mb-1 flex items-center justify-between text-sm text-rf-fg">
+              <span className="font-semibold">{homeVal ?? "-"}{suffix ?? ""}</span>
+              <span className="text-xs text-rf-fg-subtle">{label}</span>
+              <span className="font-semibold">{awayVal ?? "-"}{suffix ?? ""}</span>
+            </div>
+            <div className="flex h-1.5 overflow-hidden rounded-full bg-rf-border">
+              <div className="bg-rf-live" style={{ width: `${homeShare}%` }} />
+              <div className="flex-1 bg-rf-fg-muted" />
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

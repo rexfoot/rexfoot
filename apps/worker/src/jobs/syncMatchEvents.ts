@@ -1,14 +1,27 @@
-import { prisma, type FixtureEventType } from "@rexfoot/db";
-import { createHighlightlyClientIfConfigured, type HighlightlyEvent } from "@rexfoot/football-provider";
+import { prisma, type FixtureEventType, type Prisma } from "@rexfoot/db";
+import {
+  createHighlightlyClientIfConfigured,
+  type HighlightlyClient,
+  type HighlightlyEvent,
+  type HighlightlyTeamLineup,
+} from "@rexfoot/football-provider";
 import { logger } from "../lib/logger.js";
 
 // Highlightly (plan gratuit) : 100 requêtes/jour, aucun plafond horaire strict
 // documenté. Ce job tourne toutes les SYNC_INTERVAL_MINUTES (voir scheduler.ts)
-// et ne traite au plus MAX_MATCHES_PER_RUN matchs en direct par exécution —
-// avec l'id Highlightly mis en cache sur Fixture après la première résolution,
-// le régime de croisière est 1 requête (événements) par match en direct et par
-// cycle, ce qui reste largement sous le quota même à plusieurs matchs simultanés.
+// et ne traite au plus MAX_MATCHES_PER_RUN matchs en direct par exécution.
+// Régime de croisière par match et par cycle, une fois l'id Highlightly mis en
+// cache sur Fixture : 2 requêtes (événements + statistiques, qui évoluent
+// pendant le match) + 1 requête ponctuelle pour les compositions (jamais
+// répétée — une composition ne change pas une fois le match commencé, seuls
+// les remplacements sont suivis, déjà via les événements).
 const MAX_MATCHES_PER_RUN = 6;
+
+const normalize = (s: string) => s.toLowerCase().trim();
+function sameTeam(a: string, b: string): boolean {
+  const [na, nb] = [normalize(a), normalize(b)];
+  return na === nb || na.includes(nb) || nb.includes(na);
+}
 
 /**
  * Best-effort : un type d'événement Highlightly non reconnu est ignoré (log
@@ -54,9 +67,6 @@ interface MatchTeams {
  * repli quand `event.player` est absent (voir MatchDetailClient.tsx).
  */
 async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events: HighlightlyEvent[]): Promise<void> {
-  const normalize = (s: string) => s.toLowerCase().trim();
-  const homeNorm = normalize(teams.homeTeamName);
-
   await prisma.fixtureEvent.deleteMany({ where: { fixtureId } });
 
   for (const event of events) {
@@ -66,11 +76,7 @@ async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events
       continue;
     }
 
-    const eventTeamNorm = normalize(event.team.name);
-    const teamId = eventTeamNorm === homeNorm || homeNorm.includes(eventTeamNorm) || eventTeamNorm.includes(homeNorm)
-      ? teams.homeTeamId
-      : teams.awayTeamId;
-
+    const teamId = sameTeam(event.team.name, teams.homeTeamName) ? teams.homeTeamId : teams.awayTeamId;
     const { minute, extraMinute } = parseMinute(event.time);
     const detailParts = [event.player, event.substituted ? `→ ${event.substituted}` : null].filter(Boolean);
 
@@ -83,6 +89,100 @@ async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events
         teamId,
         detail: detailParts.length > 0 ? detailParts.join(" ") : null,
       },
+    });
+  }
+}
+
+interface FlatLineupPlayer {
+  name: string;
+  number: number | null;
+  position: string | null;
+}
+
+function flattenLineup(team: HighlightlyTeamLineup): FlatLineupPlayer[] {
+  return team.initialLineup.flat().map((p) => ({ name: p.name, number: p.number, position: p.position }));
+}
+
+/** Une composition ne change jamais une fois le match commencé — jamais refetchée si déjà connue. */
+async function syncLineupsIfMissing(
+  client: HighlightlyClient,
+  highlightlyId: number,
+  fixtureId: string,
+  teams: MatchTeams,
+): Promise<void> {
+  const already = await prisma.lineup.count({ where: { fixtureId } });
+  if (already > 0) return;
+
+  const lineups = await client.getLineups(highlightlyId);
+  const sides: Array<[HighlightlyTeamLineup, string]> = [
+    [lineups.homeTeam, teams.homeTeamId],
+    [lineups.awayTeam, teams.awayTeamId],
+  ];
+
+  for (const [team, teamId] of sides) {
+    await prisma.lineup.upsert({
+      where: { fixtureId_teamId: { fixtureId, teamId } },
+      create: {
+        fixtureId,
+        teamId,
+        formation: team.formation,
+        startingXI: flattenLineup(team) as unknown as Prisma.InputJsonValue,
+        substitutes: team.substitutes as unknown as Prisma.InputJsonValue,
+      },
+      update: {
+        formation: team.formation,
+        startingXI: flattenLineup(team) as unknown as Prisma.InputJsonValue,
+        substitutes: team.substitutes as unknown as Prisma.InputJsonValue,
+      },
+    });
+  }
+}
+
+/**
+ * Table de correspondance nom Highlightly -> colonne TeamStatistics — voir
+ * apps/worker/src/jobs/syncMatchEvents.ts (commentaire du modèle) pour
+ * pourquoi seul un sous-ensemble des statistiques disponibles est retenu
+ * (le reste — passes, duels, dribbles… — existe côté Highlightly mais n'a pas
+ * encore de colonne ni d'affichage ici).
+ */
+function pickStat(stats: Array<{ value: number; displayName: string }>, displayName: string): number | null {
+  return stats.find((s) => s.displayName === displayName)?.value ?? null;
+}
+
+async function syncStatistics(client: HighlightlyClient, highlightlyId: number, fixtureId: string, teams: MatchTeams): Promise<void> {
+  const teamStats = await client.getStatistics(highlightlyId);
+
+  for (const entry of teamStats) {
+    const teamId = sameTeam(entry.team.name, teams.homeTeamName) ? teams.homeTeamId : teams.awayTeamId;
+    const s = entry.statistics;
+    const onTarget = pickStat(s, "Shots on target");
+    const offTarget = pickStat(s, "Shots off target");
+    const blocked = pickStat(s, "Blocked shots");
+    const shotsTotal = onTarget !== null && offTarget !== null && blocked !== null ? onTarget + offTarget + blocked : null;
+
+    // Highlightly renvoie la possession en fraction (0.53), pas en pourcentage
+    // (53) — colonne TeamStatistics.possession en Int, donc conversion requise
+    // ici avant stockage (sinon 0.53 tronqué silencieusement à 0 par Prisma).
+    const possessionFraction = pickStat(s, "Possession");
+    const possession = possessionFraction !== null ? Math.round(possessionFraction * 100) : null;
+
+    const data = {
+      possession,
+      shotsTotal,
+      shotsOnTarget: onTarget,
+      corners: pickStat(s, "Corners"),
+      fouls: pickStat(s, "Fouls"),
+      offsides: pickStat(s, "Offsides"),
+      yellowCards: pickStat(s, "Yellow cards"),
+      redCards: pickStat(s, "Red cards"),
+      expectedGoals: pickStat(s, "Expected Goals"),
+      bigChancesCreated: pickStat(s, "Big Chances Created"),
+    };
+
+    await prisma.teamStatistics.upsert({
+      where: { fixtureId_teamId: { fixtureId, teamId } },
+      create: { fixtureId, teamId, ...data },
+      update: data,
     });
   }
 }
@@ -127,15 +227,30 @@ export async function syncMatchEvents(): Promise<void> {
         await prisma.fixture.update({ where: { id: match.id }, data: { highlightlyId } });
       }
 
-      const events = await client.getEvents(highlightlyId);
-      await replaceFixtureEvents(match.id, {
+      const teams: MatchTeams = {
         homeTeamId: match.homeTeam.id,
         homeTeamName: match.homeTeam.name,
         awayTeamId: match.awayTeam.id,
         awayTeamName: match.awayTeam.name,
-      }, events);
+      };
 
+      const events = await client.getEvents(highlightlyId);
+      await replaceFixtureEvents(match.id, teams, events);
       logger.info({ fixtureId: match.id, events: events.length }, "Événements de match synchronisés (Highlightly)");
+
+      // Chacun isolé dans son propre try/catch : un échec (quota épuisé en
+      // cours de boucle, par ex.) ne doit priver le match ni des événements
+      // déjà posés au-dessus, ni de l'autre appel restant.
+      try {
+        await syncLineupsIfMissing(client, highlightlyId, match.id, teams);
+      } catch (cause) {
+        logger.warn({ fixtureId: match.id, cause }, "Échec de synchro des compositions, ignoré");
+      }
+      try {
+        await syncStatistics(client, highlightlyId, match.id, teams);
+      } catch (cause) {
+        logger.warn({ fixtureId: match.id, cause }, "Échec de synchro des statistiques, ignoré");
+      }
     } catch (cause) {
       // Une erreur sur un match (id introuvable, quota Highlightly épuisé pour
       // la journée, etc.) ne doit jamais bloquer les autres matchs en direct.

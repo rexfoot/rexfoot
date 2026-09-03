@@ -34,6 +34,32 @@ interface HighlightlyMatchSearchResult {
   awayTeam: { name: string };
 }
 
+export interface HighlightlyLineupPlayer {
+  name: string;
+  number: number | null;
+  position: string | null;
+}
+
+export interface HighlightlyTeamLineup {
+  name: string;
+  formation: string | null;
+  /// Tableau de lignes tactiques (gardien, défense, milieu, attaque) tel que
+  /// renvoyé par Highlightly — aplati par le job de synchro avant stockage
+  /// (voir syncMatchEvents.ts), gardé imbriqué ici pour coller à la réponse brute.
+  initialLineup: HighlightlyLineupPlayer[][];
+  substitutes: HighlightlyLineupPlayer[];
+}
+
+export interface HighlightlyLineups {
+  homeTeam: HighlightlyTeamLineup;
+  awayTeam: HighlightlyTeamLineup;
+}
+
+export interface HighlightlyTeamStatistics {
+  team: { name: string };
+  statistics: Array<{ value: number; displayName: string }>;
+}
+
 export class HighlightlyClient {
   constructor(private readonly apiKey: string) {}
 
@@ -102,6 +128,14 @@ export class HighlightlyClient {
 
   async getEvents(highlightlyMatchId: number): Promise<HighlightlyEvent[]> {
     return this.request<HighlightlyEvent[]>(`/football/events/${highlightlyMatchId}`);
+  }
+
+  async getLineups(highlightlyMatchId: number): Promise<HighlightlyLineups> {
+    return this.request<HighlightlyLineups>(`/football/lineups/${highlightlyMatchId}`);
+  }
+
+  async getStatistics(highlightlyMatchId: number): Promise<HighlightlyTeamStatistics[]> {
+    return this.request<HighlightlyTeamStatistics[]>(`/football/statistics/${highlightlyMatchId}`);
   }
 }
 

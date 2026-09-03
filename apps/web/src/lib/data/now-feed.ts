@@ -33,8 +33,8 @@ const matchSelect = {
   homeTeamId: true,
   awayTeamId: true,
   competitionId: true,
-  homeTeam: { select: { name: true, slug: true, crestUrl: true } },
-  awayTeam: { select: { name: true, slug: true, crestUrl: true } },
+  homeTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
+  awayTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
   competition: { select: { name: true, slug: true, logoUrl: true } },
 } as const;
 

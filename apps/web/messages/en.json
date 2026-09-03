@@ -35,7 +35,20 @@
     "votes": "{count, plural, one {# vote} other {# votes}}",
     "events": "Events",
     "noEvents": "No events yet",
-    "vs": "vs"
+    "vs": "vs",
+    "lineups": "Line-ups",
+    "substitutes": "Substitutes",
+    "statistics": "Statistics",
+    "possession": "Possession",
+    "shots": "Shots",
+    "shotsOnTarget": "Shots on target",
+    "corners": "Corners",
+    "fouls": "Fouls",
+    "offsides": "Offsides",
+    "yellowCards": "Yellow cards",
+    "redCards": "Red cards",
+    "expectedGoals": "Expected goals (xG)",
+    "bigChancesCreated": "Big chances created"
   },
   "standings": {
     "title": "Standings",

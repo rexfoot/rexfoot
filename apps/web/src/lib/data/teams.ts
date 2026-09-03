@@ -18,8 +18,8 @@ export async function getTeamFixtures(teamId: string) {
     orderBy: { kickoffAt: "desc" },
     take: 20,
     include: {
-      homeTeam: { select: { name: true, slug: true, crestUrl: true } },
-      awayTeam: { select: { name: true, slug: true, crestUrl: true } },
+      homeTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
+      awayTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
       competition: { select: { name: true, slug: true, logoUrl: true } },
     },
   });

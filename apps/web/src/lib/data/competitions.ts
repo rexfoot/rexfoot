@@ -34,8 +34,8 @@ export async function getFixturesForCompetition(competitionId: string, seasonId:
     where: { competitionId, seasonId },
     orderBy: { kickoffAt: "asc" },
     include: {
-      homeTeam: { select: { name: true, slug: true, crestUrl: true } },
-      awayTeam: { select: { name: true, slug: true, crestUrl: true } },
+      homeTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
+      awayTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
     },
   });
 }

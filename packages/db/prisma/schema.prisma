@@ -227,6 +227,7 @@ model Team {
   standings           Standing[]
   teamStatistics      TeamStatistics[]
   playerStatistics    PlayerStatistics[]
+  lineups             Lineup[]
   relatedNews         NewsArticle[]
   relatedVideos       Video[]
   fixtureEvents       FixtureEvent[]
@@ -335,6 +336,7 @@ model Fixture {
   events           FixtureEvent[]
   teamStatistics   TeamStatistics[]
   playerStatistics PlayerStatistics[]
+  lineups          Lineup[]
   relatedVideos    Video[]
   votes            MatchVote[]
 
@@ -409,6 +411,29 @@ model TeamStatistics {
   offsides       Int?
   yellowCards    Int?
   redCards       Int?
+  /// "Occasions" — la statistique la plus proche de ce qu'affichent les sites
+  /// comme Marca à côté du direct. Absente du plan gratuit football-data.org,
+  /// disponible via Highlightly (voir apps/worker/src/jobs/syncMatchEvents.ts).
+  expectedGoals       Float?
+  bigChancesCreated   Int?
+
+  @@unique([fixtureId, teamId])
+}
+
+/// Composition d'une équipe pour un match — joueurs stockés en JSON (nom,
+/// numéro, poste), jamais liés à notre table Player : aucune correspondance
+/// d'id fiable entre Highlightly et notre fournisseur principal (même choix
+/// que FixtureEvent.detail, voir syncMatchEvents.ts).
+model Lineup {
+  id          String   @id @default(cuid())
+  fixtureId   String
+  fixture     Fixture  @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  formation   String?
+  startingXI  Json
+  substitutes Json
+  updatedAt   DateTime @updatedAt
 
   @@unique([fixtureId, teamId])
 }

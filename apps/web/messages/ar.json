@@ -35,7 +35,20 @@
     "votes": "{count, plural, one {# صوت} other {# أصوات}}",
     "events": "الأحداث",
     "noEvents": "لا توجد أحداث بعد",
-    "vs": "ضد"
+    "vs": "ضد",
+    "lineups": "التشكيلة",
+    "substitutes": "البدلاء",
+    "statistics": "الإحصائيات",
+    "possession": "الاستحواذ",
+    "shots": "التسديدات",
+    "shotsOnTarget": "التسديدات على المرمى",
+    "corners": "الركنيات",
+    "fouls": "الأخطاء",
+    "offsides": "التسلل",
+    "yellowCards": "البطاقات الصفراء",
+    "redCards": "البطاقات الحمراء",
+    "expectedGoals": "الأهداف المتوقعة (xG)",
+    "bigChancesCreated": "الفرص الكبيرة المهدرة"
   },
   "standings": {
     "title": "الترتيب",

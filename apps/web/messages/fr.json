@@ -35,7 +35,20 @@
     "votes": "{count, plural, one {# vote} other {# votes}}",
     "events": "Événements",
     "noEvents": "Aucun événement pour l'instant",
-    "vs": "vs"
+    "vs": "vs",
+    "lineups": "Compositions",
+    "substitutes": "Remplaçants",
+    "statistics": "Statistiques",
+    "possession": "Possession",
+    "shots": "Tirs",
+    "shotsOnTarget": "Tirs cadrés",
+    "corners": "Corners",
+    "fouls": "Fautes",
+    "offsides": "Hors-jeu",
+    "yellowCards": "Cartons jaunes",
+    "redCards": "Cartons rouges",
+    "expectedGoals": "Buts attendus (xG)",
+    "bigChancesCreated": "Grosses occasions créées"
   },
   "standings": {
     "title": "Classements",
