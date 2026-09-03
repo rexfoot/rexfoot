@@ -21,7 +21,10 @@ const securityHeaders = [
       // upload.videodelivery.net : upload direct navigateur → Cloudflare Stream depuis le panel admin.
       "connect-src 'self' https://upload.videodelivery.net https://*.cloudflarestream.com",
       // iframe.videodelivery.net : lecteur vidéo intégré Cloudflare Stream sur /video/[slug].
-      "frame-src https://iframe.videodelivery.net https://*.cloudflarestream.com",
+      // youtube.com/youtube-nocookie.com : vidéos synchronisées depuis la chaîne
+      // YouTube du propriétaire (apps/worker/src/jobs/syncYoutubeVideos.ts),
+      // même page /video/[slug], playbackUrl pointant vers youtube.com/embed/.
+      "frame-src https://iframe.videodelivery.net https://*.cloudflarestream.com https://www.youtube.com https://www.youtube-nocookie.com",
       "font-src 'self' data:",
       "frame-ancestors 'none'",
     ].join("; "),
