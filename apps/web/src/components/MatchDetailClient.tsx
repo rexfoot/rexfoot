@@ -5,7 +5,6 @@ import { useTranslations, useLocale } from "next-intl";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
 import { EmptyState } from "./EmptyState";
-import { MatchVotePanel } from "./MatchVotePanel";
 import { ShareButtons } from "./ShareButtons";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
@@ -73,10 +72,6 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
         </div>
 
         <div className="mt-6 border-t border-rf-border pt-5">
-          <MatchVotePanel matchId={match.id} homeTeam={match.homeTeam} awayTeam={match.awayTeam} />
-        </div>
-
-        <div className="mt-5 border-t border-rf-border pt-5">
           <ShareButtons title={`${match.homeTeam.name} vs ${match.awayTeam.name}`} />
         </div>
       </div>
