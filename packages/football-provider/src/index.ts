@@ -1,10 +1,11 @@
 import Redis from "ioredis";
-import { getEnv, hasFootballApiKey, hasFootballDataOrgApiKey } from "@rexfoot/config";
+import { getEnv, hasFootballApiKey, hasFootballDataOrgApiKey, hasHighlightlyApiKey } from "@rexfoot/config";
 import type { FootballDataProvider } from "./FootballDataProvider";
 import { ApiFootballProvider } from "./providers/apiFootball";
 import { FootballDataOrgProvider } from "./providers/footballDataOrg";
 import { NullFootballProvider } from "./providers/nullProvider";
 import { RedisCachingProvider } from "./cache/redisCachingProvider";
+import { HighlightlyClient } from "./highlightly";
 
 export * from "./FootballDataProvider";
 export * from "./types";
@@ -12,6 +13,17 @@ export { ApiFootballProvider } from "./providers/apiFootball";
 export { FootballDataOrgProvider } from "./providers/footballDataOrg";
 export { NullFootballProvider } from "./providers/nullProvider";
 export { RedisCachingProvider } from "./cache/redisCachingProvider";
+export { HighlightlyClient, HighlightlyProviderError, type HighlightlyEvent } from "./highlightly";
+
+let cachedHighlightlyClient: HighlightlyClient | undefined | null;
+
+/** null si HIGHLIGHTLY_API_KEY n'est pas configurée — jamais d'appel réseau dans ce cas. */
+export function createHighlightlyClientIfConfigured(): HighlightlyClient | null {
+  if (cachedHighlightlyClient !== undefined) return cachedHighlightlyClient;
+  const env = getEnv();
+  cachedHighlightlyClient = hasHighlightlyApiKey(env) ? new HighlightlyClient(env.HIGHLIGHTLY_API_KEY) : null;
+  return cachedHighlightlyClient;
+}
 
 /**
  * Identifiant `provider` à stocker sur Team/Player/Season/Fixture/Competition

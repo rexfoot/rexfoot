@@ -12,6 +12,7 @@ export const JobName = {
   editorialDigest: "editorial-digest",
   syncYoutubeVideos: "sync-youtube-videos",
   weeklyRecap: "weekly-recap",
+  syncMatchEvents: "sync-match-events",
 } as const;
 
 // Calibré pour le plan gratuit API-Football (100 requêtes/jour, 7 compétitions
@@ -96,6 +97,14 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     JobName.weeklyRecap,
     {},
     { repeat: { pattern: "0 8 * * 1" }, jobId: JobName.weeklyRecap, ...DEFAULT_JOB_OPTS },
+  );
+  // Highlightly (quota gratuit 100 req/jour) : 10 min plutôt que la cadence
+  // syncLiveScores — voir MAX_MATCHES_PER_RUN dans syncMatchEvents.ts pour le
+  // détail du budget. Ne fait rien s'il n'y a aucun match en direct.
+  await queue.add(
+    JobName.syncMatchEvents,
+    {},
+    { repeat: { every: 10 * 60 * 1000 }, jobId: JobName.syncMatchEvents, ...DEFAULT_JOB_OPTS },
   );
 
   await scheduleNextLiveScoresRun(queue, false);

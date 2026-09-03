@@ -11,6 +11,7 @@ import { syncPlayerStats } from "./jobs/syncPlayerStats.js";
 import { syncRosters } from "./jobs/syncRosters.js";
 import { syncYoutubeVideos } from "./jobs/syncYoutubeVideos.js";
 import { generateWeeklyRecap } from "./jobs/generateWeeklyRecap.js";
+import { syncMatchEvents } from "./jobs/syncMatchEvents.js";
 import { runEditorialDigest } from "./jobs/editorial/runEditorialDigest.js";
 
 async function main(): Promise<void> {
@@ -49,6 +50,8 @@ async function main(): Promise<void> {
           return syncYoutubeVideos();
         case JobName.weeklyRecap:
           return generateWeeklyRecap();
+        case JobName.syncMatchEvents:
+          return syncMatchEvents();
         case JobName.syncLiveScores: {
           const hadLiveMatches = await syncLiveScores();
           await scheduleNextLiveScoresRun(queue, hadLiveMatches);

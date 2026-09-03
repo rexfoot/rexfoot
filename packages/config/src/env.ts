@@ -15,6 +15,14 @@ const envSchema = z.object({
   // sur le plan gratuit). Voir packages/football-provider/src/providers/footballDataOrg.ts.
   FOOTBALL_DATA_ORG_API_KEY: z.string().optional().default(""),
 
+  // Highlightly (Sport Highlights API, via RapidAPI) — complète football-data.org
+  // avec ce qu'il n'a pas sur son plan gratuit : événements minute par minute
+  // (buts/cartons/remplacements), compositions, statistiques. Plan gratuit
+  // limité à 100 requêtes/jour — voir apps/worker/src/jobs/syncMatchEvents.ts
+  // pour le budget de quota (id Highlightly mis en cache sur Fixture, jamais
+  // re-cherché une fois résolu).
+  HIGHLIGHTLY_API_KEY: z.string().optional().default(""),
+
   VIDEO_PROVIDER: z.enum(["stub", "cloudflare-stream"]).default("stub"),
   CLOUDFLARE_ACCOUNT_ID: z.string().optional().default(""),
   CLOUDFLARE_STREAM_API_TOKEN: z.string().optional().default(""),
@@ -72,4 +80,8 @@ export function hasAnyFootballProviderKey(env: Env = getEnv()): boolean {
 
 export function hasCloudflareStreamConfig(env: Env = getEnv()): boolean {
   return env.CLOUDFLARE_ACCOUNT_ID.trim().length > 0 && env.CLOUDFLARE_STREAM_API_TOKEN.trim().length > 0;
+}
+
+export function hasHighlightlyApiKey(env: Env = getEnv()): boolean {
+  return env.HIGHLIGHTLY_API_KEY.trim().length > 0;
 }

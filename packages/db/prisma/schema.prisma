@@ -317,6 +317,12 @@ model Fixture {
   venueName  String?
   referee    String?
 
+  /// Id du même match côté Highlightly (Sport Highlights API) — résolu une
+  /// fois par recherche nom d'équipe + date (voir apps/worker/src/jobs/
+  /// syncMatchEvents.ts), puis mis en cache ici pour ne plus jamais refaire
+  /// cette recherche : le quota gratuit (100 requêtes/jour) ne le permettrait pas.
+  highlightlyId Int? @unique
+
   competitionId String
   competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
   seasonId      String
