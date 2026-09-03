@@ -70,6 +70,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       coverImageUrl,
       status,
       publishedAt: status === "PUBLISHED" ? (existing.publishedAt ?? new Date()) : existing.publishedAt,
+      // Brouillons de l'agent éditorial : jamais d'auteur assigné à la création
+      // (voir runEditorialDigest.ts). On l'attribue à la personne qui relit/
+      // valide dans l'admin, sans jamais écraser un auteur déjà présent.
+      authorId: existing.authorId ?? admin.id,
       isBreaking,
       breakingPriority: breakingPriority as BreakingPriority,
       breakingSince,

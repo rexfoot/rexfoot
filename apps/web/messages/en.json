@@ -83,7 +83,8 @@
   "news": {
     "title": "News",
     "metaDescription": "International football news: transfers, results, analysis and interviews.",
-    "noArticles": "No articles published yet"
+    "noArticles": "No articles published yet",
+    "writtenBy": "Written by"
   },
   "analysis": {
     "title": "RexFoot Analysis",
@@ -240,5 +241,25 @@
   "metadata": {
     "title": "RexFoot — Football that never sleeps",
     "description": "RexFoot brings together football news, live matches, results, statistics and video in one place."
+  },
+  "footer": {
+    "legalLink": "Legal notice",
+    "rights": "All rights reserved."
+  },
+  "legal": {
+    "title": "Legal notice",
+    "metaDescription": "RexFoot legal notice: publisher, hosting and intellectual property.",
+    "publisherTitle": "Site publisher",
+    "publisherBody": "RexFoot (rexfoot.com) is published on a non-professional basis by Hicham Jikh Cheddad.\nContact: footrexofficial@gmail.com",
+    "directorTitle": "Publication director",
+    "directorBody": "Hicham Jikh Cheddad.",
+    "hostingTitle": "Hosting",
+    "hostingBody": "Application hosting: Railway Corporation (railway.com).\nDomain, DNS and network protection: Cloudflare, Inc. (cloudflare.com).",
+    "ipTitle": "Intellectual property",
+    "ipBody": "All content on this site (text, layout, logo) belongs to RexFoot unless stated otherwise. Articles drafted with AI assistance are always reviewed and approved by the editorial team before publication. Photographs and videos remain the property of their respective authors or agencies; their use on RexFoot is limited to editorial illustration, with source credit where known.",
+    "dataTitle": "Personal data",
+    "dataBody": "Creating a RexFoot account requires an email address and a display name. No data is sold or shared with third parties for advertising purposes. The site does not set advertising tracking cookies; a technical cookie only stores your chosen language. You can request deletion of your account and data from the Account page, or by writing to footrexofficial@gmail.com.",
+    "contactTitle": "Contact",
+    "contactBody": "For any question about the site, write to footrexofficial@gmail.com."
   }
 }

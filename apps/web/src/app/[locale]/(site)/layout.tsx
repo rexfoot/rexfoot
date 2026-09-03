@@ -4,6 +4,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { Sidebar } from "@/components/Sidebar";
 import { MobileHeader } from "@/components/MobileHeader";
 import { BreakingNewsBanner } from "@/components/BreakingNewsBanner";
+import { Footer } from "@/components/Footer";
 
 /**
  * Chrome du site public (sidebar desktop, bottom nav + header mobile) —
@@ -21,6 +22,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <Sidebar user={user} />
         <main className="min-w-0 flex-1">{children}</main>
       </div>
+      <Footer />
       <BottomNav />
       <div className="rf-mobile-nav-spacer" aria-hidden />
     </>

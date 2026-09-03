@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { SITE_NAME } from "@rexfoot/config";
 import { getNewsArticleBySlug } from "@/lib/data/news";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { TrackView } from "@/components/TrackView";
 import { ShareButtons } from "@/components/ShareButtons";
+import { ArticleSignature } from "@/components/ArticleSignature";
 import { buildAlternates, localizedUrl } from "@/lib/seo/alternates";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rexfoot.com";
@@ -29,7 +30,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function NewsArticlePage({ params }: PageProps) {
   const { slug } = await params;
-  const [article, locale] = await Promise.all([getNewsArticleBySlug(slug), getLocale()]);
+  const [article, locale, t] = await Promise.all([
+    getNewsArticleBySlug(slug),
+    getLocale(),
+    getTranslations("news"),
+  ]);
   if (!article) notFound();
 
   const articleUrl = localizedUrl(locale, `/news/${slug}`);
@@ -76,6 +81,8 @@ export default async function NewsArticlePage({ params }: PageProps) {
         className="space-y-4 text-[15px] leading-relaxed text-rf-fg [&_a]:text-rf-gold [&_a]:underline [&_h2]:font-display [&_h2]:text-lg [&_h2]:font-bold"
         dangerouslySetInnerHTML={{ __html: article.contentHtml }}
       />
+
+      <ArticleSignature name={article.author?.displayName ?? SITE_NAME} label={t("writtenBy")} />
     </article>
   );
 }

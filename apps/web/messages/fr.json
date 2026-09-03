@@ -83,7 +83,8 @@
   "news": {
     "title": "Actualités",
     "metaDescription": "L'actualité football internationale : transferts, résultats, analyses et interviews.",
-    "noArticles": "Pas encore d'actualités publiées"
+    "noArticles": "Pas encore d'actualités publiées",
+    "writtenBy": "Écrit par"
   },
   "analysis": {
     "title": "RexFoot Analysis",
@@ -240,5 +241,25 @@
   "metadata": {
     "title": "RexFoot — Le football qui ne dort jamais",
     "description": "RexFoot centralise l'actualité, les matchs en direct, les résultats, les statistiques et la vidéo football international."
+  },
+  "footer": {
+    "legalLink": "Mentions légales",
+    "rights": "Tous droits réservés."
+  },
+  "legal": {
+    "title": "Mentions légales",
+    "metaDescription": "Mentions légales du site RexFoot : éditeur, hébergement et propriété intellectuelle.",
+    "publisherTitle": "Éditeur du site",
+    "publisherBody": "Le site RexFoot (rexfoot.com) est édité à titre non professionnel par Hicham Jikh Cheddad.\nContact : footrexofficial@gmail.com",
+    "directorTitle": "Directeur de la publication",
+    "directorBody": "Hicham Jikh Cheddad.",
+    "hostingTitle": "Hébergement",
+    "hostingBody": "Hébergement applicatif : Railway Corporation (railway.com).\nNom de domaine, DNS et protection réseau : Cloudflare, Inc. (cloudflare.com).",
+    "ipTitle": "Propriété intellectuelle",
+    "ipBody": "L'ensemble des contenus du site (textes, mises en page, logo) est la propriété de RexFoot, sauf mention contraire. Les articles générés avec l'assistance d'une IA sont systématiquement relus et validés par la rédaction avant publication. Les photographies et vidéos restent la propriété de leurs auteurs ou agences respectifs ; leur usage sur RexFoot se limite à l'illustration éditoriale, avec mention de la source lorsqu'elle est connue.",
+    "dataTitle": "Données personnelles",
+    "dataBody": "La création d'un compte RexFoot suppose la fourniture d'une adresse email et d'un nom d'affichage. Aucune donnée n'est vendue ou partagée avec des tiers à des fins publicitaires. Le site ne dépose pas de cookie de suivi publicitaire ; un cookie technique conserve uniquement la langue choisie. Vous pouvez demander la suppression de votre compte et de vos données depuis la page Mon compte, ou en écrivant à footrexofficial@gmail.com.",
+    "contactTitle": "Contact",
+    "contactBody": "Pour toute question relative au site, écrivez à footrexofficial@gmail.com."
   }
 }
