@@ -3,7 +3,6 @@ import { Link } from "@/i18n/navigation";
 import { AccountMenuButton } from "./AccountMenuButton";
 import { NotificationBell } from "./NotificationBell";
 import { LanguageSwitcher } from "./LanguageSwitcher";
-import { SearchOverlay } from "./SearchOverlay";
 import type { CurrentUser } from "@/lib/auth/current-user";
 
 /** Barre du haut visible uniquement sur mobile — la nav de contenu vit dans BottomNav, ceci ne sert qu'au compte/langue/recherche. */
@@ -16,7 +15,6 @@ export function MobileHeader({ user }: { user: CurrentUser | null }) {
         <span className="text-rf-fg">Foot</span>
       </Link>
       <div className="flex items-center gap-2">
-        <SearchOverlay />
         <LanguageSwitcher />
         {user && <NotificationBell />}
         <AccountMenuButton user={user} />

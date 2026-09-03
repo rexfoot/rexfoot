@@ -25,10 +25,7 @@ export async function syncLiveScores(): Promise<boolean> {
 
   const provider = createFootballProvider();
   const liveFixtures = await provider.getLiveScores();
-
-  if (liveFixtures.length === 0) {
-    return false;
-  }
+  const liveExternalIds = new Set(liveFixtures.map((f) => f.externalId));
 
   for (const fixtureDto of liveFixtures) {
     const existing = await prisma.fixture.findUnique({
@@ -52,6 +49,30 @@ export async function syncLiveScores(): Promise<boolean> {
     });
   }
 
-  logger.info({ count: liveFixtures.length }, "Scores en direct synchronisés");
-  return true;
+  // Un match qu'on avait en LIVE/HALFTIME mais qui n'apparaît plus dans le
+  // scoreboard direct du fournisseur vient de se terminer (ou d'être
+  // suspendu/reporté) — sans ce rattrapage, il reste bloqué en LIVE pour
+  // toujours car il ne sera plus jamais renvoyé par getLiveScores(). On va
+  // chercher son état final individuellement (peu de matchs concernés par
+  // cycle, coût négligeable).
+  const staleLive = await prisma.fixture.findMany({
+    where: { provider: PROVIDER_NAME, status: { in: ["LIVE", "HALFTIME"] } },
+  });
+  for (const fixture of staleLive) {
+    if (liveExternalIds.has(fixture.externalId)) continue;
+    const detail = await provider.getFixtureDetail(fixture.externalId);
+    if (!detail) continue;
+    await prisma.fixture.update({
+      where: { id: fixture.id },
+      data: {
+        status: detail.status,
+        minute: detail.minute,
+        homeScore: detail.homeScore,
+        awayScore: detail.awayScore,
+      },
+    });
+  }
+
+  logger.info({ count: liveFixtures.length, resolved: staleLive.length }, "Scores en direct synchronisés");
+  return liveFixtures.length > 0;
 }
