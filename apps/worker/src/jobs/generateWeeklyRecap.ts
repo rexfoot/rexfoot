@@ -3,11 +3,15 @@ import { getEnv } from "@rexfoot/config";
 import { createVideoProvider, VideoProviderError } from "@rexfoot/video-provider";
 import { renderMatchSlide, renderTitleSlide } from "./weeklyRecap/renderSlide.js";
 import { buildSlideshowVideo } from "./weeklyRecap/buildVideo.js";
+import { fetchBackgroundMusic } from "./weeklyRecap/music.js";
 import { generateUniqueVideoSlug } from "../lib/slug.js";
 import { logger } from "../lib/logger.js";
 
 const MAX_MATCHES = 10;
 const RECAP_WINDOW_DAYS = 7;
+// Licence gratuite Bensound (bensound.com) : attribution obligatoire dans la
+// description — voir music.ts pour la piste et le détail de la licence.
+const MUSIC_ATTRIBUTION = "Musique : \"Energy\" par Bensound.com — https://www.bensound.com";
 // Le transcodage Cloudflare Stream d'une vidéo aussi courte (~30-45s) prend
 // quelques secondes à ~1 minute en pratique — on poll plutôt que de créer la
 // fiche en base à l'état PROCESSING et attendre un rafraîchissement manuel
@@ -39,8 +43,9 @@ async function uploadToCloudflareStream(video: Buffer): Promise<string> {
 /**
  * Génère et publie un résumé vidéo hebdomadaire (slideshow scores + écussons,
  * données réelles uniquement) à partir des matchs terminés des compétitions
- * vedettes sur les RECAP_WINDOW_DAYS derniers jours. Pas de piste audio —
- * voir buildVideo.ts.
+ * vedettes sur les RECAP_WINDOW_DAYS derniers jours. Musique de fond Bensound
+ * (licence gratuite avec attribution, voir music.ts) — vidéo muette en repli
+ * silencieux si le morceau n'est pas récupérable, jamais bloquant.
  */
 export async function generateWeeklyRecap(): Promise<void> {
   const since = new Date();
@@ -85,8 +90,9 @@ export async function generateWeeklyRecap(): Promise<void> {
     )),
   ];
 
-  logger.info("Résumé hebdo : assemblage vidéo (ffmpeg)");
-  const videoBuffer = await buildSlideshowVideo(slides);
+  const music = await fetchBackgroundMusic();
+  logger.info({ withMusic: music !== null }, "Résumé hebdo : assemblage vidéo (ffmpeg)");
+  const videoBuffer = await buildSlideshowVideo(slides, music);
 
   logger.info({ sizeMb: (videoBuffer.length / 1_000_000).toFixed(1) }, "Résumé hebdo : upload vers Cloudflare Stream");
   const providerAssetId = await uploadToCloudflareStream(videoBuffer);
@@ -105,11 +111,14 @@ export async function generateWeeklyRecap(): Promise<void> {
   const title = `Résumé de la semaine — ${dateRange}`;
   const slug = await generateUniqueVideoSlug(title);
 
+  const baseDescription = `Les résultats de la semaine (${matches.length} matchs) — généré automatiquement à partir des données RexFoot.`;
+  const description = music ? `${baseDescription}\n\n${MUSIC_ATTRIBUTION}` : baseDescription;
+
   await prisma.video.create({
     data: {
       title,
       slug,
-      description: `Les résultats de la semaine (${matches.length} matchs) — généré automatiquement à partir des données RexFoot.`,
+      description,
       uploaderId: uploader?.id,
       providerName: getEnv().VIDEO_PROVIDER,
       providerAssetId,

@@ -27,13 +27,17 @@ function runFfmpeg(args: string[]): Promise<void> {
   });
 }
 
+const MUSIC_VOLUME = 0.25;
+const FADE_OUT_SECONDS = 2;
+
 /**
  * Assemble une liste d'images PNG (une par slide, même durée chacune) en un
- * mp4 H.264 muet — pas de piste audio : voir generateWeeklyRecap.ts pour
- * pourquoi (aucune source musicale libre de droits vérifiée n'est câblée ici,
- * mieux vaut une vidéo silencieuse qu'un risque de copyright).
+ * mp4 H.264 — avec piste audio de fond si `music` est fourni (voir music.ts ;
+ * volume réduit + fondu de sortie pour rester discret derrière les scores),
+ * sinon vidéo muette (musique indisponible ou non fournie n'est jamais
+ * bloquant, voir fetchBackgroundMusic).
  */
-export async function buildSlideshowVideo(slides: Buffer[]): Promise<Buffer> {
+export async function buildSlideshowVideo(slides: Buffer[], music: Buffer | null = null): Promise<Buffer> {
   const dir = await mkdtemp(path.join(tmpdir(), "rexfoot-recap-"));
   try {
     const listLines: string[] = [];
@@ -51,23 +55,59 @@ export async function buildSlideshowVideo(slides: Buffer[]): Promise<Buffer> {
     const listPath = path.join(dir, "list.txt");
     await writeFile(listPath, listLines.join("\n"));
 
+    const totalSeconds = slides.length * SECONDS_PER_SLIDE;
     const outputPath = path.join(dir, "output.mp4");
-    await runFfmpeg([
-      "-y",
-      "-f",
-      "concat",
-      "-safe",
-      "0",
-      "-i",
-      listPath,
-      "-vf",
-      "fps=30,format=yuv420p",
-      "-c:v",
-      "libx264",
-      "-movflags",
-      "+faststart",
-      outputPath,
-    ]);
+
+    if (music) {
+      const musicPath = path.join(dir, "music.mp3");
+      await writeFile(musicPath, music);
+      const fadeStart = Math.max(0, totalSeconds - FADE_OUT_SECONDS);
+      await runFfmpeg([
+        "-y",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        listPath,
+        // -stream_loop -1 : la piste boucle si plus courte que la vidéo, -shortest
+        // (ci-dessous) coupe tout au plus court des deux une fois combiné avec la
+        // vidéo — donc toujours calé exactement sur la durée du slideshow.
+        "-stream_loop",
+        "-1",
+        "-i",
+        musicPath,
+        "-vf",
+        "fps=30,format=yuv420p",
+        "-af",
+        `volume=${MUSIC_VOLUME},afade=t=out:st=${fadeStart}:d=${FADE_OUT_SECONDS}`,
+        "-c:v",
+        "libx264",
+        "-c:a",
+        "aac",
+        "-shortest",
+        "-movflags",
+        "+faststart",
+        outputPath,
+      ]);
+    } else {
+      await runFfmpeg([
+        "-y",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        listPath,
+        "-vf",
+        "fps=30,format=yuv420p",
+        "-c:v",
+        "libx264",
+        "-movflags",
+        "+faststart",
+        outputPath,
+      ]);
+    }
 
     const { readFile } = await import("node:fs/promises");
     return await readFile(outputPath);
