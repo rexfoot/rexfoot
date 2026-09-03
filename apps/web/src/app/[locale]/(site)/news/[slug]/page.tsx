@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getLocale } from "next-intl/server";
+import { SITE_NAME } from "@rexfoot/config";
 import { getNewsArticleBySlug } from "@/lib/data/news";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { TrackView } from "@/components/TrackView";
 import { ShareButtons } from "@/components/ShareButtons";
-import { buildAlternates } from "@/lib/seo/alternates";
+import { buildAlternates, localizedUrl } from "@/lib/seo/alternates";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rexfoot.com";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -29,13 +32,24 @@ export default async function NewsArticlePage({ params }: PageProps) {
   const [article, locale] = await Promise.all([getNewsArticleBySlug(slug), getLocale()]);
   if (!article) notFound();
 
+  const articleUrl = localizedUrl(locale, `/news/${slug}`);
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
     headline: article.title,
-    image: article.coverImageUrl ?? undefined,
+    description: article.summary ?? undefined,
+    image: article.coverImageUrl ? [article.coverImageUrl] : undefined,
     datePublished: article.publishedAt?.toISOString(),
-    author: article.author ? { "@type": "Person", name: article.author.displayName } : undefined,
+    dateModified: (article.updatedAt ?? article.publishedAt)?.toISOString(),
+    mainEntityOfPage: { "@type": "WebPage", "@id": articleUrl },
+    author: article.author
+      ? { "@type": "Person", name: article.author.displayName }
+      : { "@type": "Organization", name: SITE_NAME },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: { "@type": "ImageObject", url: `${siteUrl}/logo-crown.png` },
+    },
   };
 
   return (

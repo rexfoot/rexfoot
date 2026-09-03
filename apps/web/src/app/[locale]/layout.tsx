@@ -54,6 +54,32 @@ interface LocaleLayoutProps {
   params: Promise<{ locale: string }>;
 }
 
+// Organization + WebSite : posé une fois ici (racine), pas répété page par
+// page — sert de socle au knowledge panel / sitelinks searchbox Google, en
+// complément des schémas plus spécifiques (NewsArticle, SportsEvent…) posés
+// par chaque page de détail.
+function buildRootJsonLd() {
+  return [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: SITE_NAME,
+      url: siteUrl,
+      logo: `${siteUrl}/logo-crown.png`,
+    },
+    // Pas de `potentialAction: SearchAction` (sitelinks searchbox) : la
+    // recherche n'a pas de page dédiée lisant `?q=` (overlay client + /api/search
+    // uniquement) — un SearchAction pointant vers une page qui l'ignore
+    // induirait Google en erreur plutôt que d'aider.
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: SITE_NAME,
+      url: siteUrl,
+    },
+  ];
+}
+
 // Racine du site public — langue et sens d'écriture dépendent réellement de la
 // route (`dir="rtl"` rendu côté serveur pour l'arabe, jamais corrigé après coup
 // en JS : un flash LTR→RTL serait exactement l'"élément cassé" à éviter).
@@ -70,6 +96,10 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
       className={`${inter.variable} ${outfit.variable} h-full antialiased`}
     >
       <body className="min-h-full">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(buildRootJsonLd()) }}
+        />
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>
