@@ -33,8 +33,19 @@ function expand(entries: RouteEntry[]): MetadataRoute.Sitemap {
   });
 }
 
+// Fenêtre calquée sur syncFixtures (apps/worker) : les seuls matchs dont la
+// base est réellement à jour. Au-delà, l'entrée existerait mais pointerait
+// vers des données jamais rafraîchies par le worker.
+const MATCH_WINDOW_DAYS_PAST = 3;
+const MATCH_WINDOW_DAYS_FUTURE = 14;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [teams, players, competitions, videos, articles] = await Promise.all([
+  const matchDateFrom = new Date();
+  matchDateFrom.setDate(matchDateFrom.getDate() - MATCH_WINDOW_DAYS_PAST);
+  const matchDateTo = new Date();
+  matchDateTo.setDate(matchDateTo.getDate() + MATCH_WINDOW_DAYS_FUTURE);
+
+  const [teams, players, competitions, videos, articles, matches] = await Promise.all([
     prisma.team.findMany({ select: { slug: true, updatedAt: true } }),
     prisma.player.findMany({ select: { slug: true, updatedAt: true } }),
     prisma.competition.findMany({ select: { slug: true, updatedAt: true }, where: { isActive: true } }),
@@ -43,6 +54,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { moderationStatus: "APPROVED", publishedAt: { not: null } },
     }),
     prisma.newsArticle.findMany({ select: { slug: true, updatedAt: true }, where: { status: "PUBLISHED" } }),
+    prisma.fixture.findMany({
+      select: { id: true, updatedAt: true, status: true },
+      where: { kickoffAt: { gte: matchDateFrom, lte: matchDateTo } },
+    }),
   ]);
 
   return [
@@ -65,5 +80,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...expand(players.map((p) => ({ pathname: `/players/${p.slug}`, lastModified: p.updatedAt, priority: 0.5 }))),
     ...expand(videos.map((v) => ({ pathname: `/video/${v.slug}`, lastModified: v.updatedAt, priority: 0.5 }))),
     ...expand(articles.map((a) => ({ pathname: `/news/${a.slug}`, lastModified: a.updatedAt, priority: 0.5 }))),
+    ...expand(
+      matches.map((m): RouteEntry => {
+        const isLive = m.status === "LIVE" || m.status === "HALFTIME";
+        return {
+          pathname: `/matches/${m.id}`,
+          lastModified: m.updatedAt,
+          changeFrequency: isLive ? "always" : "hourly",
+          priority: isLive ? 0.9 : 0.6,
+        };
+      }),
+    ),
   ];
 }
