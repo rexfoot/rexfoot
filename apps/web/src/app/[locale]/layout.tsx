@@ -6,6 +6,7 @@ import { Inter, Outfit } from "next/font/google";
 import { SITE_NAME } from "@rexfoot/config";
 import { routing, isRtl } from "@/i18n/routing";
 import { buildAlternates, ogLocale } from "@/lib/seo/alternates";
+import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import "../globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -101,6 +102,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildRootJsonLd()) }}
         />
+        <GoogleAnalytics />
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>
