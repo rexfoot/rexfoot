@@ -40,6 +40,7 @@ export async function generateMetadata({
     },
     twitter: { card: "summary_large_image", title: t("title"), description: t("description") },
     icons: { icon: "/favicon.ico" },
+    verification: { google: "2XBaY5zTQbk39aUgVQLhQOfZRmRnYxBMDRPKZ2S3Yao" },
   };
 }
 
