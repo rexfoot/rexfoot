@@ -24,3 +24,17 @@ export async function generateUniqueNewsSlug(title: string): Promise<string> {
 
   return candidate;
 }
+
+/** Même logique que generateUniqueVideoSlug côté web (apps/web/src/lib/data/videos-admin.ts). */
+export async function generateUniqueVideoSlug(title: string): Promise<string> {
+  const base = slugify(title) || "video";
+  let candidate = base;
+  let suffix = 2;
+
+  while (await prisma.video.findUnique({ where: { slug: candidate }, select: { id: true } })) {
+    candidate = `${base}-${suffix}`;
+    suffix += 1;
+  }
+
+  return candidate;
+}

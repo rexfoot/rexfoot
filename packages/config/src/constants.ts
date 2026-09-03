@@ -60,3 +60,14 @@ export const EDITORIAL_SOURCE_FEEDS = [
   { publisherName: "AS", url: "https://as.com/rss/futbol/portada.xml" },
   { publisherName: "ESPN FC", url: "https://www.espn.com/espn/rss/soccer/news" },
 ] as const;
+
+/**
+ * Chaîne YouTube du propriétaire de RexFoot (handle public @youblive, affiché
+ * "souss-actualités" — le handle et le nom de la chaîne sont deux champs
+ * indépendants côté YouTube). Résolu une fois manuellement via la page de la
+ * chaîne (canonical -> /channel/UC...) : YouTube n'expose pas de résolution
+ * handle -> id sans clé API, et l'id de chaîne ne change jamais contrairement
+ * au handle. Sert de source à syncYoutubeVideos (apps/worker) via son flux
+ * RSS public (pas de clé API requise, pas de quota).
+ */
+export const YOUTUBE_CHANNEL_ID = "UCiuPF8_U1DLILNWwzf1cyvA";

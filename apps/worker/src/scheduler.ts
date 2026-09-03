@@ -10,6 +10,7 @@ export const JobName = {
   syncPlayerStats: "sync-player-stats",
   syncRosters: "sync-rosters",
   editorialDigest: "editorial-digest",
+  syncYoutubeVideos: "sync-youtube-videos",
 } as const;
 
 // Calibré pour le plan gratuit API-Football (100 requêtes/jour, 7 compétitions
@@ -81,6 +82,13 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     JobName.editorialDigest,
     {},
     { repeat: { pattern: "0 7 * * *" }, jobId: JobName.editorialDigest, ...DEFAULT_JOB_OPTS },
+  );
+  // Flux RSS public YouTube (pas de clé API, pas de quota) : cadence courte
+  // pour que les vidéos publiées sur la chaîne apparaissent vite sur /video.
+  await queue.add(
+    JobName.syncYoutubeVideos,
+    {},
+    { repeat: { every: 15 * 60 * 1000 }, jobId: JobName.syncYoutubeVideos, ...DEFAULT_JOB_OPTS },
   );
 
   await scheduleNextLiveScoresRun(queue, false);

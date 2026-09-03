@@ -9,6 +9,7 @@ import { syncLiveScores } from "./jobs/syncLiveScores.js";
 import { syncStandings } from "./jobs/syncStandings.js";
 import { syncPlayerStats } from "./jobs/syncPlayerStats.js";
 import { syncRosters } from "./jobs/syncRosters.js";
+import { syncYoutubeVideos } from "./jobs/syncYoutubeVideos.js";
 import { runEditorialDigest } from "./jobs/editorial/runEditorialDigest.js";
 
 async function main(): Promise<void> {
@@ -43,6 +44,8 @@ async function main(): Promise<void> {
           return syncRosters();
         case JobName.editorialDigest:
           return runEditorialDigest();
+        case JobName.syncYoutubeVideos:
+          return syncYoutubeVideos();
         case JobName.syncLiveScores: {
           const hadLiveMatches = await syncLiveScores();
           await scheduleNextLiveScoresRun(queue, hadLiveMatches);
