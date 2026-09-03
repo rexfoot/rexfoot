@@ -29,6 +29,11 @@ function runFfmpeg(args: string[]): Promise<void> {
 
 const MUSIC_VOLUME = 0.25;
 const FADE_OUT_SECONDS = 2;
+// libx264 pioche par défaut un thread par cœur détecté — sur le conteneur
+// Railway du worker, ça a fait planter l'encodage à mi-chemin (code de sortie
+// null = tué par un signal, contention CPU/mémoire). Un thread count fixe et
+// modeste passe partout, y compris sur un plan compute limité.
+const FFMPEG_THREADS = "2";
 
 /**
  * Assemble une liste d'images PNG (une par slide, même durée chacune) en un
@@ -83,6 +88,8 @@ export async function buildSlideshowVideo(slides: Buffer[], music: Buffer | null
         `volume=${MUSIC_VOLUME},afade=t=out:st=${fadeStart}:d=${FADE_OUT_SECONDS}`,
         "-c:v",
         "libx264",
+        "-threads",
+        FFMPEG_THREADS,
         "-c:a",
         "aac",
         "-shortest",
@@ -103,6 +110,8 @@ export async function buildSlideshowVideo(slides: Buffer[], music: Buffer | null
         "fps=30,format=yuv420p",
         "-c:v",
         "libx264",
+        "-threads",
+        FFMPEG_THREADS,
         "-movflags",
         "+faststart",
         outputPath,
