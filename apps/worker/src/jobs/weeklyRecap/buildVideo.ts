@@ -75,11 +75,14 @@ export async function buildSlideshowVideo(slides: Buffer[], music: Buffer | null
         "0",
         "-i",
         listPath,
-        // -stream_loop -1 : la piste boucle si plus courte que la vidéo, -shortest
-        // (ci-dessous) coupe tout au plus court des deux une fois combiné avec la
-        // vidéo — donc toujours calé exactement sur la durée du slideshow.
-        "-stream_loop",
-        "-1",
+        // Le morceau Bensound (plusieurs minutes) est toujours plus long qu'un
+        // résumé hebdo (quelques dizaines de secondes) — pas besoin de boucler.
+        // `-stream_loop -1` (boucle infinie côté ffmpeg, coupée par -shortest)
+        // testé ici a fait grimper la mémoire du process jusqu'à l'OOM kill sur
+        // le conteneur Railway contraint du worker ; `-t` borne l'audio décodé
+        // à la durée utile dès l'entrée, sans jamais décoder plus que ça.
+        "-t",
+        String(totalSeconds),
         "-i",
         musicPath,
         "-vf",
