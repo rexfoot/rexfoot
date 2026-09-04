@@ -51,6 +51,20 @@ export interface LineupSummary {
   substitutes: LineupPlayer[];
 }
 
+export interface StandingRow {
+  position: number;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+  points: number;
+  form: string | null;
+  team: { name: string; slug: string; crestUrl: string | null };
+}
+
 /** Détail complet d'un match — forme JSON renvoyée par /api/matches/[id] (dates sérialisées en ISO string). */
 export interface MatchDetail extends MatchSummary {
   round: string | null;
@@ -59,6 +73,9 @@ export interface MatchDetail extends MatchSummary {
   events: MatchEventSummary[];
   teamStatistics: TeamStatisticsSummary[];
   lineups: LineupSummary[];
+  standings: StandingRow[];
+  homeTeamNextMatch: MatchSummary | null;
+  awayTeamNextMatch: MatchSummary | null;
 }
 
 /** Forme allégée d'une vidéo, utilisée par VideoCard et les pages /video. */

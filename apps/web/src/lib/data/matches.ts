@@ -1,6 +1,7 @@
 import { prisma, Prisma } from "@rexfoot/db";
 import { PAGE_SIZE_MATCHES } from "@rexfoot/config";
-import type { LineupPlayer, MatchDetail, MatchSummary } from "@/lib/types";
+import { getStandingsForCompetition } from "./competitions";
+import type { LineupPlayer, MatchDetail, MatchSummary, StandingRow } from "@/lib/types";
 
 const matchSelect = {
   id: true,
@@ -85,6 +86,8 @@ const matchDetailSelect = {
   round: true,
   venueName: true,
   referee: true,
+  competitionId: true,
+  seasonId: true,
   events: {
     orderBy: { minute: "asc" as const },
     select: {
@@ -123,9 +126,40 @@ const matchDetailSelect = {
   },
 } as const;
 
+/** Premier match à venir de l'équipe après `after` — null s'il n'y en a aucun de programmé. */
+async function getNextFixtureForTeam(teamId: string, after: Date): Promise<MatchSummary | null> {
+  const row = await prisma.fixture.findFirst({
+    where: { OR: [{ homeTeamId: teamId }, { awayTeamId: teamId }], kickoffAt: { gt: after }, status: "SCHEDULED" },
+    orderBy: { kickoffAt: "asc" },
+    select: matchSelect,
+  });
+  return row ? serialize(row) : null;
+}
+
 export async function getMatchById(id: string): Promise<MatchDetail | null> {
   const row = await prisma.fixture.findUnique({ where: { id }, select: matchDetailSelect });
   if (!row) return null;
+
+  const [standingsRows, homeTeamNextMatch, awayTeamNextMatch] = await Promise.all([
+    getStandingsForCompetition(row.competitionId, row.seasonId),
+    getNextFixtureForTeam(row.homeTeam.id, row.kickoffAt),
+    getNextFixtureForTeam(row.awayTeam.id, row.kickoffAt),
+  ]);
+
+  const standings: StandingRow[] = standingsRows.map((s) => ({
+    position: s.position,
+    played: s.played,
+    won: s.won,
+    drawn: s.drawn,
+    lost: s.lost,
+    goalsFor: s.goalsFor,
+    goalsAgainst: s.goalsAgainst,
+    goalDifference: s.goalDifference,
+    points: s.points,
+    form: s.form,
+    team: s.team,
+  }));
+
   return {
     ...row,
     kickoffAt: row.kickoffAt.toISOString(),
@@ -134,6 +168,9 @@ export async function getMatchById(id: string): Promise<MatchDetail | null> {
       startingXI: l.startingXI as unknown as LineupPlayer[],
       substitutes: l.substitutes as unknown as LineupPlayer[],
     })),
+    standings,
+    homeTeamNextMatch,
+    awayTeamNextMatch,
   };
 }
 

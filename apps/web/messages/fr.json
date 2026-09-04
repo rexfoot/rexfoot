@@ -58,7 +58,13 @@
     "yellowCards": "Cartons jaunes",
     "redCards": "Cartons rouges",
     "expectedGoals": "Buts attendus (xG)",
-    "bigChancesCreated": "Grosses occasions créées"
+    "bigChancesCreated": "Grosses occasions créées",
+    "composition": "Compositions",
+    "standingsTab": "Classement",
+    "nextMatch": "Prochain match",
+    "noStandingsForMatch": "Aucun classement disponible",
+    "noNextMatch": "Aucun match programmé pour l'instant",
+    "noLineups": "Compositions pas encore disponibles"
   },
   "standings": {
     "title": "Classements",

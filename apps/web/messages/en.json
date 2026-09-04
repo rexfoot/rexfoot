@@ -58,7 +58,13 @@
     "yellowCards": "Yellow cards",
     "redCards": "Red cards",
     "expectedGoals": "Expected goals (xG)",
-    "bigChancesCreated": "Big chances created"
+    "bigChancesCreated": "Big chances created",
+    "composition": "Line-ups",
+    "standingsTab": "Standings",
+    "nextMatch": "Next match",
+    "noStandingsForMatch": "No standings available",
+    "noNextMatch": "No match scheduled yet",
+    "noLineups": "Line-ups not available yet"
   },
   "standings": {
     "title": "Standings",

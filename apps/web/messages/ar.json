@@ -58,7 +58,13 @@
     "yellowCards": "البطاقات الصفراء",
     "redCards": "البطاقات الحمراء",
     "expectedGoals": "الأهداف المتوقعة (xG)",
-    "bigChancesCreated": "الفرص الكبيرة المهدرة"
+    "bigChancesCreated": "الفرص الكبيرة المهدرة",
+    "composition": "التشكيلة",
+    "standingsTab": "الترتيب",
+    "nextMatch": "المباراة القادمة",
+    "noStandingsForMatch": "لا يوجد ترتيب متاح",
+    "noNextMatch": "لا توجد مباراة مبرمجة بعد",
+    "noLineups": "التشكيلة غير متوفرة بعد"
   },
   "standings": {
     "title": "الترتيب",

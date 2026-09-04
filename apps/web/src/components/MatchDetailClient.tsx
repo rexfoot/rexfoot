@@ -1,14 +1,20 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowDownCircle, ArrowUpCircle, ListChecks } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
 import { EmptyState } from "./EmptyState";
 import { ShareButtons } from "./ShareButtons";
+import { MatchCard } from "./MatchCard";
+import { FormBadge } from "./FormBadge";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
-import type { LineupPlayer, MatchDetail, MatchEventSummary, TeamStatisticsSummary } from "@/lib/types";
+import { cn } from "@/lib/cn";
+import type { LineupPlayer, MatchDetail, MatchEventSummary, MatchSummary, TeamStatisticsSummary } from "@/lib/types";
+
+type QuickTab = "composition" | "standings" | "nextMatch";
 
 const EVENT_ICON: Record<string, string> = {
   GOAL: "⚽",
@@ -101,44 +107,7 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
         )}
       </section>
 
-      {match.lineups.length > 0 && (
-        <section>
-          <h2 className="mb-3 font-display text-lg font-bold text-rf-fg">{t("lineups")}</h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {match.lineups.map((lineup) => {
-              const team = lineup.teamId === match.homeTeam.id ? match.homeTeam : match.awayTeam;
-              return (
-                <div key={lineup.teamId} className="rounded-xl border border-rf-border bg-rf-bg-card p-4">
-                  <div className="mb-3 flex items-center gap-2">
-                    <TeamCrest crestUrl={team.crestUrl} teamName={team.name} size="sm" />
-                    <span className="font-display text-sm font-semibold text-rf-fg">{team.name}</span>
-                    {lineup.formation && (
-                      <span className="ms-auto text-xs font-medium text-rf-fg-subtle">{lineup.formation}</span>
-                    )}
-                  </div>
-                  <ul className="space-y-1.5">
-                    {lineup.startingXI.map((player, i) => (
-                      <LineupRow key={`${lineup.teamId}-xi-${i}`} player={player} />
-                    ))}
-                  </ul>
-                  {lineup.substitutes.length > 0 && (
-                    <>
-                      <p className="mb-1.5 mt-3 text-xs font-semibold uppercase tracking-wide text-rf-fg-subtle">
-                        {t("substitutes")}
-                      </p>
-                      <ul className="space-y-1.5">
-                        {lineup.substitutes.map((player, i) => (
-                          <LineupRow key={`${lineup.teamId}-sub-${i}`} player={player} />
-                        ))}
-                      </ul>
-                    </>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      )}
+      <QuickTabs match={match} />
 
       {match.teamStatistics.length > 0 && (
         <section>
@@ -183,6 +152,165 @@ function EventRow({ event }: { event: MatchEventSummary }) {
         </span>
       )}
     </li>
+  );
+}
+
+/**
+ * Réplique en réduit le bloc "match" de Google (composition/classement/prochain
+ * match dans le même bloc, un clic change juste le panneau affiché — jamais de
+ * navigation). Les Événements et Statistiques restent des sections à part,
+ * toujours visibles, inchangées.
+ */
+function QuickTabs({ match }: { match: MatchDetail }) {
+  const t = useTranslations("matches");
+  const [tab, setTab] = useState<QuickTab>("composition");
+
+  const tabs: Array<{ id: QuickTab; label: string }> = [
+    { id: "composition", label: t("composition") },
+    { id: "standings", label: t("standingsTab") },
+    { id: "nextMatch", label: t("nextMatch") },
+  ];
+
+  return (
+    <section>
+      <div className="mb-3 flex gap-2 overflow-x-auto rounded-full border border-rf-border bg-rf-bg-card p-1">
+        {tabs.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => setTab(id)}
+            className={cn(
+              "shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors",
+              tab === id ? "bg-rf-gold text-rf-bg" : "text-rf-fg-muted hover:text-rf-fg",
+            )}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {tab === "composition" && <CompositionPanel match={match} />}
+      {tab === "standings" && <StandingsPanel match={match} />}
+      {tab === "nextMatch" && <NextMatchPanel match={match} />}
+    </section>
+  );
+}
+
+function CompositionPanel({ match }: { match: MatchDetail }) {
+  const t = useTranslations("matches");
+
+  if (match.lineups.length === 0) {
+    return <EmptyState icon={ListChecks} title={t("noLineups")} />;
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {match.lineups.map((lineup) => {
+        const team = lineup.teamId === match.homeTeam.id ? match.homeTeam : match.awayTeam;
+        return (
+          <div key={lineup.teamId} className="rounded-xl border border-rf-border bg-rf-bg-card p-4">
+            <div className="mb-3 flex items-center gap-2">
+              <TeamCrest crestUrl={team.crestUrl} teamName={team.name} size="sm" />
+              <span className="font-display text-sm font-semibold text-rf-fg">{team.name}</span>
+              {lineup.formation && (
+                <span className="ms-auto text-xs font-medium text-rf-fg-subtle">{lineup.formation}</span>
+              )}
+            </div>
+            <ul className="space-y-1.5">
+              {lineup.startingXI.map((player, i) => (
+                <LineupRow key={`${lineup.teamId}-xi-${i}`} player={player} />
+              ))}
+            </ul>
+            {lineup.substitutes.length > 0 && (
+              <>
+                <p className="mb-1.5 mt-3 text-xs font-semibold uppercase tracking-wide text-rf-fg-subtle">
+                  {t("substitutes")}
+                </p>
+                <ul className="space-y-1.5">
+                  {lineup.substitutes.map((player, i) => (
+                    <LineupRow key={`${lineup.teamId}-sub-${i}`} player={player} />
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function StandingsPanel({ match }: { match: MatchDetail }) {
+  const t = useTranslations("matches");
+  const s = useTranslations("standings");
+
+  if (match.standings.length === 0) {
+    return <EmptyState icon={ListChecks} title={t("noStandingsForMatch")} />;
+  }
+
+  return (
+    <div className="overflow-x-auto rounded-xl border border-rf-border">
+      <table className="w-full text-sm">
+        <thead className="bg-rf-bg-elevated text-left text-rf-fg-muted">
+          <tr>
+            <th className="px-3 py-2 font-medium">{s("position")}</th>
+            <th className="px-3 py-2 font-medium">{s("team")}</th>
+            <th className="px-3 py-2 text-center font-medium">{s("played")}</th>
+            <th className="px-3 py-2 text-center font-medium">{s("goalDifference")}</th>
+            <th className="px-3 py-2 text-center font-medium">{s("points")}</th>
+            <th className="px-3 py-2 text-center font-medium">{s("form")}</th>
+          </tr>
+        </thead>
+        <tbody className="[font-variant-numeric:tabular-nums]">
+          {match.standings.map((row) => {
+            const isMatchTeam = row.team.slug === match.homeTeam.slug || row.team.slug === match.awayTeam.slug;
+            return (
+              <tr
+                key={row.team.slug}
+                className={cn("border-t border-rf-border", isMatchTeam && "bg-rf-gold/10")}
+              >
+                <td className="px-3 py-2 text-rf-fg-muted">{row.position}</td>
+                <td className="px-3 py-2">
+                  <span className="flex items-center gap-2 font-medium text-rf-fg">
+                    <TeamCrest crestUrl={row.team.crestUrl} teamName={row.team.name} size="sm" />
+                    {row.team.name}
+                  </span>
+                </td>
+                <td className="px-3 py-2 text-center text-rf-fg-muted">{row.played}</td>
+                <td className="px-3 py-2 text-center text-rf-fg-muted">{row.goalDifference}</td>
+                <td className="px-3 py-2 text-center font-bold text-rf-fg">{row.points}</td>
+                <td className="px-3 py-2">
+                  <FormBadge form={row.form} />
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function NextMatchPanel({ match }: { match: MatchDetail }) {
+  const t = useTranslations("matches");
+  const entries: Array<{ teamName: string; next: MatchSummary | null }> = [
+    { teamName: match.homeTeam.name, next: match.homeTeamNextMatch },
+    { teamName: match.awayTeam.name, next: match.awayTeamNextMatch },
+  ];
+
+  if (entries.every((e) => !e.next)) {
+    return <EmptyState icon={ListChecks} title={t("noNextMatch")} />;
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {entries.map(({ teamName, next }) => (
+        <div key={teamName}>
+          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-rf-fg-subtle">{teamName}</p>
+          {next ? <MatchCard match={next} /> : <EmptyState icon={ListChecks} title={t("noNextMatch")} />}
+        </div>
+      ))}
+    </div>
   );
 }
 
