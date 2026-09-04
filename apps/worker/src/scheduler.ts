@@ -11,6 +11,7 @@ export const JobName = {
   syncRosters: "sync-rosters",
   editorialDigest: "editorial-digest",
   extractTransfers: "extract-transfers",
+  syncPlayerPhotos: "sync-player-photos",
   syncYoutubeVideos: "sync-youtube-videos",
   weeklyRecap: "weekly-recap",
   syncMatchEvents: "sync-match-events",
@@ -95,6 +96,14 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     JobName.extractTransfers,
     {},
     { repeat: { every: 2 * 60 * 60 * 1000 }, jobId: JobName.extractTransfers, ...DEFAULT_JOB_OPTS },
+  );
+  // football-data.org (gratuit) ne fournit aucune photo de joueur — comble ce
+  // manque via TheSportsDB, par petits lots (voir MAX_PLAYERS_PER_RUN dans
+  // syncPlayerPhotos.ts) pour rester sous son plan gratuit très limité en débit.
+  await queue.add(
+    JobName.syncPlayerPhotos,
+    {},
+    { repeat: { every: 15 * 60 * 1000 }, jobId: JobName.syncPlayerPhotos, ...DEFAULT_JOB_OPTS },
   );
   // Flux RSS public YouTube (pas de clé API, pas de quota) : cadence courte
   // pour que les vidéos publiées sur la chaîne apparaissent vite sur /video.
