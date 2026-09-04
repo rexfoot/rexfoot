@@ -89,8 +89,47 @@ const ISO2_BY_NATIONALITY: Record<string, string> = {
   Yemen: "ye", Zambia: "zm", Zimbabwe: "zw",
 };
 
+/** Code flagcdn.com (ISO2, ou l'un des codes spéciaux ci-dessus) — `null` si inconnu. */
+export function nationalityCode(name: string): string | null {
+  return SPECIAL_CODES[name] ?? ISO2_BY_NATIONALITY[name] ?? null;
+}
+
 /** URL d'image de drapeau (flagcdn.com) pour une nationalité déjà canonicalisée — `null` si inconnue (jamais de drapeau inventé). */
 export function nationalityFlagUrl(name: string): string | null {
-  const code = SPECIAL_CODES[name] ?? ISO2_BY_NATIONALITY[name];
+  const code = nationalityCode(name);
   return code ? `${FLAGCDN_BASE}/h40/${code}.png` : null;
+}
+
+/**
+ * Code ISO 3166-1 "standard" pour Intl.DisplayNames — les quatre nations
+ * britanniques n'en ont pas (rattachées à GB), donc pas de traduction FR/ES
+ * automatique possible pour elles : la recherche reste alors limitée au nom
+ * anglais pour ces quatre-là.
+ */
+function iso2ForDisplayNames(name: string): string | null {
+  return ISO2_BY_NATIONALITY[name] ?? null;
+}
+
+function stripDiacritics(s: string): string {
+  return s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+/**
+ * Termes de recherche pour cette nationalité : le nom anglais canonique (celui
+ * affiché) + ses traductions français/espagnol via Intl.DisplayNames (aucune
+ * table à maintenir à la main) — pour que taper "Maroc" ou "Marruecos" trouve
+ * "Morocco" même si le nom affiché reste en anglais.
+ */
+export function nationalitySearchTerms(name: string): string[] {
+  const terms = [name];
+  const iso2 = iso2ForDisplayNames(name);
+  if (iso2) {
+    try {
+      terms.push(new Intl.DisplayNames(["fr"], { type: "region" }).of(iso2.toUpperCase()) ?? name);
+      terms.push(new Intl.DisplayNames(["es"], { type: "region" }).of(iso2.toUpperCase()) ?? name);
+    } catch {
+      // Intl.DisplayNames indisponible (environnement très ancien) : repli sur le seul nom anglais.
+    }
+  }
+  return terms.map(stripDiacritics);
 }

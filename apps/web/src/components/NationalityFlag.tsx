@@ -18,8 +18,7 @@ export function NationalityFlag({ url, name, size = 24 }: { url: string | null; 
       alt={name}
       width={size}
       height={size * 0.75}
-      className="shrink-0 rounded-sm object-cover"
-      style={{ width: size, height: size * 0.75 }}
+      className="h-auto shrink-0 rounded-sm object-cover"
       unoptimized
       onError={() => setFailed(true)}
     />

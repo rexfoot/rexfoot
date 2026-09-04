@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { EmptyState } from "./EmptyState";
 import { NationalityFlag } from "./NationalityFlag";
+import { nationalitySearchTerms } from "@/lib/nationality-flags";
 import type { NationalityDateOption } from "./NationalityDateFilter";
 import type { NationalityOption } from "@/lib/types";
 
@@ -29,11 +30,18 @@ export function NationalityPicker({
   const [expanded, setExpanded] = useState(!selected);
   const [query, setQuery] = useState("");
 
+  // Termes de recherche (anglais + traductions FR/ES) précalculés une seule
+  // fois par option — jamais recalculés à chaque frappe, voir nationality-flags.ts.
+  const searchIndex = useMemo(
+    () => new Map(options.map((o) => [o.name, nationalitySearchTerms(o.name).map((t) => t.toLowerCase())])),
+    [options],
+  );
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return options;
-    return options.filter((o) => o.name.toLowerCase().includes(q));
-  }, [options, query]);
+    return options.filter((o) => searchIndex.get(o.name)?.some((term) => term.includes(q)));
+  }, [options, query, searchIndex]);
 
   function selectNationality(name: string) {
     setExpanded(false);
