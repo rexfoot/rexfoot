@@ -13,17 +13,6 @@ export interface MatchSummary {
   competition: { name: string; slug: string; logoUrl: string | null };
 }
 
-export interface MatchEventSummary {
-  id: string;
-  type: string;
-  minute: number;
-  extraMinute: number | null;
-  detail: string | null;
-  team: { name: string; slug: string; crestUrl: string | null };
-  player: { displayName: string; slug: string } | null;
-  assistPlayer: { displayName: string; slug: string } | null;
-}
-
 export interface TeamStatisticsSummary {
   teamId: string;
   possession: number | null;
@@ -70,7 +59,6 @@ export interface MatchDetail extends MatchSummary {
   round: string | null;
   venueName: string | null;
   referee: string | null;
-  events: MatchEventSummary[];
   teamStatistics: TeamStatisticsSummary[];
   lineups: LineupSummary[];
   standings: StandingRow[];

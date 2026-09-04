@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowDownCircle, ArrowUpCircle, ListChecks } from "lucide-react";
+import { ListChecks } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
@@ -12,32 +12,9 @@ import { FormBadge } from "./FormBadge";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { cn } from "@/lib/cn";
-import type { LineupPlayer, MatchDetail, MatchEventSummary, MatchSummary, TeamStatisticsSummary } from "@/lib/types";
+import type { LineupPlayer, MatchDetail, MatchSummary, TeamStatisticsSummary } from "@/lib/types";
 
 type QuickTab = "composition" | "standings" | "nextMatch";
-
-const EVENT_ICON: Record<string, string> = {
-  GOAL: "⚽",
-  OWN_GOAL: "⚽",
-  PENALTY: "⚽",
-  MISSED_PENALTY: "❌",
-  YELLOW_CARD: "🟨",
-  RED_CARD: "🟥",
-  VAR: "📺",
-};
-
-/**
- * Le worker stocke les remplacements sous la forme "Sortant → Entrant" dans
- * `detail` (voir apps/worker/src/jobs/syncMatchEvents.ts) — jamais deux champs
- * séparés en base, donc on reparse ce délimiteur ici pour distinguer les deux
- * joueurs et leur donner chacun leur flèche colorée (rouge = sort, vert = entre).
- */
-function parseSubstitution(detail: string | null): { out: string; in: string } | null {
-  if (!detail) return null;
-  const parts = detail.split(" → ");
-  if (parts.length !== 2) return null;
-  return { out: parts[0], in: parts[1] };
-}
 
 function useStatusLabel(match: MatchDetail): string {
   const t = useTranslations("matches");
@@ -94,19 +71,6 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
         </div>
       </div>
 
-      <section>
-        <h2 className="mb-3 font-display text-lg font-bold text-rf-fg">{t("events")}</h2>
-        {match.events.length === 0 ? (
-          <EmptyState icon={ListChecks} title={t("noEvents")} />
-        ) : (
-          <ol className="space-y-2">
-            {match.events.map((event) => (
-              <EventRow key={event.id} event={event} />
-            ))}
-          </ol>
-        )}
-      </section>
-
       <QuickTabs match={match} />
 
       {match.teamStatistics.length > 0 && (
@@ -121,45 +85,11 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
   );
 }
 
-function EventRow({ event }: { event: MatchEventSummary }) {
-  const t = useTranslations("matches");
-  const minuteLabel = `${event.minute}${event.extraMinute ? `+${event.extraMinute}` : ""}'`;
-  const substitution = event.type === "SUBSTITUTION" ? parseSubstitution(event.detail) : null;
-
-  return (
-    <li className="flex items-center gap-3 rounded-xl border border-rf-border bg-rf-bg-card px-4 py-2.5 text-sm">
-      <span className="w-10 shrink-0 text-end font-display font-semibold text-rf-fg-muted">{minuteLabel}</span>
-      <TeamCrest crestUrl={event.team.crestUrl} teamName={event.team.name} size="sm" />
-
-      {substitution ? (
-        <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="flex items-center gap-1.5 text-rf-live">
-            <ArrowDownCircle size={15} className="shrink-0" />
-            <span className="truncate">{substitution.out}</span>
-          </span>
-          <span className="flex items-center gap-1.5 text-rf-success">
-            <ArrowUpCircle size={15} className="shrink-0" />
-            <span className="truncate">{substitution.in}</span>
-          </span>
-        </span>
-      ) : (
-        <span className="flex min-w-0 flex-1 items-center gap-2">
-          <span aria-hidden>{EVENT_ICON[event.type] ?? "•"}</span>
-          <span className="text-xs font-semibold uppercase tracking-wide text-rf-fg-subtle">
-            {t(`eventTypes.${event.type}`)}
-          </span>
-          <span className="truncate text-rf-fg">{event.player?.displayName ?? event.detail ?? ""}</span>
-        </span>
-      )}
-    </li>
-  );
-}
-
 /**
  * Réplique en réduit le bloc "match" de Google (composition/classement/prochain
  * match dans le même bloc, un clic change juste le panneau affiché — jamais de
- * navigation). Les Événements et Statistiques restent des sections à part,
- * toujours visibles, inchangées.
+ * navigation). Remplace la section Événements (retirée) juste sous le score ;
+ * Statistiques reste une section à part, toujours visible, plus bas.
  */
 function QuickTabs({ match }: { match: MatchDetail }) {
   const t = useTranslations("matches");

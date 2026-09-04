@@ -88,19 +88,6 @@ const matchDetailSelect = {
   referee: true,
   competitionId: true,
   seasonId: true,
-  events: {
-    orderBy: { minute: "asc" as const },
-    select: {
-      id: true,
-      type: true,
-      minute: true,
-      extraMinute: true,
-      detail: true,
-      team: { select: { name: true, slug: true, crestUrl: true } },
-      player: { select: { displayName: true, slug: true } },
-      assistPlayer: { select: { displayName: true, slug: true } },
-    },
-  },
   teamStatistics: {
     select: {
       teamId: true,
