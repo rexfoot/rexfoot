@@ -40,12 +40,11 @@ function isValidStatus(value: unknown): value is TransferStatus {
 /**
  * Sourcé UNIQUEMENT depuis des articles mercato déjà publiés (donc déjà
  * relus/approuvés par un humain via /admin/news) — jamais depuis les flux RSS
- * bruts directement, pour ne jamais créer une fiche transfert à partir d'une
- * information qui n'a pas déjà été validée éditorialement une première fois.
- *
- * Ne publie JAMAIS : chaque fiche créée reste `publishedAt: null` — la
- * publication reste un geste humain volontaire dans /admin/transfers, comme
- * pour l'agent éditorial (voir runEditorialDigest.ts).
+ * bruts directement. Contrairement à l'agent éditorial (qui rédige un texte
+ * ORIGINAL et reste donc en DRAFT), ceci ne fait que reformater en champs
+ * structurés une information déjà validée éditorialement une première fois —
+ * publié directement (`publishedAt` posé), toujours modifiable/dépubliable
+ * ensuite via /admin/transfers si l'extraction s'avère imprécise.
  */
 export async function extractTransfersFromArticles(): Promise<void> {
   if (!hasAiProviderConfigured()) {
@@ -115,7 +114,7 @@ export async function extractTransfersFromArticles(): Promise<void> {
         notes: t.notes ?? null,
         sourceName: source?.publisherName ?? null,
         sourceUrl,
-        publishedAt: null,
+        publishedAt: new Date(),
       },
     });
     created += 1;
