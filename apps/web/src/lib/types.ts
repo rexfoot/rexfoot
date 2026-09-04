@@ -1,4 +1,4 @@
-import type { FixtureStatus } from "@rexfoot/db";
+import type { FixtureStatus, PlayerPosition } from "@rexfoot/db";
 
 /** Forme allégée d'un match, utilisée par MatchCard et les pages qui listent des matchs. */
 export interface MatchSummary {
@@ -64,6 +64,21 @@ export interface MatchDetail extends MatchSummary {
   standings: StandingRow[];
   homeTeamNextMatch: MatchSummary | null;
   awayTeamNextMatch: MatchSummary | null;
+}
+
+export interface NationalityOption {
+  name: string;
+  flagUrl: string | null;
+  playerCount: number;
+}
+
+export interface NationalityPlayerEntry {
+  player: { id: string; slug: string; displayName: string; photoUrl: string | null; position: PlayerPosition | null };
+  team: { name: string; slug: string; crestUrl: string | null };
+  opponent: { name: string; slug: string; crestUrl: string | null };
+  isHome: boolean;
+  match: MatchSummary;
+  lineupStatus: "STARTER" | "SUBSTITUTE" | null;
 }
 
 /** Forme allégée d'une vidéo, utilisée par VideoCard et les pages /video. */

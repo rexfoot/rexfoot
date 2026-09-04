@@ -90,24 +90,3 @@ body {
     height: 0;
   }
 }
-
-/* Halo qui pulse — utilisé uniquement par la bannière "RexFoot Now" de l'accueil. */
-@keyframes rf-now-glow {
-  0%,
-  100% {
-    box-shadow: 0 0 16px 0 rgba(255, 122, 26, 0.3);
-  }
-  50% {
-    box-shadow: 0 0 34px 6px rgba(255, 122, 26, 0.6);
-  }
-}
-
-.rf-now-pulse {
-  animation: rf-now-glow 2.2s ease-in-out infinite;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .rf-now-pulse {
-    animation: none;
-  }
-}

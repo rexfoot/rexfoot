@@ -233,21 +233,23 @@
     "trendingTitle": "Trending",
     "trendingEmptyTitle": "Trending is coming soon",
     "trendingEmptyDescription": "This section will highlight the most popular content once RexFoot has traffic to analyze.",
-    "nowTitle": "RexFoot Now",
-    "nowCta": "See the full feed"
+    "nationalityTitle": "Players by nationality",
+    "nationalityCta": "Discover"
   },
-  "now": {
-    "title": "RexFoot Now",
-    "subtitle": "News, matches, videos and transfers together in one feed, newest first.",
-    "metaDescription": "The RexFoot Now feed: news, matches, videos and transfers all in one place.",
-    "empty": "Nothing to show yet",
-    "favoriteMatch": "Favorite",
-    "kind": {
-      "news": "News",
-      "video": "Video",
-      "transfer": "Transfer",
-      "match": "Match"
-    }
+  "nationality": {
+    "title": "Players by nationality",
+    "metaDescription": "Pick a nationality and see which players of that country are playing today, tomorrow or the day after.",
+    "searchPlaceholder": "Search a country",
+    "change": "Change",
+    "chooseCountry": "Pick a country to see its players in action",
+    "resultsTitle": "{country} · Players in action",
+    "noPlayers": "No player of this nationality is playing that day.",
+    "noResults": "No country matches \"{query}\"",
+    "today": "Today",
+    "tomorrow": "Tomorrow",
+    "dayAfterTomorrow": "Day after tomorrow",
+    "starter": "Starter",
+    "substitute": "Substitute"
   },
   "language": {
     "fr": "Français",
