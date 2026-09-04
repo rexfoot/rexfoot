@@ -13,6 +13,7 @@ import { syncYoutubeVideos } from "./jobs/syncYoutubeVideos.js";
 import { generateWeeklyRecap } from "./jobs/generateWeeklyRecap.js";
 import { syncMatchEvents } from "./jobs/syncMatchEvents.js";
 import { runEditorialDigest } from "./jobs/editorial/runEditorialDigest.js";
+import { extractTransfersFromArticles } from "./jobs/editorial/extractTransfers.js";
 
 async function main(): Promise<void> {
   getEnv(); // valide les variables d'env dès le démarrage, échoue vite si mal configuré
@@ -46,6 +47,8 @@ async function main(): Promise<void> {
           return syncRosters();
         case JobName.editorialDigest:
           return runEditorialDigest();
+        case JobName.extractTransfers:
+          return extractTransfersFromArticles();
         case JobName.syncYoutubeVideos:
           return syncYoutubeVideos();
         case JobName.weeklyRecap:

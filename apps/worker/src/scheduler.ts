@@ -10,6 +10,7 @@ export const JobName = {
   syncPlayerStats: "sync-player-stats",
   syncRosters: "sync-rosters",
   editorialDigest: "editorial-digest",
+  extractTransfers: "extract-transfers",
   syncYoutubeVideos: "sync-youtube-videos",
   weeklyRecap: "weekly-recap",
   syncMatchEvents: "sync-match-events",
@@ -84,6 +85,16 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     JobName.editorialDigest,
     {},
     { repeat: { pattern: "0 7 * * *" }, jobId: JobName.editorialDigest, ...DEFAULT_JOB_OPTS },
+  );
+  // Convertit les articles mercato (catégorie TRANSFERTS) déjà publiés en
+  // fiches structurées pour /mercato — jamais de publication automatique non
+  // plus, voir extractTransfers.ts. Peu coûteux (dédoublonné par sourceUrl,
+  // borné à MAX_ARTICLES_PER_RUN) : cadence plus rapprochée que l'agent
+  // éditorial pour rattraper vite un article publié entre deux runs.
+  await queue.add(
+    JobName.extractTransfers,
+    {},
+    { repeat: { every: 2 * 60 * 60 * 1000 }, jobId: JobName.extractTransfers, ...DEFAULT_JOB_OPTS },
   );
   // Flux RSS public YouTube (pas de clé API, pas de quota) : cadence courte
   // pour que les vidéos publiées sur la chaîne apparaissent vite sur /video.
