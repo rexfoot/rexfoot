@@ -13,6 +13,13 @@ const matchSelect = {
   homeTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
   awayTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
   competition: { select: { name: true, slug: true, logoUrl: true } },
+  // Vide pour un match SCHEDULED (rien à joindre) — coût négligeable pour les
+  // matchs LIVE/FINISHED, alimente les badges but/carton/remplacement sur
+  // MatchCard.tsx.
+  events: {
+    select: { id: true, type: true, minute: true, extraMinute: true, teamId: true, detail: true, detailOut: true },
+    orderBy: { minute: "asc" },
+  },
 } as const;
 
 function serialize(row: {
@@ -25,6 +32,7 @@ function serialize(row: {
   homeTeam: MatchSummary["homeTeam"];
   awayTeam: MatchSummary["awayTeam"];
   competition: MatchSummary["competition"];
+  events: MatchSummary["events"];
 }): MatchSummary {
   return { ...row, kickoffAt: row.kickoffAt.toISOString() };
 }

@@ -36,6 +36,10 @@ export async function getFixturesForCompetition(competitionId: string, seasonId:
     include: {
       homeTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
       awayTeam: { select: { id: true, name: true, slug: true, crestUrl: true } },
+      events: {
+        select: { id: true, type: true, minute: true, extraMinute: true, teamId: true, detail: true, detailOut: true },
+        orderBy: { minute: "asc" },
+      },
     },
   });
 }

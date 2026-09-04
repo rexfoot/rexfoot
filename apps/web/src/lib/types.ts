@@ -1,4 +1,17 @@
-import type { FixtureStatus, PlayerPosition } from "@rexfoot/db";
+import type { FixtureEventType, FixtureStatus, PlayerPosition } from "@rexfoot/db";
+
+/** Événement de match (but/carton/remplacement) affiché en badge sur MatchCard — voir syncMatchEvents.ts pour la provenance. */
+export interface MatchEventSummary {
+  id: string;
+  type: FixtureEventType;
+  minute: number;
+  extraMinute: number | null;
+  teamId: string;
+  /** Buteur/joueur sanctionné, ou joueur ENTRANT pour une SUBSTITUTION. */
+  detail: string | null;
+  /** Joueur SORTANT — uniquement renseigné pour une SUBSTITUTION. */
+  detailOut: string | null;
+}
 
 /** Forme allégée d'un match, utilisée par MatchCard et les pages qui listent des matchs. */
 export interface MatchSummary {
@@ -11,6 +24,7 @@ export interface MatchSummary {
   homeTeam: { id: string; name: string; slug: string; crestUrl: string | null };
   awayTeam: { id: string; name: string; slug: string; crestUrl: string | null };
   competition: { name: string; slug: string; logoUrl: string | null };
+  events: MatchEventSummary[];
 }
 
 export interface TeamStatisticsSummary {

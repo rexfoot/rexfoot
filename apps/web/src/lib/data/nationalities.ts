@@ -147,6 +147,9 @@ export async function getPlayersByNationalityOnDate(nationality: string, date: D
         homeTeam: fixture.homeTeam,
         awayTeam: fixture.awayTeam,
         competition: fixture.competition,
+        // Non chargé ici (cette page n'affiche pas de badge d'événement) —
+        // voir matchSelect dans lib/data/matches.ts pour la version complète.
+        events: [],
       };
 
       for (const { player } of teamMemberships) {

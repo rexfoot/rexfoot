@@ -52,7 +52,12 @@
     "nextMatch": "Next match",
     "noStandingsForMatch": "No standings available",
     "noNextMatch": "No match scheduled yet",
-    "noLineups": "Line-ups not available yet"
+    "noLineups": "Line-ups not available yet",
+    "goal": "Goal",
+    "ownGoal": "Own goal",
+    "yellowCard": "Yellow card",
+    "redCard": "Red card",
+    "substitution": "Substitution"
   },
   "standings": {
     "title": "Standings",

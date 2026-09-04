@@ -52,7 +52,12 @@
     "nextMatch": "Próximo partido",
     "noStandingsForMatch": "Clasificación no disponible",
     "noNextMatch": "Ningún partido programado por ahora",
-    "noLineups": "Alineaciones aún no disponibles"
+    "noLineups": "Alineaciones aún no disponibles",
+    "goal": "Gol",
+    "ownGoal": "Gol en propia puerta",
+    "yellowCard": "Tarjeta amarilla",
+    "redCard": "Tarjeta roja",
+    "substitution": "Cambio"
   },
   "standings": {
     "title": "Clasificaciones",

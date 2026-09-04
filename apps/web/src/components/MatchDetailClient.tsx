@@ -11,6 +11,7 @@ import { MatchCard } from "./MatchCard";
 import { FormBadge } from "./FormBadge";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
+import { bestKnownMinute } from "@/lib/match-minute";
 import { cn } from "@/lib/cn";
 import type { LineupPlayer, MatchDetail, MatchSummary, TeamStatisticsSummary } from "@/lib/types";
 
@@ -19,10 +20,11 @@ type QuickTab = "composition" | "standings" | "nextMatch";
 function useStatusLabel(match: MatchDetail): string {
   const t = useTranslations("matches");
   const locale = useLocale();
+  const knownMinute = bestKnownMinute(match.minute, match.events);
 
   switch (match.status) {
     case "LIVE":
-      return `${match.minute ?? 0}' — ${t("live")}`;
+      return knownMinute !== null ? `${knownMinute}' — ${t("live")}` : t("live");
     case "HALFTIME":
       return t("halftime");
     case "FINISHED":

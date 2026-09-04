@@ -374,7 +374,12 @@ model FixtureEvent {
   assistPlayer    Player?  @relation("EventAssistPlayer", fields: [assistPlayerId], references: [id])
   relatedPlayerId String?
   relatedPlayer   Player?  @relation("EventRelatedPlayer", fields: [relatedPlayerId], references: [id])
+  // Nom brut (jamais résolu vers Player, voir syncMatchEvents.ts) : buteur/joueur
+  // sanctionné pour la plupart des types, joueur ENTRANT pour une SUBSTITUTION.
   detail        String?
+  // Joueur SORTANT pour une SUBSTITUTION uniquement (`detail` = joueur entrant) ;
+  // toujours null pour les autres types d'événement.
+  detailOut     String?
 
   @@index([fixtureId, minute])
 }

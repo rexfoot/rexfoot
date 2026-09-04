@@ -63,8 +63,9 @@ interface MatchTeams {
  * L'équipe est résolue par comparaison de nom (jamais d'id Highlightly côté
  * équipe stocké chez nous) ; le joueur n'est jamais résolu vers notre table
  * Player (aucune correspondance d'id fiable entre fournisseurs) — son nom est
- * stocké tel quel dans `detail`, exactement le champ que l'UI utilise déjà en
- * repli quand `event.player` est absent (voir MatchDetailClient.tsx).
+ * stocké tel quel dans `detail` (buteur/sanctionné, ou joueur ENTRANT pour une
+ * SUBSTITUTION) et `detailOut` (joueur SORTANT, uniquement pour une
+ * SUBSTITUTION) — voir les badges d'événements sur MatchCard.tsx.
  */
 async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events: HighlightlyEvent[]): Promise<void> {
   await prisma.fixtureEvent.deleteMany({ where: { fixtureId } });
@@ -78,7 +79,6 @@ async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events
 
     const teamId = sameTeam(event.team.name, teams.homeTeamName) ? teams.homeTeamId : teams.awayTeamId;
     const { minute, extraMinute } = parseMinute(event.time);
-    const detailParts = [event.player, event.substituted ? `→ ${event.substituted}` : null].filter(Boolean);
 
     await prisma.fixtureEvent.create({
       data: {
@@ -87,7 +87,8 @@ async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events
         minute,
         extraMinute,
         teamId,
-        detail: detailParts.length > 0 ? detailParts.join(" ") : null,
+        detail: event.player,
+        detailOut: type === "SUBSTITUTION" ? event.substituted : null,
       },
     });
   }
