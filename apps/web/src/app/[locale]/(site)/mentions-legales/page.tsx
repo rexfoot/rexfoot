@@ -36,7 +36,10 @@ export default async function LegalNoticePage() {
       <Section title={t("hostingTitle")} body={t("hostingBody")} />
       <Section title={t("ipTitle")} body={t("ipBody")} />
       <Section title={t("dataTitle")} body={t("dataBody")} />
+      <Section title={t("responsibilityTitle")} body={t("responsibilityBody")} />
       <Section title={t("contactTitle")} body={t("contactBody")} />
+
+      <p className="text-sm text-rf-fg-muted">{t("lastUpdated")}</p>
     </div>
   );
 }
