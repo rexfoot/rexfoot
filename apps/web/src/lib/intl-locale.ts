@@ -1,10 +1,10 @@
-/** Convertit le code de locale next-intl (fr/en/ar) en tag BCP-47 pour Intl.*/
+/** Convertit le code de locale next-intl (fr/en/es) en tag BCP-47 pour Intl.*/
 export function toIntlLocale(locale: string): string {
   switch (locale) {
     case "en":
       return "en-US";
-    case "ar":
-      return "ar";
+    case "es":
+      return "es-ES";
     default:
       return "fr-FR";
   }

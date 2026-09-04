@@ -4,7 +4,7 @@ import { routing } from "@/i18n/routing";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rexfoot.com";
 
-const OG_LOCALES: Record<string, string> = { fr: "fr_FR", en: "en_US", ar: "ar_SA" };
+const OG_LOCALES: Record<string, string> = { fr: "fr_FR", en: "en_US", es: "es_ES" };
 
 /** Code de langue attendu par `openGraph.locale` (`fr_FR`, pas `fr`). */
 export function ogLocale(locale: string): string {

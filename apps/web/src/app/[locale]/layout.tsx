@@ -83,8 +83,10 @@ function buildRootJsonLd() {
 }
 
 // Racine du site public — langue et sens d'écriture dépendent réellement de la
-// route (`dir="rtl"` rendu côté serveur pour l'arabe, jamais corrigé après coup
-// en JS : un flash LTR→RTL serait exactement l'"élément cassé" à éviter).
+// route (`dir` rendu côté serveur, jamais corrigé après coup en JS : un flash
+// LTR→RTL serait exactement l'"élément cassé" à éviter). Plus aucune locale
+// RTL depuis le retrait de l'arabe (voir RTL_LOCALES dans i18n/routing.ts),
+// mais `isRtl` reste générique plutôt que supprimé.
 export default async function LocaleLayout({ children, params }: LocaleLayoutProps) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();

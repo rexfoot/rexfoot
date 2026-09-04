@@ -1,9 +1,11 @@
 import { defineRouting } from "next-intl/routing";
 
-export const LOCALES = ["fr", "en", "ar"] as const;
+export const LOCALES = ["fr", "en", "es"] as const;
 export type Locale = (typeof LOCALES)[number];
 
-export const RTL_LOCALES: Locale[] = ["ar"];
+/// Plus aucune locale RTL depuis le retrait de l'arabe — gardé générique
+/// (plutôt que supprimé partout) au cas où une locale RTL reviendrait un jour.
+export const RTL_LOCALES: Locale[] = [];
 
 export function isRtl(locale: string): boolean {
   return RTL_LOCALES.includes(locale as Locale);
@@ -12,7 +14,7 @@ export function isRtl(locale: string): boolean {
 /**
  * "as-needed" : le français (langue par défaut du site) garde des URLs sans
  * préfixe (`/matches`) — aucune des URLs déjà construites/testées ne change.
- * Anglais et arabe sont préfixés (`/en/matches`, `/ar/matches`).
+ * Anglais et espagnol sont préfixés (`/en/matches`, `/es/matches`).
  */
 export const routing = defineRouting({
   locales: LOCALES,
