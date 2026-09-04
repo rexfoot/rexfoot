@@ -327,6 +327,23 @@ model Fixture {
   venueName  String?
   referee    String?
 
+  /// Horodatage de la revérification post-match du score final auprès du
+  /// fournisseur — null tant qu'elle n'a pas eu lieu. Nécessaire car le
+  /// score qu'on capture au moment où un match passe FINISHED n'est pas
+  /// toujours définitif : football-data.org peut corriger un score après
+  /// coup (constaté en prod : un match affiché 1-1 chez nous est resté
+  /// figé alors que le fournisseur avait corrigé en 1-0 plus d'une heure
+  /// après la fin — notre sync ne revérifie jamais un match déjà FINISHED).
+  /// Voir finalizeRecentMatches() dans syncLiveScores.ts.
+  finalScoreConfirmedAt DateTime?
+  /// Même principe que finalScoreConfirmedAt, mais pour les événements
+  /// (buts/cartons) : un but refusé par la VAR après coup (ex. Carlos Espí,
+  /// Betis-Real Madrid du 04/09/2026) reste enregistré comme un vrai but tant
+  /// que ce champ est null — voir finalizeRecentMatchEvents() dans
+  /// syncMatchEvents.ts. Champ séparé de finalScoreConfirmedAt car un job
+  /// différent (Highlightly, pas football-data.org) s'en charge.
+  finalEventsConfirmedAt DateTime?
+
   /// Id du même match côté Highlightly (Sport Highlights API) — résolu une
   /// fois par recherche nom d'équipe + date (voir apps/worker/src/jobs/
   /// syncMatchEvents.ts), puis mis en cache ici pour ne plus jamais refaire

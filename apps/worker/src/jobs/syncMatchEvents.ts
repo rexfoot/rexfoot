@@ -17,6 +17,15 @@ import { logger } from "../lib/logger.js";
 // les remplacements sont suivis, déjà via les événements).
 const MAX_MATCHES_PER_RUN = 6;
 
+// Un événement capté pendant un match LIVE peut être invalidé après coup (ex.
+// but refusé par la VAR après le direct, comme Carlos Espí lors de Betis-Real
+// Madrid du 04/09/2026 : toujours enregistré comme un vrai but chez nous,
+// jamais corrigé car plus rien ne resynchronise un match déjà FINISHED).
+// Même fenêtre que finalizeRecentMatches() dans syncLiveScores.ts, pour
+// rester cohérent sur le delai de correction tardive plausible.
+const FINAL_EVENTS_RECHECK_DELAY_MS = 105 * 60 * 1000;
+const FINAL_EVENTS_RECHECK_WINDOW_MS = 4 * 60 * 60 * 1000;
+
 const normalize = (s: string) => s.toLowerCase().trim();
 function sameTeam(a: string, b: string): boolean {
   const [na, nb] = [normalize(a), normalize(b)];
@@ -30,6 +39,15 @@ function sameTeam(a: string, b: string): boolean {
  */
 function mapEventType(rawType: string): FixtureEventType | null {
   const type = rawType.toLowerCase();
+  // A verifier EN PREMIER : "VAR Goal Cancelled" contient "goal" et matchait
+  // donc a tort la regle GOAL plus bas avant d'atteindre la regle VAR — bug
+  // reel constate en prod (but de Carlos Espí, Betis-Real Madrid du
+  // 04/09/2026, refuse par la VAR mais enregistre chez nous comme un vrai
+  // but). Toute variante "but annule/refuse" doit rester un simple evenement
+  // VAR, jamais un GOAL.
+  if (type.includes("cancelled") || type.includes("canceled") || type.includes("disallowed") || type.includes("overturned")) {
+    return "VAR";
+  }
   if (type.includes("own goal")) return "OWN_GOAL";
   if (type.includes("missed penalty") || type.includes("penalty missed")) return "MISSED_PENALTY";
   if (type.includes("penalty")) return "PENALTY";
@@ -195,23 +213,49 @@ export async function syncMatchEvents(): Promise<void> {
     return;
   }
 
-  const liveMatches = await prisma.fixture.findMany({
-    where: { status: { in: ["LIVE", "HALFTIME"] } },
-    orderBy: { kickoffAt: "asc" },
-    take: MAX_MATCHES_PER_RUN,
-    select: {
-      id: true,
-      kickoffAt: true,
-      highlightlyId: true,
-      homeTeam: { select: { id: true, name: true } },
-      awayTeam: { select: { id: true, name: true } },
-      competition: { select: { countryName: true } },
-    },
-  });
+  const matchSelect = {
+    id: true,
+    kickoffAt: true,
+    highlightlyId: true,
+    homeTeam: { select: { id: true, name: true } },
+    awayTeam: { select: { id: true, name: true } },
+    competition: { select: { countryName: true } },
+  } as const;
 
-  if (liveMatches.length === 0) return;
+  const now = new Date();
+  const [liveMatches, recentlyFinishedMatches] = await Promise.all([
+    prisma.fixture.findMany({
+      where: { status: { in: ["LIVE", "HALFTIME"] } },
+      orderBy: { kickoffAt: "asc" },
+      take: MAX_MATCHES_PER_RUN,
+      select: matchSelect,
+    }),
+    // Passe finale unique par match (voir finalEventsConfirmedAt) — jamais
+    // rejouée indéfiniment, bornée à une fenêtre de quelques heures post-match.
+    prisma.fixture.findMany({
+      where: {
+        status: "FINISHED",
+        finalEventsConfirmedAt: null,
+        highlightlyId: { not: null },
+        kickoffAt: {
+          lte: new Date(now.getTime() - FINAL_EVENTS_RECHECK_DELAY_MS),
+          gte: new Date(now.getTime() - FINAL_EVENTS_RECHECK_WINDOW_MS),
+        },
+      },
+      orderBy: { kickoffAt: "asc" },
+      take: MAX_MATCHES_PER_RUN,
+      select: matchSelect,
+    }),
+  ]);
 
-  for (const match of liveMatches) {
+  const matches = [
+    ...liveMatches.map((m) => ({ ...m, isFinalPass: false })),
+    ...recentlyFinishedMatches.map((m) => ({ ...m, isFinalPass: true })),
+  ];
+
+  if (matches.length === 0) return;
+
+  for (const match of matches) {
     try {
       let highlightlyId = match.highlightlyId;
       if (!highlightlyId) {
@@ -237,7 +281,14 @@ export async function syncMatchEvents(): Promise<void> {
 
       const events = await client.getEvents(highlightlyId);
       await replaceFixtureEvents(match.id, teams, events);
-      logger.info({ fixtureId: match.id, events: events.length }, "Événements de match synchronisés (Highlightly)");
+      logger.info(
+        { fixtureId: match.id, events: events.length, finalPass: match.isFinalPass },
+        "Événements de match synchronisés (Highlightly)",
+      );
+
+      if (match.isFinalPass) {
+        await prisma.fixture.update({ where: { id: match.id }, data: { finalEventsConfirmedAt: new Date() } });
+      }
 
       // Chacun isolé dans son propre try/catch : un échec (quota épuisé en
       // cours de boucle, par ex.) ne doit priver le match ni des événements
