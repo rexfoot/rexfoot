@@ -47,12 +47,16 @@ export default async function PlayerPage({ params }: PageProps) {
 
   const currentTeam = player.teamMemberships[0]?.team;
   const intlLocale = toIntlLocale(locale);
+  // La correction manuelle prime toujours sur la valeur du fournisseur, qui
+  // accuse parfois des mois de retard sur un changement de sélection
+  // nationale récent — voir nationalityOverride dans schema.prisma.
+  const nationality = player.nationalityOverride ?? player.nationality;
 
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Person",
     name: player.displayName,
-    nationality: player.nationality ?? undefined,
+    nationality: nationality ?? undefined,
     image: player.photoUrl ?? undefined,
   };
 
@@ -69,7 +73,7 @@ export default async function PlayerPage({ params }: PageProps) {
             <p className="text-sm text-rf-fg-muted">
               {player.position ? t(POSITION_KEY[player.position]) : t("unknownPosition")}
               {currentTeam && ` · ${currentTeam.name}`}
-              {player.nationality && ` · ${player.nationality}`}
+              {nationality && ` · ${nationality}`}
             </p>
           </div>
         </div>

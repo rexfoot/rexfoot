@@ -253,6 +253,15 @@ model Player {
   heightCm    Int?
   weightKg    Int?
 
+  /// Correction manuelle de `nationality`, jamais touchée par upsertPlayer (voir
+  /// apps/worker/src/lib/upsert.ts) — écrasée sinon à chaque resync (6h) par la
+  /// valeur du fournisseur, qui accuse parfois des mois de retard sur un
+  /// changement de sélection nationale récent (ex. Ayyoub Bouaddi, Issa Diop :
+  /// passés à la nationalité sportive marocaine avant la Coupe du monde 2026,
+  /// football-data.org indiquait toujours "France" en septembre 2026). Tout le
+  /// code qui lit la nationalité d'un joueur doit préférer ce champ à `nationality`.
+  nationalityOverride String?
+
   teamMemberships  PlayerTeamMembership[]
   statistics       PlayerStatistics[]
   fixtureEvents    FixtureEvent[]           @relation("EventPlayer")

@@ -88,6 +88,14 @@ export async function upsertTeam(dto: TeamDTO): Promise<Team> {
   });
 }
 
+/**
+ * `photoUrl` n'est JAMAIS écrasé par une valeur nulle du fournisseur : voir
+ * apps/worker/src/jobs/syncPlayerPhotos.ts, qui comble ce que football-data.org
+ * (dto.photoUrl toujours null sur ce plan) ne fournit pas — sans ce garde,
+ * chaque resync (toutes les 6h, voir syncRosters.ts) effacerait silencieusement
+ * les photos backfillées, exactement le bug déjà corrigé une fois pour les
+ * événements de match écrasés par syncLiveScores.ts.
+ */
 export async function upsertPlayer(dto: PlayerDTO): Promise<Player> {
   return prisma.player.upsert({
     where: { provider_externalId: { provider: PROVIDER_NAME, externalId: dto.externalId } },
@@ -109,7 +117,7 @@ export async function upsertPlayer(dto: PlayerDTO): Promise<Player> {
       firstName: dto.firstName,
       lastName: dto.lastName,
       displayName: dto.displayName,
-      photoUrl: dto.photoUrl,
+      ...(dto.photoUrl ? { photoUrl: dto.photoUrl } : {}),
       dateOfBirth: dto.dateOfBirth ? new Date(dto.dateOfBirth) : null,
       nationality: dto.nationality,
       position: dto.position,

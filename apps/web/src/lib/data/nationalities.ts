@@ -10,19 +10,29 @@ function rawVariantsFor(canonical: string): string[] {
   return [canonical, ...aliases];
 }
 
+/**
+ * Nationalité "effective" d'un joueur : la correction manuelle
+ * (`nationalityOverride`, voir schema.prisma) prime toujours sur celle du
+ * fournisseur, qui accuse parfois des mois de retard sur un changement de
+ * sélection nationale récent.
+ */
+function effectiveNationality(player: { nationality: string | null; nationalityOverride: string | null }): string | null {
+  return player.nationalityOverride ?? player.nationality;
+}
+
 /** Liste des nationalités réellement présentes en base — jamais une liste figée, dérivée des joueurs synchronisés. */
 export async function getNationalityOptions(): Promise<NationalityOption[]> {
-  const rows = await prisma.player.groupBy({
-    by: ["nationality"],
-    _count: true,
-    where: { nationality: { not: null } },
+  const players = await prisma.player.findMany({
+    where: { OR: [{ nationality: { not: null } }, { nationalityOverride: { not: null } }] },
+    select: { nationality: true, nationalityOverride: true },
   });
 
   const counts = new Map<string, number>();
-  for (const row of rows) {
-    if (!row.nationality) continue;
-    const canonical = canonicalNationality(row.nationality);
-    counts.set(canonical, (counts.get(canonical) ?? 0) + row._count);
+  for (const player of players) {
+    const raw = effectiveNationality(player);
+    if (!raw) continue;
+    const canonical = canonicalNationality(raw);
+    counts.set(canonical, (counts.get(canonical) ?? 0) + 1);
   }
 
   return Array.from(counts.entries())
@@ -96,7 +106,13 @@ export async function getPlayersByNationalityOnDate(nationality: string, date: D
   const nationalityVariants = rawVariantsFor(nationality);
 
   const memberships = await prisma.playerTeamMembership.findMany({
-    where: { teamId: { in: teamIds }, leftAt: null, player: { nationality: { in: nationalityVariants } } },
+    where: {
+      teamId: { in: teamIds },
+      leftAt: null,
+      player: {
+        OR: [{ nationality: { in: nationalityVariants } }, { nationalityOverride: { in: nationalityVariants } }],
+      },
+    },
     select: {
       teamId: true,
       player: { select: { id: true, slug: true, displayName: true, photoUrl: true, position: true } },
