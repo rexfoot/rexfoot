@@ -17,15 +17,15 @@ export const JobName = {
   syncMatchEvents: "sync-match-events",
 } as const;
 
-// Le fournisseur actif est football-data.org (plan gratuit) : 10 requêtes/MINUTE,
-// aucun plafond quotidien — voir MAX_REQUESTS_PER_WINDOW dans footballDataOrg.ts.
-// (L'ancien commentaire ici citait le budget quotidien d'API-Football, un
-// fournisseur qui n'est plus actif — ne s'applique plus.) Avec cette marge,
-// un cycle "idle" toutes les 3 min coûte au pire ~480 requêtes/jour à lui
-// seul, largement sous la limite par minute une fois réparti dans le temps.
-// Corrige le bug où un match qui vient de démarrer pouvait rester affiché
-// "SCHEDULED" jusqu'à 1h après son coup d'envoi, faute de vérification.
-const LIVE_SCORES_INTERVAL_DURING_MATCHES_MS = 90 * 1000;
+// Le fournisseur actif est football-data.org, plan "Free w/ Livescores"
+// (12E/mois depuis le 2026-09-05 — l'ancien plan gratuit retardait les scores
+// DELIBEREMENT, un cycle de sync plus rapide n'y aurait rien change) :
+// 20 requetes/MINUTE, aucun plafond quotidien — voir MAX_REQUESTS_PER_WINDOW
+// dans footballDataOrg.ts. Avec cette marge, un cycle toutes les 45s pendant
+// un match (le cas qui compte le plus) ne consomme que 2-4 requetes/min,
+// large sous la limite. Idle laisse a 3 min : sert seulement a detecter
+// qu'un match vient de commencer, moins critique que la fraicheur en direct.
+const LIVE_SCORES_INTERVAL_DURING_MATCHES_MS = 45 * 1000;
 const LIVE_SCORES_INTERVAL_IDLE_MS = 3 * 60 * 1000;
 
 export function createSyncQueue(): Queue {

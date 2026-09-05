@@ -27,10 +27,11 @@ export interface FootballDataOrgConfig {
   apiKey: string;
 }
 
-// Plan gratuit : 10 requêtes/minute, pas de plafond quotidien (à la différence
-// d'API-Football). On garde une marge de sécurité (8 au lieu de 10) plutôt que
-// de coller pile au quota documenté.
-const MAX_REQUESTS_PER_WINDOW = 8;
+// Plan "Free w/ Livescores" (passé de gratuit a 12E/mois le 2026-09-05,
+// justement pour lever le retard delibere du plan gratuit sur les scores) :
+// 20 requetes/minute, toujours aucun plafond quotidien. Marge de securite
+// gardee a 80% du quota documente (16 au lieu de 20), meme ratio qu'avant.
+const MAX_REQUESTS_PER_WINDOW = 16;
 const WINDOW_MS = 60_000;
 
 const STATUS_MAP: Record<string, FixtureDTO["status"]> = {

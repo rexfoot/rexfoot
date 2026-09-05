@@ -22,15 +22,16 @@ export const PAGE_SIZE_VIDEOS = 24;
 
 /**
  * Durées de cache (secondes) pour la couche Redis devant le FootballDataProvider.
- * Le fournisseur actif (football-data.org, plan gratuit) limite à 10 requêtes
- * par MINUTE plutôt qu'un plafond quotidien — voir footballDataOrg.ts. Ces TTL
- * évitent des appels redondants plutôt que de protéger un quota journalier.
- * Voir aussi les intervalles des jobs dans apps/worker/src/scheduler.ts, qui
- * doivent rester alignés (un TTL plus court que l'intervalle de sync n'apporte
- * aucun bénéfice).
+ * Le fournisseur actif (football-data.org, plan "Free w/ Livescores" depuis le
+ * 2026-09-05) limite à 20 requêtes par MINUTE plutôt qu'un plafond quotidien —
+ * voir footballDataOrg.ts. Ces TTL évitent des appels redondants plutôt que de
+ * protéger un quota journalier. Voir aussi les intervalles des jobs dans
+ * apps/worker/src/scheduler.ts : `live` doit rester STRICTEMENT INFÉRIEUR à
+ * LIVE_SCORES_INTERVAL_DURING_MATCHES_MS, sinon un cycle de sync sur deux ne
+ * ferait que relire le cache au lieu d'aller chercher un score vraiment à jour.
  */
 export const CACHE_TTL_SECONDS = {
-  live: 90,
+  live: 40,
   fixturesShortTerm: 6 * 60 * 60,
   standings: 8 * 60 * 60,
   staticEntities: 24 * 60 * 60,
