@@ -15,6 +15,7 @@ import { syncMatchEvents } from "./jobs/syncMatchEvents.js";
 import { runEditorialDigest } from "./jobs/editorial/runEditorialDigest.js";
 import { extractTransfersFromArticles } from "./jobs/editorial/extractTransfers.js";
 import { syncPlayerPhotos } from "./jobs/syncPlayerPhotos.js";
+import { startRealtimeServer } from "./lib/realtime.js";
 
 async function main(): Promise<void> {
   getEnv(); // valide les variables d'env dès le démarrage, échoue vite si mal configuré
@@ -31,6 +32,8 @@ async function main(): Promise<void> {
         "quand même mais restera no-op tant qu'une clé n'est pas fournie via Railway.",
     );
   }
+
+  startRealtimeServer();
 
   const queue = createSyncQueue();
 

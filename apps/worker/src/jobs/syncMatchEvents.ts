@@ -7,6 +7,7 @@ import {
 } from "@rexfoot/football-provider";
 import { logger } from "../lib/logger.js";
 import { notifyWriters } from "../lib/notifyWriters.js";
+import { emitFixtureUpdate } from "../lib/realtime.js";
 
 // Highlightly (plan gratuit) : 100 requêtes/jour, aucun plafond horaire strict
 // documenté. Ce job tourne toutes les SYNC_INTERVAL_MINUTES (voir scheduler.ts)
@@ -329,6 +330,7 @@ export async function syncMatchEvents(): Promise<void> {
         { fixtureId: match.id, events: events.length, finalPass: match.isFinalPass },
         "Événements de match synchronisés (Highlightly)",
       );
+      emitFixtureUpdate(match.id);
 
       if (match.isFinalPass) {
         await prisma.fixture.update({ where: { id: match.id }, data: { finalEventsConfirmedAt: new Date() } });
@@ -385,6 +387,7 @@ export async function syncMatchEvents(): Promise<void> {
 
             if (Object.keys(data).length > 0) {
               await prisma.fixture.update({ where: { id: match.id }, data });
+              emitFixtureUpdate(match.id);
               if (data.status) {
                 logger.info({ fixtureId: match.id, status: data.status }, "Statut corrigé via Highlightly (football-data.org bloqué)");
               }

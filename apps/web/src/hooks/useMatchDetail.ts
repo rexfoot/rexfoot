@@ -1,7 +1,9 @@
 "use client";
 
-import useSWR from "swr";
+import { useEffect } from "react";
+import useSWR, { useSWRConfig } from "swr";
 import { LIVE_POLL_INTERVAL_MS } from "@rexfoot/config";
+import { getRealtimeSocket } from "@/lib/realtimeSocket";
 import type { MatchDetail } from "@/lib/types";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -20,14 +22,34 @@ function needsPolling(match: MatchDetail): boolean {
 }
 
 export function useMatchDetail(matchId: string, initialMatch: MatchDetail) {
+  const key = `/api/matches/${matchId}`;
+  const { mutate } = useSWRConfig();
+
   // refreshInterval est réévalué à chaque tick à partir de `latest` (la donnée
   // SWR la plus récente), jamais figé sur initialMatch — sinon un match ouvert
   // avant son coup d'envoi ne se mettrait jamais à jour tout seul.
-  const { data } = useSWR<{ match: MatchDetail }>(`/api/matches/${matchId}`, fetcher, {
+  const { data } = useSWR<{ match: MatchDetail }>(key, fetcher, {
     fallbackData: { match: initialMatch },
     refreshInterval: (latest) => (latest && needsPolling(latest.match) ? LIVE_POLL_INTERVAL_MS : 0),
     revalidateOnFocus: needsPolling(initialMatch),
   });
+
+  // Temps réel (demandé 2026-09-05) : revalide immédiatement dès que le
+  // worker signale un changement sur CE match, sans attendre le prochain
+  // tick du polling ci-dessus (qui reste le filet de sécurité si le socket
+  // est indisponible). Voir apps/worker/src/lib/realtime.ts.
+  useEffect(() => {
+    const socket = getRealtimeSocket();
+    if (!socket) return;
+
+    const onUpdate = (payload: { fixtureId: string }) => {
+      if (payload.fixtureId === matchId) void mutate(key);
+    };
+    socket.on("fixture:update", onUpdate);
+    return () => {
+      socket.off("fixture:update", onUpdate);
+    };
+  }, [matchId, key, mutate]);
 
   return data?.match ?? initialMatch;
 }

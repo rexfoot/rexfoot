@@ -37,6 +37,16 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
   NEXT_PUBLIC_SITE_URL: z.string().url().default("http://localhost:3000"),
 
+  // Diffusion temps réel des scores en direct (2026-09-05) : le worker expose
+  // un serveur Socket.io séparé de sa boucle BullMQ (voir apps/worker/src/lib/
+  // realtime.ts) — PORT est le port HTTP qu'il écoute (fourni par Railway une
+  // fois le service exposé publiquement) ; NEXT_PUBLIC_WORKER_WS_URL est
+  // l'URL publique (wss://...) que le navigateur utilise pour s'y connecter
+  // depuis apps/web. Vide par défaut : le front retombe alors sur le seul
+  // polling SWR (LIVE_POLL_INTERVAL_MS), qui reste le filet de sécurité.
+  PORT: z.coerce.number().int().positive().default(4001),
+  NEXT_PUBLIC_WORKER_WS_URL: z.string().optional().default(""),
+
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().positive().default(60),
 

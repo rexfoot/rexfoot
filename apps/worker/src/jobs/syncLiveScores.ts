@@ -3,6 +3,7 @@ import { hasAnyFootballProviderKey } from "@rexfoot/config";
 import { createFootballProvider, getActiveProviderName, type FootballDataProvider } from "@rexfoot/football-provider";
 import { logger } from "../lib/logger.js";
 import { notifyWriters } from "../lib/notifyWriters.js";
+import { emitFixtureUpdate } from "../lib/realtime.js";
 
 const PROVIDER_NAME = getActiveProviderName();
 
@@ -61,6 +62,7 @@ async function finalizeRecentMatches(provider: FootballDataProvider): Promise<nu
         finalScoreConfirmedAt: now,
       },
     });
+    emitFixtureUpdate(fixture.id);
   }
   return corrected;
 }
@@ -132,6 +134,7 @@ export async function syncLiveScores(): Promise<boolean> {
         awayScore: fixtureDto.awayScore,
       },
     });
+    emitFixtureUpdate(existing.id);
   }
 
   // Un match qu'on avait en LIVE/HALFTIME mais qui n'apparaît plus dans le
@@ -186,6 +189,7 @@ export async function syncLiveScores(): Promise<boolean> {
         awayScore: detail.awayScore,
       },
     });
+    emitFixtureUpdate(fixture.id);
   }
 
   const corrected = await finalizeRecentMatches(provider);

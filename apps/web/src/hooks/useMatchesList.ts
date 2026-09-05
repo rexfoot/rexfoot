@@ -1,7 +1,9 @@
 "use client";
 
-import useSWR from "swr";
+import { useEffect } from "react";
+import useSWR, { useSWRConfig } from "swr";
 import { LIVE_POLL_INTERVAL_MS } from "@rexfoot/config";
+import { getRealtimeSocket } from "@/lib/realtimeSocket";
 import type { MatchSummary } from "@/lib/types";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -25,11 +27,29 @@ function needsPolling(matches: MatchSummary[]): boolean {
 
 /** Reste statique tant qu'aucun match n'est en direct ni proche de son coup d'envoi — ne poll que si nécessaire. */
 export function useMatchesList(apiUrl: string, initialMatches: MatchSummary[]) {
+  const { mutate } = useSWRConfig();
   const { data } = useSWR<{ matches: MatchSummary[] }>(apiUrl, fetcher, {
     fallbackData: { matches: initialMatches },
     refreshInterval: (latest) =>
       latest && needsPolling(latest.matches) ? LIVE_POLL_INTERVAL_MS : 0,
   });
+
+  // Temps réel (demandé 2026-09-05) — voir même mécanisme dans useMatchDetail.ts.
+  // Pas moyen simple de savoir ICI si le match mis à jour fait partie de
+  // cette liste précise (dates/compétitions filtrées côté serveur) sans
+  // dupliquer cette logique côté client — on revalide donc à chaque signal,
+  // peu coûteux (une requête déjà no-store) et bien plus rare qu'un vrai
+  // polling à 10s si peu de matchs sont en direct.
+  useEffect(() => {
+    const socket = getRealtimeSocket();
+    if (!socket) return;
+
+    const onUpdate = () => void mutate(apiUrl);
+    socket.on("fixture:update", onUpdate);
+    return () => {
+      socket.off("fixture:update", onUpdate);
+    };
+  }, [apiUrl, mutate]);
 
   return data?.matches ?? initialMatches;
 }
