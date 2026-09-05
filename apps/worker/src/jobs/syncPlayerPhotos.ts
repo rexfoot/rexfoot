@@ -56,13 +56,43 @@ function pickBestMatch(candidates: TheSportsDbPlayer[], nationality: string | nu
  * joueurs sans photo à chaque run (jamais de photo devinée/inventée : voir
  * pickBestMatch). Débit volontairement lent (délai entre requêtes + lot
  * borné) pour rester sous la limite du plan gratuit TheSportsDB.
+ *
+ * Priorise les joueurs des équipes qui jouent AUJOURD'HUI (demandé par
+ * Hicham le 2026-09-05, après avoir vu la compo sans aucune photo sur un
+ * match en direct — la file d'attente générale, sans ordre précis, pouvait
+ * mettre des heures à atteindre l'équipe d'un match du jour parmi tous les
+ * joueurs sans photo de la base). Le reste du lot, s'il en reste, retombe
+ * sur la file générale — jamais bloquant, l'auto-rotation vient du filtre
+ * `photoUrl: null` qui se réduit tout seul à mesure que des photos sont trouvées.
  */
 export async function syncPlayerPhotos(): Promise<void> {
-  const players = await prisma.player.findMany({
-    where: { photoUrl: null },
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+
+  const teamPlayingTodayFilter = {
+    OR: [
+      { homeFixtures: { some: { kickoffAt: { gte: today, lt: tomorrow } } } },
+      { awayFixtures: { some: { kickoffAt: { gte: today, lt: tomorrow } } } },
+    ],
+  };
+
+  const priorityPlayers = await prisma.player.findMany({
+    where: { photoUrl: null, teamMemberships: { some: { team: teamPlayingTodayFilter } } },
     take: MAX_PLAYERS_PER_RUN,
     select: { id: true, displayName: true, nationality: true },
   });
+
+  let players = priorityPlayers;
+  if (players.length < MAX_PLAYERS_PER_RUN) {
+    const fallback = await prisma.player.findMany({
+      where: { photoUrl: null, id: { notIn: players.map((p) => p.id) } },
+      take: MAX_PLAYERS_PER_RUN - players.length,
+      select: { id: true, displayName: true, nationality: true },
+    });
+    players = [...players, ...fallback];
+  }
   if (players.length === 0) return;
 
   let updated = 0;

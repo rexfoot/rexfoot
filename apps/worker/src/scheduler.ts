@@ -125,10 +125,15 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
   // football-data.org (gratuit) ne fournit aucune photo de joueur — comble ce
   // manque via TheSportsDB, par petits lots (voir MAX_PLAYERS_PER_RUN dans
   // syncPlayerPhotos.ts) pour rester sous son plan gratuit très limité en débit.
+  // Resserré de 15 min à 5 min le 2026-09-05 (demandé par Hicham : aucune
+  // photo sur la compo d'un match en direct) — le rythme À L'INTÉRIEUR d'un
+  // lot ne change pas (toujours DELAY_BETWEEN_REQUESTS_MS entre requêtes),
+  // seule la fréquence des lots triple, donc toujours sous la limite
+  // documentée de TheSportsDB (~30 req/min) à l'intérieur de chaque lot.
   await queue.add(
     JobName.syncPlayerPhotos,
     {},
-    { repeat: { every: 15 * 60 * 1000 }, jobId: JobName.syncPlayerPhotos, ...DEFAULT_JOB_OPTS },
+    { repeat: { every: 5 * 60 * 1000 }, jobId: JobName.syncPlayerPhotos, ...DEFAULT_JOB_OPTS },
   );
   // Flux RSS public YouTube (pas de clé API, pas de quota) : cadence courte
   // pour que les vidéos publiées sur la chaîne apparaissent vite sur /video.
