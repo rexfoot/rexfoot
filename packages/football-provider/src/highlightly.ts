@@ -101,6 +101,16 @@ export class HighlightlyClient {
    * plupart du temps. `countryName` est optionnel (absent pour une compétition
    * internationale comme la Ligue des champions) : sans lui, la recherche par
    * date seule reste correcte mais renvoie plus de matchs à comparer.
+   *
+   * Paginé : un pays avec beaucoup de divisions/coupes le même jour (ex.
+   * Angleterre, 160 matchs un samedi entre Premier League, Championship,
+   * National League, tours qualificatifs de FA Cup...) dépasse largement la
+   * première page de 100 résultats. Bug réel constaté en prod (2026-09-05) :
+   * Newcastle-Bournemouth (Premier League, très suivi) est tombé page 2 —
+   * sans pagination ici, `findMatchId` renvoyait null pour toujours sur ce
+   * match, donc aucun but/carton/composition jamais synchronisé de la
+   * rencontre. Borné à MAX_PAGES pour ne pas exploser le quota journalier sur
+   * un pays avec un nombre de matchs anormalement élevé.
    */
   async findMatchId(
     homeTeamName: string,
@@ -109,21 +119,29 @@ export class HighlightlyClient {
     countryName?: string | null,
   ): Promise<number | null> {
     const date = dateISO.slice(0, 10);
-    const result = await this.request<{ data: HighlightlyMatchSearchResult[] }>("/football/matches", {
-      date,
-      countryName: countryName ?? undefined,
-    });
-
     const normalize = (s: string) => s.toLowerCase().trim();
     const sameTeam = (a: string, b: string) => {
       const [na, nb] = [normalize(a), normalize(b)];
       return na === nb || na.includes(nb) || nb.includes(na);
     };
 
-    const match = result.data.find(
-      (m) => sameTeam(m.homeTeam.name, homeTeamName) && sameTeam(m.awayTeam.name, awayTeamName),
-    );
-    return match?.id ?? null;
+    const PAGE_SIZE = 100;
+    const MAX_PAGES = 3;
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const result = await this.request<{ data: HighlightlyMatchSearchResult[]; pagination?: { totalCount: number } }>(
+        "/football/matches",
+        { date, countryName: countryName ?? undefined, offset: String(page * PAGE_SIZE), limit: String(PAGE_SIZE) },
+      );
+
+      const match = result.data.find(
+        (m) => sameTeam(m.homeTeam.name, homeTeamName) && sameTeam(m.awayTeam.name, awayTeamName),
+      );
+      if (match) return match.id;
+
+      const totalCount = result.pagination?.totalCount ?? result.data.length;
+      if ((page + 1) * PAGE_SIZE >= totalCount) break;
+    }
+    return null;
   }
 
   async getEvents(highlightlyMatchId: number): Promise<HighlightlyEvent[]> {

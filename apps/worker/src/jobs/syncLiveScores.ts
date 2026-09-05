@@ -114,6 +114,16 @@ export async function syncLiveScores(): Promise<boolean> {
   // toujours car il ne sera plus jamais renvoyé par getLiveScores(). On va
   // chercher son état final individuellement (peu de matchs concernés par
   // cycle, coût négligeable).
+  //
+  // Bug réel constaté en prod (2026-09-05) : l'endpoint /matches/{id} du
+  // fournisseur peut lui-même renvoyer un état incohérent avec sa propre
+  // liste "LIVE" quelques secondes plus tôt (confirmé manuellement : un
+  // même match, deux requêtes à 24s d'écart, IN_PLAY 0-1 puis TIMED
+  // null-null). Un match déjà LIVE/HALFTIME ne peut chronologiquement
+  // jamais redevenir SCHEDULED — si ce fallback renvoie ça, on l'ignore
+  // plutôt que d'écraser un vrai direct avec une lecture manifestement
+  // fausse (même risque que le bug syncFixtures corrigé plus tôt le
+  // même jour, mais ici côté syncLiveScores lui-même).
   const staleLive = await prisma.fixture.findMany({
     where: { provider: PROVIDER_NAME, status: { in: ["LIVE", "HALFTIME"] } },
   });
@@ -121,6 +131,13 @@ export async function syncLiveScores(): Promise<boolean> {
     if (liveExternalIds.has(fixture.externalId)) continue;
     const detail = await provider.getFixtureDetail(fixture.externalId);
     if (!detail) continue;
+    if (detail.status === "SCHEDULED") {
+      logger.warn(
+        { fixtureId: fixture.id, externalId: fixture.externalId },
+        "Le fournisseur a renvoyé SCHEDULED pour un match déjà LIVE — lecture ignorée (incohérence connue du fournisseur)",
+      );
+      continue;
+    }
     await prisma.fixture.update({
       where: { id: fixture.id },
       data: {
@@ -134,9 +151,22 @@ export async function syncLiveScores(): Promise<boolean> {
 
   const corrected = await finalizeRecentMatches(provider);
 
+  // Piloté par notre propre état en base plutôt que par liveFixtures.length :
+  // bug réel constaté en prod, la liste LIVE du fournisseur peut renvoyer 0
+  // matchs de façon transitoire (vu dans les logs : count:0 en plein milieu
+  // d'un match confirmé en direct par ailleurs) alors qu'un vrai match est en
+  // cours — se fier uniquement à cette lecture faisait basculer la cadence
+  // sur l'intervalle idle (3 min) pile au moment où un but pouvait se
+  // marquer. Notre table Fixture, elle, ne redescend de LIVE/HALFTIME que sur
+  // une confirmation ferme (terminé/reporté/annulé, jamais SCHEDULED, voir
+  // le garde-fou juste au-dessus), donc plus fiable comme signal de cadence.
+  const stillLiveCount = await prisma.fixture.count({
+    where: { provider: PROVIDER_NAME, status: { in: ["LIVE", "HALFTIME"] } },
+  });
+
   logger.info(
-    { count: liveFixtures.length, resolved: staleLive.length, finalScoreCorrections: corrected },
+    { count: liveFixtures.length, resolved: staleLive.length, finalScoreCorrections: corrected, stillLiveCount },
     "Scores en direct synchronisés",
   );
-  return liveFixtures.length > 0;
+  return stillLiveCount > 0;
 }
