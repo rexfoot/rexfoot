@@ -16,6 +16,21 @@ const PROVIDER_NAME = getActiveProviderName();
 const FINAL_SCORE_RECHECK_DELAY_MS = 105 * 60 * 1000; // 1h45 apres le coup d'envoi : le match est presque certainement termine
 const FINAL_SCORE_RECHECK_WINDOW_MS = 4 * 60 * 60 * 1000; // au-dela de 4h, on abandonne (evite de trainer de tres vieux matchs jamais confirmes)
 
+// Bug réel constaté en prod (2026-09-05) : Manchester City-Coventry (ligue,
+// donc jamais de prolongation possible) restait affiché EN DIRECT bien après
+// sa fin réelle — vérifié directement : football-data.org lui-même
+// renvoyait IN_PLAY avec un lastUpdated identique à plusieurs requêtes
+// espacées de plus d'une minute, un vrai blocage chez EUX (le fournisseur
+// entier, pas seulement l'endpoint "detail" déjà connu pour ce défaut).
+// staleLive plus bas ne corrige que si le match a DISPARU de leur liste
+// "LIVE" — inutile si LEUR liste elle-même reste bloquée à le dire vivant.
+// Ce filet de sécurité force donc FINISHED (score connu conservé, best-
+// effort) passé un délai que même un match à prolongations + tirs au but ne
+// devrait jamais dépasser — jamais pour un simple retard, uniquement pour un
+// blocage manifestement anormal des DEUX fournisseurs à la fois.
+const MAX_LEAGUE_MATCH_DURATION_MS = 125 * 60 * 1000; // 2h05 : championnat, jamais de prolongation
+const MAX_CUP_MATCH_DURATION_MS = 175 * 60 * 1000; // 2h55 : coupe, prolongations + tirs au but possibles
+
 /**
  * Revérifie une seule fois (finalScoreConfirmedAt) le score des matchs
  * fraîchement FINISHED, pour rattraper une correction tardive du fournisseur.
@@ -65,6 +80,52 @@ async function finalizeRecentMatches(provider: FootballDataProvider): Promise<nu
     emitFixtureUpdate(fixture.id);
   }
   return corrected;
+}
+
+/**
+ * Filet de sécurité final : un match encore LIVE/HALFTIME largement au-delà
+ * de toute durée plausible passe FINISHED de force (score déjà connu
+ * conservé tel quel), indépendamment de ce que dit le fournisseur — voir le
+ * commentaire de MAX_LEAGUE_MATCH_DURATION_MS ci-dessus pour l'incident qui
+ * a motivé ce garde-fou. Coût négligeable : quasiment jamais déclenché en
+ * fonctionnement normal (le staleLive plus haut résout déjà l'immense
+ * majorité des cas), aucun appel réseau nécessaire.
+ */
+async function forceFinishStuckMatches(): Promise<number> {
+  const now = Date.now();
+  const stuck = await prisma.fixture.findMany({
+    where: { provider: PROVIDER_NAME, status: { in: ["LIVE", "HALFTIME"] } },
+    include: {
+      homeTeam: { select: { name: true } },
+      awayTeam: { select: { name: true } },
+      competition: { select: { type: true } },
+    },
+  });
+
+  let forced = 0;
+  for (const fixture of stuck) {
+    const maxDurationMs =
+      fixture.competition.type === "CUP" ? MAX_CUP_MATCH_DURATION_MS : MAX_LEAGUE_MATCH_DURATION_MS;
+    if (now - fixture.kickoffAt.getTime() < maxDurationMs) continue;
+
+    logger.warn(
+      {
+        fixtureId: fixture.id,
+        home: fixture.homeTeam.name,
+        away: fixture.awayTeam.name,
+        kickoffAt: fixture.kickoffAt,
+        score: `${fixture.homeScore}-${fixture.awayScore}`,
+      },
+      "Match resté LIVE/HALFTIME au-delà de toute durée plausible — forcé FINISHED (blocage fournisseur)",
+    );
+    await prisma.fixture.update({ where: { id: fixture.id }, data: { status: "FINISHED" } });
+    emitFixtureUpdate(fixture.id);
+    void notifyWriters(
+      `🏁 Final: ${fixture.homeTeam.name} ${fixture.homeScore ?? "?"}-${fixture.awayScore ?? "?"} ${fixture.awayTeam.name}`,
+    );
+    forced += 1;
+  }
+  return forced;
 }
 
 /**
@@ -193,6 +254,7 @@ export async function syncLiveScores(): Promise<boolean> {
   }
 
   const corrected = await finalizeRecentMatches(provider);
+  const forcedFinished = await forceFinishStuckMatches();
 
   // Piloté par notre propre état en base plutôt que par liveFixtures.length :
   // bug réel constaté en prod, la liste LIVE du fournisseur peut renvoyer 0
@@ -208,7 +270,7 @@ export async function syncLiveScores(): Promise<boolean> {
   });
 
   logger.info(
-    { count: liveFixtures.length, resolved: staleLive.length, finalScoreCorrections: corrected, stillLiveCount },
+    { count: liveFixtures.length, resolved: staleLive.length, finalScoreCorrections: corrected, forcedFinished, stillLiveCount },
     "Scores en direct synchronisés",
   );
   return stillLiveCount > 0;
