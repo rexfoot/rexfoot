@@ -143,6 +143,7 @@ export async function getMatchById(id: string): Promise<MatchDetail | null> {
 
   const standings: StandingRow[] = standingsRows.map((s) => ({
     position: s.position,
+    previousPosition: s.previousPosition,
     played: s.played,
     won: s.won,
     drawn: s.drawn,

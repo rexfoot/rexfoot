@@ -56,7 +56,7 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
           <TeamColumn
             name={match.homeTeam.name}
             crestUrl={match.homeTeam.crestUrl}
-            position={findStandingPosition(match.standings, match.homeTeam.slug)}
+            standing={findStanding(match.standings, match.homeTeam.slug)}
           />
           <div className="text-center">
             {hasScore ? (
@@ -71,7 +71,7 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
           <TeamColumn
             name={match.awayTeam.name}
             crestUrl={match.awayTeam.crestUrl}
-            position={findStandingPosition(match.standings, match.awayTeam.slug)}
+            standing={findStanding(match.standings, match.awayTeam.slug)}
           />
         </div>
 
@@ -363,25 +363,54 @@ function MatchScorers({
   );
 }
 
-/** Position actuelle de l'équipe dans le classement affiché sous l'onglet Classement — même source, pas de calcul séparé. */
-function findStandingPosition(standings: MatchDetail["standings"], teamSlug: string): number | null {
-  return standings.find((row) => row.team.slug === teamSlug)?.position ?? null;
+/** Ligne de classement de l'équipe dans le classement affiché sous l'onglet Classement — même source, pas de calcul séparé. */
+function findStanding(standings: MatchDetail["standings"], teamSlug: string): MatchDetail["standings"][number] | null {
+  return standings.find((row) => row.team.slug === teamSlug) ?? null;
+}
+
+/**
+ * Flèche montée/descente sous le nom de l'équipe (demandé par Hicham le
+ * 2026-09-05) — compare à `previousPosition` (position au sync précédent,
+ * voir Standing.previousPosition/syncStandings.ts) : un chiffre de position
+ * PLUS PETIT = mieux classé, donc "monte". Rien affiché si on n'a encore
+ * aucun historique (previousPosition null) ou si la position n'a pas bougé.
+ */
+function PositionBadge({ standing }: { standing: MatchDetail["standings"][number] | null }) {
+  if (!standing) return null;
+  const { position, previousPosition } = standing;
+
+  if (previousPosition === null || previousPosition === position) {
+    return <span className="text-xs font-semibold text-rf-fg-subtle">#{position}</span>;
+  }
+
+  const isRising = position < previousPosition;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-0.5 text-xs font-semibold",
+        isRising ? "text-green-500" : "text-red-500",
+      )}
+    >
+      #{position}
+      <span aria-hidden>{isRising ? "▲" : "▼"}</span>
+    </span>
+  );
 }
 
 function TeamColumn({
   name,
   crestUrl,
-  position,
+  standing,
 }: {
   name: string;
   crestUrl: string | null;
-  position: number | null;
+  standing: MatchDetail["standings"][number] | null;
 }) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
       <TeamCrest crestUrl={crestUrl} teamName={name} size="lg" />
-      {position !== null && <span className="text-xs font-semibold text-rf-fg-subtle">#{position}</span>}
       <span className="text-sm font-medium text-rf-fg">{name}</span>
+      <PositionBadge standing={standing} />
     </div>
   );
 }

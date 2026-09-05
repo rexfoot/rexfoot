@@ -56,6 +56,8 @@ export interface LineupSummary {
 
 export interface StandingRow {
   position: number;
+  /** Position au sync précédent — null si pas encore comparable. Voir Standing.previousPosition. */
+  previousPosition: number | null;
   played: number;
   won: number;
   drawn: number;

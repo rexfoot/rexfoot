@@ -51,7 +51,7 @@ export async function syncStandings(): Promise<void> {
           teamId: team.id,
           groupName: row.groupName,
         },
-        select: { id: true },
+        select: { id: true, position: true },
       });
 
       await prisma.standing.upsert({
@@ -72,8 +72,15 @@ export async function syncStandings(): Promise<void> {
           points: row.points,
           form: row.form,
         },
+        // previousPosition capture la position d'AVANT ce sync (demandé par
+        // Hicham le 2026-09-05, pour afficher une flèche montée/descente sous
+        // le nom de l'équipe) — jamais renseigné à la création (rien à
+        // comparer), toujours écrasé par l'ancienne `position` à la mise à
+        // jour, même si elle n'a pas bougé (dans ce cas previousPosition ==
+        // position, donc pas de flèche affichée côté web, ce qui est correct).
         update: {
           position: row.position,
+          previousPosition: existing?.position ?? null,
           played: row.played,
           won: row.won,
           drawn: row.drawn,

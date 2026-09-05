@@ -411,6 +411,10 @@ model Standing {
   team           Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
   groupName      String?
   position       Int
+  /// Position au sync précédent (avant d'écraser `position` ci-dessus) — permet
+  /// d'afficher une flèche montée/descente sans historique complet. Null tant
+  /// qu'un seul sync a eu lieu (pas encore de "avant" à comparer).
+  previousPosition Int?
   played         Int     @default(0)
   won            Int     @default(0)
   drawn          Int     @default(0)
