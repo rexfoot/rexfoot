@@ -288,5 +288,10 @@
     "contactTitle": "7. Contact",
     "contactBody": "Pour toute question concernant le site, ses contenus, les droits d'auteur ou les données personnelles, vous pouvez contacter RexFoot à l'adresse suivante : footrexofficial@gmail.com.",
     "lastUpdated": "Dernière mise à jour : 4 septembre 2026"
+  },
+  "teamConnect": {
+    "label": "Rechercher sur Google",
+    "ariaLabel": "Rechercher « {team} » sur Google",
+    "firstUseHint": "Ouvre une recherche Google. Appuyez sur Retour pour revenir à RexFoot."
   }
 }

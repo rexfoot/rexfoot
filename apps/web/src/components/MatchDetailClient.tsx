@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { ListChecks, Goal } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { TeamCrest } from "./TeamCrest";
+import { TeamGoogleLink } from "./TeamGoogleLink";
 import { CompetitionBadge } from "./CompetitionBadge";
 import { EmptyState } from "./EmptyState";
 import { MatchCard } from "./MatchCard";
@@ -55,9 +55,11 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
 
         <div className="grid grid-cols-3 items-center gap-4">
           <TeamColumn
-            name={match.homeTeam.name}
-            crestUrl={match.homeTeam.crestUrl}
+            team={match.homeTeam}
             standing={findStanding(match.standings, match.homeTeam.slug)}
+            matchId={match.id}
+            competitionSlug={match.competition.slug}
+            showFirstUseHint
           />
           <div className="text-center">
             {hasScore ? (
@@ -70,9 +72,10 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
             <p className={`mt-2 text-sm font-semibold ${isLive ? "text-rf-live" : "text-rf-fg-muted"}`}>{statusLabel}</p>
           </div>
           <TeamColumn
-            name={match.awayTeam.name}
-            crestUrl={match.awayTeam.crestUrl}
+            team={match.awayTeam}
             standing={findStanding(match.standings, match.awayTeam.slug)}
+            matchId={match.id}
+            competitionSlug={match.competition.slug}
           />
         </div>
 
@@ -150,9 +153,9 @@ function CompositionPanel({ match }: { match: MatchDetail }) {
 
   return (
     <div className="space-y-3">
-      <TeamFormationHeader team={match.awayTeam} formation={away.formation} />
+      <TeamFormationHeader team={match.awayTeam} formation={away.formation} matchId={match.id} competitionSlug={match.competition.slug} />
       <FormationPitch home={home} away={away} />
-      <TeamFormationHeader team={match.homeTeam} formation={home.formation} />
+      <TeamFormationHeader team={match.homeTeam} formation={home.formation} matchId={match.id} competitionSlug={match.competition.slug} />
 
       <div className="grid grid-cols-1 gap-4 border-t border-rf-border pt-4 sm:grid-cols-2">
         <SubstitutesList lineup={home} side="home" />
@@ -165,14 +168,17 @@ function CompositionPanel({ match }: { match: MatchDetail }) {
 function TeamFormationHeader({
   team,
   formation,
+  matchId,
+  competitionSlug,
 }: {
   team: MatchDetail["homeTeam"];
   formation: string | null;
+  matchId: string;
+  competitionSlug: string;
 }) {
   return (
     <div className="flex items-center gap-2 text-sm font-semibold text-rf-fg">
-      <TeamCrest crestUrl={team.crestUrl} teamName={team.name} size="sm" />
-      {team.name}
+      <TeamGoogleLink team={team} matchId={matchId} competitionSlug={competitionSlug} surface="lineup" size="sm" />
       {formation && <span className="font-normal text-rf-fg-subtle">({formation})</span>}
     </div>
   );
@@ -209,10 +215,14 @@ function StandingsPanel({ match }: { match: MatchDetail }) {
               >
                 <td className="px-3 py-2 text-rf-fg-muted">{row.position}</td>
                 <td className="px-3 py-2">
-                  <span className="flex items-center gap-2 font-medium text-rf-fg">
-                    <TeamCrest crestUrl={row.team.crestUrl} teamName={row.team.name} size="sm" />
-                    {row.team.name}
-                  </span>
+                  <TeamGoogleLink
+                    team={row.team}
+                    matchId={match.id}
+                    competitionSlug={match.competition.slug}
+                    surface="standings_row"
+                    size="sm"
+                    className="font-medium text-rf-fg"
+                  />
                 </td>
                 <td className="px-3 py-2 text-center text-rf-fg-muted">{row.played}</td>
                 <td className="px-3 py-2 text-center text-rf-fg-muted">{row.goalDifference}</td>
@@ -383,18 +393,30 @@ function PositionBadge({ standing }: { standing: MatchDetail["standings"][number
 }
 
 function TeamColumn({
-  name,
-  crestUrl,
+  team,
   standing,
+  matchId,
+  competitionSlug,
+  showFirstUseHint,
 }: {
-  name: string;
-  crestUrl: string | null;
+  team: { name: string; slug: string; crestUrl: string | null };
   standing: MatchDetail["standings"][number] | null;
+  matchId: string;
+  competitionSlug: string;
+  showFirstUseHint?: boolean;
 }) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
-      <TeamCrest crestUrl={crestUrl} teamName={name} size="lg" />
-      <span className="text-sm font-medium text-rf-fg">{name}</span>
+      <TeamGoogleLink
+        team={team}
+        matchId={matchId}
+        competitionSlug={competitionSlug}
+        surface="match_header"
+        size="lg"
+        layout="column"
+        showFirstUseHint={showFirstUseHint}
+        className="text-sm font-medium text-rf-fg"
+      />
       <PositionBadge standing={standing} />
     </div>
   );
