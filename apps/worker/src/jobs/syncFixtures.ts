@@ -81,6 +81,24 @@ export async function syncFixtures(): Promise<void> {
         continue;
       }
 
+      // syncFixtures pose le calendrier (équipes, horaires) ; le SUIVI EN
+      // DIRECT (statut/minute/score) appartient exclusivement à
+      // syncLiveScores.ts une fois qu'un match a commencé. Bug réel constaté
+      // en prod (2026-09-05) : ce job, relancé par un redémarrage du worker,
+      // a réécrit "SCHEDULED, score vide" sur un match que syncLiveScores
+      // venait de passer correctement en LIVE — l'endpoint "calendrier"
+      // général de football-data.org ne reflète pas aussi vite qu'un match a
+      // démarré que l'endpoint dédié aux scores en direct. On ne touche donc
+      // plus status/minute/score ici une fois qu'un match n'est plus
+      // SCHEDULED (mais on garde round/venue/referee à jour, qui ne posent
+      // pas ce risque, et on laisse passer une éventuelle annonce de report/
+      // annulation détectée AVANT le coup d'envoi).
+      const existing = await prisma.fixture.findUnique({
+        where: { provider_externalId: { provider: PROVIDER_NAME, externalId: fixtureDto.externalId } },
+        select: { status: true },
+      });
+      const liveTrackingStarted = existing !== null && existing.status !== "SCHEDULED";
+
       await prisma.fixture.upsert({
         where: { provider_externalId: { provider: PROVIDER_NAME, externalId: fixtureDto.externalId } },
         create: {
@@ -100,10 +118,17 @@ export async function syncFixtures(): Promise<void> {
           referee: fixtureDto.referee,
         },
         update: {
-          status: fixtureDto.status,
-          minute: fixtureDto.minute,
-          homeScore: fixtureDto.homeScore,
-          awayScore: fixtureDto.awayScore,
+          round: fixtureDto.round,
+          venueName: fixtureDto.venueName,
+          referee: fixtureDto.referee,
+          ...(liveTrackingStarted
+            ? {}
+            : {
+                status: fixtureDto.status,
+                minute: fixtureDto.minute,
+                homeScore: fixtureDto.homeScore,
+                awayScore: fixtureDto.awayScore,
+              }),
         },
       });
     }
