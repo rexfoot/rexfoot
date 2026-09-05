@@ -64,7 +64,8 @@ export default async function NewsArticlePage({ params }: PageProps) {
 
       {article.coverImageUrl && (
         <div className="relative aspect-video overflow-hidden rounded-2xl bg-rf-bg-card">
-          <Image src={article.coverImageUrl} alt={article.title} fill unoptimized className="object-cover" />
+          {/* object-top : voir NewsCard.tsx (même raison — évite de couper la tête sur un recadrage centré). */}
+          <Image src={article.coverImageUrl} alt={article.title} fill unoptimized className="object-cover object-top" />
         </div>
       )}
 

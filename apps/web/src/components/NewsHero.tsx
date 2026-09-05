@@ -33,13 +33,14 @@ export function NewsHero({ article }: NewsHeroProps) {
     >
       <div className="relative aspect-4/3 sm:aspect-16/7">
         {article.coverImageUrl ? (
+          // object-top : voir NewsCard.tsx (même raison — évite de couper la tête sur un recadrage centré).
           <Image
             src={article.coverImageUrl}
             alt={article.title}
             fill
             unoptimized
             priority
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-rf-bg-elevated">

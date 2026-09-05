@@ -34,12 +34,14 @@ export function NewsCard({ article }: NewsCardProps) {
     >
       <div className="relative aspect-video overflow-hidden bg-rf-bg-elevated">
         {article.coverImageUrl ? (
+          // object-top plutôt que le centre par défaut : les photos de presse (portrait/carré)
+          // laissent peu de marge au-dessus du visage, un recadrage centré coupe souvent la tête.
           <Image
             src={article.coverImageUrl}
             alt={article.title}
             fill
             unoptimized
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
