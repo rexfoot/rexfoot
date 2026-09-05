@@ -155,8 +155,8 @@ function CompositionPanel({ match }: { match: MatchDetail }) {
       <TeamFormationHeader team={match.homeTeam} formation={home.formation} />
 
       <div className="grid grid-cols-1 gap-4 border-t border-rf-border pt-4 sm:grid-cols-2">
-        <SubstitutesList lineup={home} />
-        <SubstitutesList lineup={away} />
+        <SubstitutesList lineup={home} side="home" />
+        <SubstitutesList lineup={away} side="away" />
       </div>
     </div>
   );

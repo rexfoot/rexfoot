@@ -10,14 +10,27 @@ import { notifyWriters } from "../lib/notifyWriters.js";
 import { emitFixtureUpdate } from "../lib/realtime.js";
 
 // Highlightly (plan gratuit) : 100 requêtes/jour, aucun plafond horaire strict
-// documenté. Ce job tourne toutes les SYNC_INTERVAL_MINUTES (voir scheduler.ts)
-// et ne traite au plus MAX_MATCHES_PER_RUN matchs en direct par exécution.
+// documenté. Ce job tourne toutes les SYNC_INTERVAL_MINUTES (voir scheduler.ts).
 // Régime de croisière par match et par cycle, une fois l'id Highlightly mis en
 // cache sur Fixture : 2 requêtes (événements + statistiques, qui évoluent
 // pendant le match) + 1 requête ponctuelle pour les compositions (jamais
 // répétée — une composition ne change pas une fois le match commencé, seuls
-// les remplacements sont suivis, déjà via les événements).
+// les remplacements sont suivis, déjà via les événements). Sert aussi de
+// plafond pour la passe finale post-match (recentlyFinishedMatches) — les
+// matchs LIVE/HALFTIME déjà résolus n'y sont eux plus soumis (voir plus bas).
 const MAX_MATCHES_PER_RUN = 6;
+
+// Bug réel constaté en prod (2026-09-05, journée à 12 matchs en direct
+// simultanés, Manchester City-Coventry parmi les victimes) : les matchs pas
+// encore résolus étaient plafonnés par MAX_MATCHES_PER_RUN et triés
+// seulement par kickoffAt — un match à coup d'envoi plus tardif n'obtenait
+// alors JAMAIS un créneau tant que ≥6 matchs plus tôt restaient en direct,
+// pas juste ralenti mais ignoré pour toute la durée de sa rencontre. Ce
+// plafond séparé et plus petit, combiné à un tri par tentative la plus
+// ancienne (voir plus bas), fait tourner l'attention équitablement — les
+// matchs déjà résolus, eux, ne sont plus plafonnés du tout (voir
+// resolvedLiveMatches).
+const MAX_LOOKUP_PER_RUN = 3;
 
 // Bug réel constaté en prod (2026-09-05, journée à 11 matchs en direct
 // simultanés) : sans cette limite, un match encore non résolu chez
@@ -280,11 +293,34 @@ export async function syncMatchEvents(): Promise<void> {
   } as const;
 
   const now = new Date();
-  const [liveMatches, recentlyFinishedMatches] = await Promise.all([
+  const cooldownCutoff = new Date(now.getTime() - LOOKUP_RETRY_COOLDOWN_MS);
+
+  const [resolvedLiveMatches, unresolvedLiveMatches, recentlyFinishedMatches] = await Promise.all([
+    // Déjà résolus : toujours tous traités (jamais plafonné par
+    // MAX_MATCHES_PER_RUN) — un match déjà suivi ne doit plus jamais être
+    // privé de son rafraîchissement events/stats au profit d'un nouveau
+    // match, quel que soit le nombre de matchs en direct simultanés.
     prisma.fixture.findMany({
-      where: { status: { in: ["LIVE", "HALFTIME"] } },
+      where: { status: { in: ["LIVE", "HALFTIME"] }, highlightlyId: { not: null } },
       orderBy: { kickoffAt: "asc" },
-      take: MAX_MATCHES_PER_RUN,
+      select: matchSelect,
+    }),
+    // Pas encore résolus : plafonné à MAX_LOOKUP_PER_RUN et priorisé par
+    // tentative la plus ancienne (jamais tenté d'abord, "nulls first").
+    // Bug réel constaté en prod (2026-09-05, journée à 12 matchs en direct) :
+    // trié seulement par kickoffAt, les matchs à coup d'envoi plus tardif
+    // (Manchester City, 14h) n'obtenaient JAMAIS un des MAX_MATCHES_PER_RUN
+    // créneaux tant que ≥6 matchs à coup d'envoi plus tôt restaient en
+    // direct — pas juste ralentis, complètement ignorés pour toute la durée
+    // du match. Ce tri fait tourner l'attention équitablement.
+    prisma.fixture.findMany({
+      where: {
+        status: { in: ["LIVE", "HALFTIME"] },
+        highlightlyId: null,
+        OR: [{ highlightlyLookupAttemptedAt: null }, { highlightlyLookupAttemptedAt: { lt: cooldownCutoff } }],
+      },
+      orderBy: [{ highlightlyLookupAttemptedAt: { sort: "asc", nulls: "first" } }, { kickoffAt: "asc" }],
+      take: MAX_LOOKUP_PER_RUN,
       select: matchSelect,
     }),
     // Passe finale unique par match (voir finalEventsConfirmedAt) — jamais
@@ -306,7 +342,8 @@ export async function syncMatchEvents(): Promise<void> {
   ]);
 
   const matches = [
-    ...liveMatches.map((m) => ({ ...m, isFinalPass: false })),
+    ...resolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false })),
+    ...unresolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false })),
     ...recentlyFinishedMatches.map((m) => ({ ...m, isFinalPass: true })),
   ];
 

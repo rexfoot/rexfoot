@@ -38,7 +38,21 @@ function splitIntoRows(startingXI: LineupPlayer[], formation: string | null): Li
   return rows;
 }
 
-function PlayerAvatar({ player }: { player: LineupPlayer }) {
+type Side = "home" | "away";
+
+// Numéro de dos coloré par équipe plutôt qu'une seule couleur pour les deux
+// (demandé par Hicham le 2026-09-05 : "differenciar el equipo a y el equipo
+// b con numeros de otros colores... y no el verde porque el campo es verde")
+// — jamais vert, ce qui exclut `rf-gold` : malgré son nom, ce token vaut
+// #00e676 (vert vif, voir globals.css) depuis une refonte de marque, pas un
+// vrai doré. On utilise donc directement un ambre Tailwind pour l'équipe
+// extérieure, sans dépendre de ce token.
+const NUMBER_BADGE_CLASS: Record<Side, string> = {
+  home: "bg-blue-500 text-white",
+  away: "bg-amber-500 text-rf-bg",
+};
+
+function PlayerAvatar({ player, side }: { player: LineupPlayer; side: Side }) {
   return (
     <div className="flex flex-col items-center gap-1">
       <div className="relative">
@@ -50,7 +64,12 @@ function PlayerAvatar({ player }: { player: LineupPlayer }) {
           )}
         </div>
         {player.number !== null && (
-          <span className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rf-gold text-[9px] font-bold text-rf-bg">
+          <span
+            className={cn(
+              "absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-bold",
+              NUMBER_BADGE_CLASS[side],
+            )}
+          >
             {player.number}
           </span>
         )}
@@ -62,12 +81,12 @@ function PlayerAvatar({ player }: { player: LineupPlayer }) {
   );
 }
 
-function PlayerRow({ players }: { players: LineupPlayer[] }) {
+function PlayerRow({ players, side }: { players: LineupPlayer[]; side: Side }) {
   if (players.length === 0) return null;
   return (
     <div className="flex items-start justify-around px-2">
       {players.map((player, i) => (
-        <PlayerAvatar key={`${player.name}-${i}`} player={player} />
+        <PlayerAvatar key={`${player.name}-${i}`} player={player} side={side} />
       ))}
     </div>
   );
@@ -93,22 +112,27 @@ export function FormationPitch({ home, away }: { home: LineupSummary; away: Line
 
       <div className="relative flex h-1/2 flex-col justify-around py-3">
         {awayRows.map((row, i) => (
-          <PlayerRow key={i} players={row} />
+          <PlayerRow key={i} players={row} side="away" />
         ))}
       </div>
       <div className="relative flex h-1/2 flex-col-reverse justify-around py-3">
         {homeRows.map((row, i) => (
-          <PlayerRow key={i} players={row} />
+          <PlayerRow key={i} players={row} side="home" />
         ))}
       </div>
     </div>
   );
 }
 
-function SubstituteRow({ player }: { player: LineupPlayer }) {
+function SubstituteRow({ player, side }: { player: LineupPlayer; side: Side }) {
   return (
     <li className="flex items-center gap-2 text-sm text-rf-fg">
-      <span className="w-6 shrink-0 text-end font-display text-xs font-semibold text-rf-fg-subtle">
+      <span
+        className={cn(
+          "flex h-5 w-6 shrink-0 items-center justify-center rounded text-xs font-bold",
+          NUMBER_BADGE_CLASS[side],
+        )}
+      >
         {player.number ?? "-"}
       </span>
       <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-rf-bg-elevated">
@@ -124,7 +148,7 @@ function SubstituteRow({ player }: { player: LineupPlayer }) {
   );
 }
 
-export function SubstitutesList({ lineup }: { lineup: LineupSummary }) {
+export function SubstitutesList({ lineup, side }: { lineup: LineupSummary; side: Side }) {
   const t = useTranslations("matches");
   if (lineup.substitutes.length === 0) return null;
 
@@ -133,7 +157,7 @@ export function SubstitutesList({ lineup }: { lineup: LineupSummary }) {
       <p className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-rf-fg-subtle">{t("substitutes")}</p>
       <ul className={cn("space-y-1.5")}>
         {lineup.substitutes.map((player, i) => (
-          <SubstituteRow key={`${lineup.teamId}-sub-${i}`} player={player} />
+          <SubstituteRow key={`${lineup.teamId}-sub-${i}`} player={player} side={side} />
         ))}
       </ul>
     </div>
