@@ -349,6 +349,15 @@ model Fixture {
   /// syncMatchEvents.ts), puis mis en cache ici pour ne plus jamais refaire
   /// cette recherche : le quota gratuit (100 requêtes/jour) ne le permettrait pas.
   highlightlyId Int? @unique
+  /// Dernière tentative (réussie ou non) de résolution de highlightlyId —
+  /// null tant qu'aucune tentative n'a eu lieu. Bug réel constaté en prod
+  /// (2026-09-05, journée à 11 matchs en direct simultanés) : sans ce champ,
+  /// syncMatchEvents.ts retentait la recherche paginée (jusqu'à 3 requêtes)
+  /// à CHAQUE cycle (10 min) pour tout match encore non résolu — le quota
+  /// gratuit (100/jour) a été entièrement consommé en un peu plus d'une
+  /// heure, bloquant même les matchs déjà résolus (plus aucun but/minute mis
+  /// à jour pour personne). Sert de garde-fou pour espacer les tentatives.
+  highlightlyLookupAttemptedAt DateTime?
 
   competitionId String
   competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)

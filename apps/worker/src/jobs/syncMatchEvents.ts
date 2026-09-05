@@ -19,6 +19,17 @@ import { emitFixtureUpdate } from "../lib/realtime.js";
 // les remplacements sont suivis, déjà via les événements).
 const MAX_MATCHES_PER_RUN = 6;
 
+// Bug réel constaté en prod (2026-09-05, journée à 11 matchs en direct
+// simultanés) : sans cette limite, un match encore non résolu chez
+// Highlightly déclenchait une recherche paginée (jusqu'à 3 requêtes, voir
+// findMatchId dans highlightly.ts) à CHAQUE cycle de 10 minutes — le quota
+// gratuit (100/jour) a été entièrement épuisé en un peu plus d'une heure,
+// bloquant même les matchs déjà résolus (plus aucun but/minute mis à jour
+// pour personne, cf. X-RateLimit-Requests-Remaining: 0 confirmé
+// directement). On espace donc les tentatives de résolution : au plus une
+// toutes les LOOKUP_RETRY_COOLDOWN_MS, qu'elle ait réussi ou non.
+const LOOKUP_RETRY_COOLDOWN_MS = 30 * 60 * 1000;
+
 // Un événement capté pendant un match LIVE peut être invalidé après coup (ex.
 // but refusé par la VAR après le direct, comme Carlos Espí lors de Betis-Real
 // Madrid du 04/09/2026 : toujours enregistré comme un vrai but chez nous,
@@ -260,6 +271,7 @@ export async function syncMatchEvents(): Promise<void> {
     id: true,
     kickoffAt: true,
     highlightlyId: true,
+    highlightlyLookupAttemptedAt: true,
     status: true,
     minute: true,
     homeTeam: { select: { id: true, name: true } },
@@ -304,6 +316,12 @@ export async function syncMatchEvents(): Promise<void> {
     try {
       let highlightlyId = match.highlightlyId;
       if (!highlightlyId) {
+        const lastAttempt = match.highlightlyLookupAttemptedAt;
+        if (lastAttempt && Date.now() - lastAttempt.getTime() < LOOKUP_RETRY_COOLDOWN_MS) {
+          continue;
+        }
+
+        await prisma.fixture.update({ where: { id: match.id }, data: { highlightlyLookupAttemptedAt: new Date() } });
         highlightlyId = await client.findMatchId(
           match.homeTeam.name,
           match.awayTeam.name,
