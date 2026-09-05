@@ -47,6 +47,28 @@ async function removeAllRepeatableJobs(queue: Queue): Promise<void> {
   }
 }
 
+/**
+ * syncLiveScores ne suit pas un `repeat` BullMQ classique : chaque exécution
+ * planifie elle-même la suivante via un job ponctuel a delai (jobId unique,
+ * voir scheduleNextLiveScoresRun). Consequence reelle constatee en prod : au
+ * redemarrage du worker (chaque redeploiement), removeAllRepeatableJobs ne
+ * voit pas ce job ponctuel deja en attente dans Redis (ce n'est pas un
+ * "repeatable" au sens BullMQ) — il reste planifie, et quand il finit par se
+ * declencher il relance SA PROPRE chaine, en parallele de celle du nouveau
+ * process. Apres plusieurs redeploiements, plusieurs chaines tournaient en
+ * meme temps (constate : 9 executions quasi simultanees dans les logs),
+ * gaspillant le quota API et rendant la cadence imprevisible. On purge donc
+ * explicitement tout syncLiveScores en attente avant d'en replanifier un seul.
+ */
+async function removeOrphanedLiveScoresJobs(queue: Queue): Promise<void> {
+  const pending = await queue.getJobs(["delayed", "waiting"]);
+  for (const job of pending) {
+    if (job.name === JobName.syncLiveScores) {
+      await job.remove();
+    }
+  }
+}
+
 const DEFAULT_JOB_OPTS = { removeOnComplete: { count: 20 }, removeOnFail: { count: 50 } };
 
 /**
@@ -58,6 +80,7 @@ const DEFAULT_JOB_OPTS = { removeOnComplete: { count: 20 }, removeOnFail: { coun
  */
 export async function registerScheduledJobs(queue: Queue): Promise<void> {
   await removeAllRepeatableJobs(queue);
+  await removeOrphanedLiveScoresJobs(queue);
 
   await queue.add(
     JobName.syncFixtures,
