@@ -121,6 +121,50 @@ const matchDetailSelect = {
   },
 } as const;
 
+function normalizePlayerName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z\s]/g, "")
+    .trim();
+}
+
+/**
+ * Résout la photo de chaque joueur d'une composition en la comparant (nom
+ * normalisé, accents/ponctuation retirés) aux joueurs de CETTE équipe dans
+ * notre table Player — Lineup vient de Highlightly (jamais lié à Player,
+ * voir syncMatchEvents.ts), Player.photoUrl vient de TheSportsDB (voir
+ * syncPlayerPhotos.ts) : deux fournisseurs différents, correspondance par
+ * nom seulement. Correspondance exacte d'abord ; à défaut, une inclusion
+ * dans un sens ou l'autre (même principe que `sameTeam` dans
+ * syncMatchEvents.ts) pour absorber les variantes ("David de Gea" vs "de
+ * Gea") — jamais risqué au-delà de l'effectif d'UNE équipe, donc peu de
+ * chance de confondre deux joueurs différents.
+ */
+async function resolveLineupPhotos(teamId: string, players: LineupPlayer[]): Promise<LineupPlayer[]> {
+  if (players.length === 0) return players;
+
+  const roster = await prisma.player.findMany({
+    where: { teamMemberships: { some: { teamId } } },
+    select: { displayName: true, photoUrl: true },
+  });
+  const normalizedRoster = roster
+    .filter((r) => r.photoUrl !== null)
+    .map((r) => ({ normalized: normalizePlayerName(r.displayName), photoUrl: r.photoUrl! }));
+
+  return players.map((player) => {
+    const normalizedName = normalizePlayerName(player.name);
+    const exact = normalizedRoster.find((r) => r.normalized === normalizedName);
+    if (exact) return { ...player, photoUrl: exact.photoUrl };
+
+    const partial = normalizedRoster.find(
+      (r) => r.normalized.includes(normalizedName) || normalizedName.includes(r.normalized),
+    );
+    return { ...player, photoUrl: partial?.photoUrl ?? null };
+  });
+}
+
 /** Premier match à venir de l'équipe après `after` — null s'il n'y en a aucun de programmé. */
 async function getNextFixtureForTeam(teamId: string, after: Date): Promise<MatchSummary | null> {
   const row = await prisma.fixture.findFirst({
@@ -156,14 +200,18 @@ export async function getMatchById(id: string): Promise<MatchDetail | null> {
     team: s.team,
   }));
 
+  const lineups = await Promise.all(
+    row.lineups.map(async (l) => ({
+      ...l,
+      startingXI: await resolveLineupPhotos(l.teamId, l.startingXI as unknown as LineupPlayer[]),
+      substitutes: await resolveLineupPhotos(l.teamId, l.substitutes as unknown as LineupPlayer[]),
+    })),
+  );
+
   return {
     ...row,
     kickoffAt: row.kickoffAt.toISOString(),
-    lineups: row.lineups.map((l) => ({
-      ...l,
-      startingXI: l.startingXI as unknown as LineupPlayer[],
-      substitutes: l.substitutes as unknown as LineupPlayer[],
-    })),
+    lineups,
     standings,
     homeTeamNextMatch,
     awayTeamNextMatch,

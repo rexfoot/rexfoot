@@ -8,11 +8,12 @@ import { CompetitionBadge } from "./CompetitionBadge";
 import { EmptyState } from "./EmptyState";
 import { MatchCard } from "./MatchCard";
 import { FormBadge } from "./FormBadge";
+import { FormationPitch, SubstitutesList } from "./FormationPitch";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { bestKnownMinute } from "@/lib/match-minute";
 import { cn } from "@/lib/cn";
-import type { LineupPlayer, MatchDetail, MatchEventSummary, MatchSummary, TeamStatisticsSummary } from "@/lib/types";
+import type { MatchDetail, MatchEventSummary, MatchSummary, TeamStatisticsSummary } from "@/lib/types";
 
 type QuickTab = "composition" | "standings" | "nextMatch";
 
@@ -137,46 +138,42 @@ function QuickTabs({ match }: { match: MatchDetail }) {
   );
 }
 
+/** Style Sofascore : un seul pitch partagé (extérieur en haut, domicile en bas), demandé par Hicham le 2026-09-05. */
 function CompositionPanel({ match }: { match: MatchDetail }) {
   const t = useTranslations("matches");
+  const home = match.lineups.find((l) => l.teamId === match.homeTeam.id);
+  const away = match.lineups.find((l) => l.teamId === match.awayTeam.id);
 
-  if (match.lineups.length === 0) {
+  if (!home || !away) {
     return <EmptyState icon={ListChecks} title={t("noLineups")} />;
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-      {match.lineups.map((lineup) => {
-        const team = lineup.teamId === match.homeTeam.id ? match.homeTeam : match.awayTeam;
-        return (
-          <div key={lineup.teamId} className="rounded-xl border border-rf-border bg-rf-bg-card p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <TeamCrest crestUrl={team.crestUrl} teamName={team.name} size="sm" />
-              <span className="font-display text-sm font-semibold text-rf-fg">{team.name}</span>
-              {lineup.formation && (
-                <span className="ms-auto text-xs font-medium text-rf-fg-subtle">{lineup.formation}</span>
-              )}
-            </div>
-            <ul className="space-y-1.5">
-              {lineup.startingXI.map((player, i) => (
-                <LineupRow key={`${lineup.teamId}-xi-${i}`} player={player} />
-              ))}
-            </ul>
-            {lineup.substitutes.length > 0 && (
-              <>
-                <p className="mb-1.5 mt-3 text-xs font-semibold uppercase tracking-wide text-rf-fg-subtle">
-                  {t("substitutes")}
-                </p>
-                <ul className="space-y-1.5">
-                  {lineup.substitutes.map((player, i) => (
-                    <LineupRow key={`${lineup.teamId}-sub-${i}`} player={player} />
-                  ))}
-                </ul>
-              </>
-            )}
-          </div>
-        );
-      })}
+    <div className="space-y-3">
+      <TeamFormationHeader team={match.awayTeam} formation={away.formation} />
+      <FormationPitch home={home} away={away} />
+      <TeamFormationHeader team={match.homeTeam} formation={home.formation} />
+
+      <div className="grid grid-cols-1 gap-4 border-t border-rf-border pt-4 sm:grid-cols-2">
+        <SubstitutesList lineup={home} />
+        <SubstitutesList lineup={away} />
+      </div>
+    </div>
+  );
+}
+
+function TeamFormationHeader({
+  team,
+  formation,
+}: {
+  team: MatchDetail["homeTeam"];
+  formation: string | null;
+}) {
+  return (
+    <div className="flex items-center gap-2 text-sm font-semibold text-rf-fg">
+      <TeamCrest crestUrl={team.crestUrl} teamName={team.name} size="sm" />
+      {team.name}
+      {formation && <span className="font-normal text-rf-fg-subtle">({formation})</span>}
     </div>
   );
 }
@@ -252,18 +249,6 @@ function NextMatchPanel({ match }: { match: MatchDetail }) {
         </div>
       ))}
     </div>
-  );
-}
-
-function LineupRow({ player }: { player: LineupPlayer }) {
-  return (
-    <li className="flex items-center gap-2 text-sm text-rf-fg">
-      <span className="w-6 shrink-0 text-end font-display text-xs font-semibold text-rf-fg-subtle">
-        {player.number ?? "-"}
-      </span>
-      <span className="truncate">{player.name}</span>
-      {player.position && <span className="ms-auto text-xs text-rf-fg-subtle">{player.position}</span>}
-    </li>
   );
 }
 

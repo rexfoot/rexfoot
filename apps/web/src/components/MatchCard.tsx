@@ -1,5 +1,5 @@
 import { useTranslations, useLocale } from "next-intl";
-import { Goal, ArrowUpCircle, ArrowDownCircle } from "lucide-react";
+import { Goal } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
@@ -17,130 +17,59 @@ function formatKickoff(iso: string, locale: string): string {
   return `${date.toLocaleDateString(locale, { day: "2-digit", month: "short" })} · ${time}`;
 }
 
-function StatusBadge({
-  status,
-  minute,
-  events,
-  kickoffAt,
-}: {
-  status: MatchSummary["status"];
-  minute: number | null;
-  events: MatchEventSummary[];
-  kickoffAt: string;
-}) {
+function useStatusLabel(match: MatchSummary): { label: string; isLive: boolean } {
   const t = useTranslations("matches");
-  const knownMinute = bestKnownMinute(minute, events, kickoffAt);
+  const knownMinute = bestKnownMinute(match.minute, match.events, match.kickoffAt);
 
-  switch (status) {
+  switch (match.status) {
     case "LIVE":
-    case "HALFTIME": {
-      const label = status === "HALFTIME" ? t("halftime") : knownMinute !== null ? `${knownMinute}'` : t("live");
-      return (
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-rf-live/15 px-2 py-0.5 text-xs font-bold text-rf-live">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rf-live" />
-          {label}
-        </span>
-      );
-    }
+      return { label: knownMinute !== null ? `${knownMinute}'` : t("live"), isLive: true };
+    case "HALFTIME":
+      return { label: t("halftime"), isLive: true };
     case "FINISHED":
-      return <span className="text-xs font-semibold text-rf-fg-subtle">{t("finished")}</span>;
+      return { label: t("finished"), isLive: false };
     case "POSTPONED":
-      return <span className="text-xs font-semibold text-rf-fg-subtle">{t("postponed")}</span>;
+      return { label: t("postponed"), isLive: false };
     case "CANCELLED":
-      return <span className="text-xs font-semibold text-rf-fg-subtle">{t("cancelled")}</span>;
+      return { label: t("cancelled"), isLive: false };
     default:
-      return null;
+      return { label: "", isLive: false };
   }
 }
 
-// Types qu'on sait représenter en badge compact — VAR et penalty manqué sont
-// volontairement omis (peu d'intérêt sur une carte aussi compacte).
-const RENDERABLE_EVENT_TYPES: ReadonlySet<MatchEventSummary["type"]> = new Set([
-  "GOAL",
-  "PENALTY",
-  "OWN_GOAL",
-  "YELLOW_CARD",
-  "RED_CARD",
-  "SUBSTITUTION",
-]);
+// Sur la carte de la home/liste, uniquement les buts (demandé par Hicham le
+// 2026-09-05 : "pas toute la liste des remplacements") — cartons/remplacements
+// restent réservés à la fiche match détaillée.
+const GOAL_EVENT_TYPES: ReadonlySet<MatchEventSummary["type"]> = new Set(["GOAL", "PENALTY", "OWN_GOAL"]);
 
 function formatEventMinute(minute: number, extraMinute: number | null): string {
   return extraMinute ? `${minute}+${extraMinute}'` : `${minute}'`;
 }
 
-function EventChip({ event }: { event: MatchEventSummary }) {
+function TeamScorers({ events, teamId, align }: { events: MatchEventSummary[]; teamId: string; align: "start" | "end" }) {
   const t = useTranslations("matches");
-  const minuteLabel = formatEventMinute(event.minute, event.extraMinute);
+  const scorers = events
+    .filter((e) => e.teamId === teamId && GOAL_EVENT_TYPES.has(e.type) && e.detail)
+    .sort((a, b) => a.minute - b.minute);
 
-  switch (event.type) {
-    case "GOAL":
-    case "PENALTY":
-      if (!event.detail) return null;
-      return (
-        <span className="inline-flex min-w-0 items-center gap-1 text-[11px] text-rf-fg-subtle" title={`${t("goal")} · ${minuteLabel}`}>
-          <Goal size={12} className="shrink-0 text-rf-gold" />
-          <span className="truncate">{event.detail}</span>
-          <span className="shrink-0 text-rf-fg-subtle/70">{minuteLabel}</span>
-        </span>
-      );
-    case "OWN_GOAL":
-      if (!event.detail) return null;
-      return (
-        <span className="inline-flex min-w-0 items-center gap-1 text-[11px] text-rf-fg-subtle" title={`${t("ownGoal")} · ${minuteLabel}`}>
-          <Goal size={12} className="shrink-0 text-rf-live" />
-          <span className="truncate">{event.detail}</span>
-          <span className="shrink-0 text-rf-fg-subtle/70">{minuteLabel}</span>
-        </span>
-      );
-    case "YELLOW_CARD":
-      if (!event.detail) return null;
-      return (
-        <span className="inline-flex min-w-0 items-center gap-1 text-[11px] text-rf-fg-subtle" title={`${t("yellowCard")} · ${minuteLabel}`}>
-          <span className="h-2.5 w-2 shrink-0 rounded-[1px] bg-yellow-400" />
-          <span className="truncate">{event.detail}</span>
-        </span>
-      );
-    case "RED_CARD":
-      if (!event.detail) return null;
-      return (
-        <span className="inline-flex min-w-0 items-center gap-1 text-[11px] text-rf-fg-subtle" title={`${t("redCard")} · ${minuteLabel}`}>
-          <span className="h-2.5 w-2 shrink-0 rounded-[1px] bg-red-500" />
-          <span className="truncate">{event.detail}</span>
-        </span>
-      );
-    case "SUBSTITUTION":
-      return (
-        <span className="inline-flex min-w-0 items-center gap-2 text-[11px] text-rf-fg-subtle" title={`${t("substitution")} · ${minuteLabel}`}>
-          {event.detail && (
-            <span className="inline-flex min-w-0 items-center gap-0.5">
-              <ArrowUpCircle size={12} className="shrink-0 text-green-500" />
-              <span className="truncate">{event.detail}</span>
-            </span>
-          )}
-          {event.detailOut && (
-            <span className="inline-flex min-w-0 items-center gap-0.5">
-              <ArrowDownCircle size={12} className="shrink-0 text-red-500" />
-              <span className="truncate">{event.detailOut}</span>
-            </span>
-          )}
-        </span>
-      );
-    default:
-      return null;
-  }
-}
-
-/** Badges but/carton/remplacement pour une équipe, alignés sous son nom (voir ms-7 = largeur écusson "sm" + gap-2 dans TeamRow). */
-function TeamEvents({ events }: { events: MatchEventSummary[] }) {
-  const renderable = events.filter((e) => RENDERABLE_EVENT_TYPES.has(e.type));
-  if (renderable.length === 0) return null;
+  if (scorers.length === 0) return null;
 
   return (
-    <div className="ms-7 flex flex-wrap gap-x-2.5 gap-y-0.5">
-      {renderable.map((event) => (
-        <EventChip key={event.id} event={event} />
+    <ul className={cn("space-y-0.5", align === "end" ? "text-end" : "text-start")}>
+      {scorers.map((event) => (
+        <li
+          key={event.id}
+          className={cn("flex items-center gap-1 text-[11px] text-rf-fg-subtle", align === "end" && "flex-row-reverse")}
+        >
+          <Goal size={10} className={cn("shrink-0", event.type === "OWN_GOAL" ? "text-rf-live" : "text-rf-gold")} />
+          <span className="truncate">
+            {event.detail}
+            {event.type === "OWN_GOAL" ? ` (${t("ownGoal")})` : ""}
+          </span>
+          <span className="shrink-0 text-rf-fg-subtle/70">{formatEventMinute(event.minute, event.extraMinute)}</span>
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }
 
@@ -149,13 +78,16 @@ interface MatchCardProps {
   className?: string;
 }
 
-/** Carte compacte score/statut — le composant le plus consulté de RexFoot (accueil, /matches). */
+/**
+ * Carte "marqueur" — blason/score/blason avec le statut au centre, buteurs en
+ * petit sous le score (demandé par Hicham le 2026-09-05, remplace l'ancienne
+ * carte empilée avec cartons/remplacements). Composant le plus consulté de
+ * RexFoot (accueil, /matches).
+ */
 export function MatchCard({ match, className }: MatchCardProps) {
   const locale = useLocale();
-  const isLive = match.status === "LIVE" || match.status === "HALFTIME";
+  const { label: statusLabel, isLive } = useStatusLabel(match);
   const hasScore = match.homeScore !== null && match.awayScore !== null;
-  const homeEvents = match.events.filter((e) => e.teamId === match.homeTeam.id);
-  const awayEvents = match.events.filter((e) => e.teamId === match.awayTeam.id);
 
   return (
     <Link
@@ -168,37 +100,52 @@ export function MatchCard({ match, className }: MatchCardProps) {
     >
       <div className="mb-3 flex items-center justify-between">
         <CompetitionBadge logoUrl={match.competition.logoUrl} name={match.competition.name} />
-        {match.status === "SCHEDULED" ? (
-          <span className="text-xs font-semibold text-rf-fg-muted">
-            {formatKickoff(match.kickoffAt, toIntlLocale(locale))}
-          </span>
-        ) : (
-          <StatusBadge status={match.status} minute={match.minute} events={match.events} kickoffAt={match.kickoffAt} />
+        {match.status === "SCHEDULED" && (
+          <span className="text-xs font-semibold text-rf-fg-muted">{formatKickoff(match.kickoffAt, toIntlLocale(locale))}</span>
         )}
       </div>
 
-      <div className="space-y-2">
-        <div className="space-y-1">
-          <TeamRow name={match.homeTeam.name} crestUrl={match.homeTeam.crestUrl} score={hasScore ? match.homeScore : null} />
-          <TeamEvents events={homeEvents} />
+      <div className="grid grid-cols-3 items-center gap-2">
+        <TeamColumn name={match.homeTeam.name} crestUrl={match.homeTeam.crestUrl} />
+        <div className="text-center">
+          {hasScore ? (
+            <p className="font-display text-2xl font-extrabold text-rf-fg">
+              {match.homeScore} <span className="text-rf-fg-subtle">–</span> {match.awayScore}
+            </p>
+          ) : (
+            <p className="font-display text-lg font-bold text-rf-fg-muted">vs</p>
+          )}
+          {statusLabel && (
+            <span
+              className={cn(
+                "mt-0.5 inline-flex items-center gap-1 text-xs font-bold",
+                isLive ? "text-rf-live" : "text-rf-fg-subtle",
+              )}
+            >
+              {isLive && <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rf-live" />}
+              {statusLabel}
+            </span>
+          )}
         </div>
-        <div className="space-y-1">
-          <TeamRow name={match.awayTeam.name} crestUrl={match.awayTeam.crestUrl} score={hasScore ? match.awayScore : null} />
-          <TeamEvents events={awayEvents} />
-        </div>
+        <TeamColumn name={match.awayTeam.name} crestUrl={match.awayTeam.crestUrl} />
       </div>
+
+      {match.events.length > 0 && (
+        <div className="mt-3 grid grid-cols-3 gap-2 border-t border-rf-border pt-2">
+          <TeamScorers events={match.events} teamId={match.homeTeam.id} align="start" />
+          <div />
+          <TeamScorers events={match.events} teamId={match.awayTeam.id} align="end" />
+        </div>
+      )}
     </Link>
   );
 }
 
-function TeamRow({ name, crestUrl, score }: { name: string; crestUrl: string | null; score: number | null }) {
+function TeamColumn({ name, crestUrl }: { name: string; crestUrl: string | null }) {
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="flex items-center gap-2 truncate text-sm font-medium text-rf-fg">
-        <TeamCrest crestUrl={crestUrl} teamName={name} size="sm" />
-        <span className="truncate">{name}</span>
-      </span>
-      {score !== null && <span className="font-display text-base font-bold text-rf-fg">{score}</span>}
+    <div className="flex flex-col items-center gap-1 text-center">
+      <TeamCrest crestUrl={crestUrl} teamName={name} size="md" />
+      <span className="line-clamp-2 text-xs font-medium text-rf-fg">{name}</span>
     </div>
   );
 }

@@ -45,6 +45,8 @@ export interface LineupPlayer {
   name: string;
   number: number | null;
   position: string | null;
+  /** Résolue par correspondance de nom normalisé contre notre table Player (voir resolveLineupPhotos) — null si aucune correspondance fiable. */
+  photoUrl: string | null;
 }
 
 export interface LineupSummary {
