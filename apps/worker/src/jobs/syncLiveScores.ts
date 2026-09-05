@@ -107,11 +107,27 @@ export async function syncLiveScores(): Promise<boolean> {
       void notifyWriters(`⚽ ¡Comenzó! ${existing.homeTeam.name} vs ${existing.awayTeam.name}`);
     }
 
+    // Bug réel constaté en prod (2026-09-05) : le statut affiché oscillait
+    // (37' -> mi-temps -> 51' -> 37' -> mi-temps...) pendant plusieurs
+    // minutes sur Newcastle-Bournemouth. Cause : ce job (toutes les 45s)
+    // écrasait sans condition le statut/la minute avec la lecture de
+    // football-data.org — qui reste "IN_PLAY" (-> LIVE) même pendant la
+    // vraie mi-temps le temps qu'ils la détectent chez eux — juste après que
+    // le repli Highlightly (syncMatchEvents.ts, voir ce fichier) venait de
+    // corriger en HALFTIME. Les deux jobs se disputaient le même champ sans
+    // se coordonner. Une fois le match démarré (donc plus SCHEDULED), seul
+    // ce job peut encore faire avancer le statut jusqu'à FINISHED (voir
+    // staleLive plus bas) — la nuance LIVE <-> HALFTIME appartient
+    // désormais EXCLUSIVEMENT au repli Highlightly, qui a l'information
+    // fiable (son horloge ne dépend pas de football-data.org). Même
+    // principe pour `minute` : football-data.org ne le renseigne quasiment
+    // jamais sur ce plan (toujours `null` ici) — l'omettre plutôt que
+    // d'écraser la vraie minute que Highlightly vient de poser.
     await prisma.fixture.update({
       where: { id: existing.id },
       data: {
-        status: fixtureDto.status,
-        minute: fixtureDto.minute,
+        status: existing.status === "SCHEDULED" ? fixtureDto.status : undefined,
+        ...(fixtureDto.minute !== null ? { minute: fixtureDto.minute } : {}),
         homeScore: fixtureDto.homeScore,
         awayScore: fixtureDto.awayScore,
       },
@@ -165,7 +181,7 @@ export async function syncLiveScores(): Promise<boolean> {
       where: { id: fixture.id },
       data: {
         status: detail.status,
-        minute: detail.minute,
+        ...(detail.minute !== null ? { minute: detail.minute } : {}),
         homeScore: detail.homeScore,
         awayScore: detail.awayScore,
       },
