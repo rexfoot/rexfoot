@@ -217,6 +217,8 @@ export async function syncMatchEvents(): Promise<void> {
     id: true,
     kickoffAt: true,
     highlightlyId: true,
+    status: true,
+    minute: true,
     homeTeam: { select: { id: true, name: true } },
     awayTeam: { select: { id: true, name: true } },
     competition: { select: { countryName: true } },
@@ -302,6 +304,37 @@ export async function syncMatchEvents(): Promise<void> {
         await syncStatistics(client, highlightlyId, match.id, teams);
       } catch (cause) {
         logger.warn({ fixtureId: match.id, cause }, "Échec de synchro des statistiques, ignoré");
+      }
+      // Repli LIVE <-> HALFTIME via Highlightly, jamais SCHEDULED/FINISHED
+      // (ces transitions restent la responsabilité exclusive de
+      // syncLiveScores.ts / finalizeRecentMatches — voir leur commentaire).
+      // Bug réel constaté en prod (2026-09-05) : football-data.org est resté
+      // bloqué sur IN_PLAY (même lastUpdated) plus de 6 minutes alors que le
+      // match était réellement au repos (confirmé ici via Highlightly,
+      // description "Half time") — Hicham l'a vu en direct sur mobile.
+      if (!match.isFinalPass) {
+        try {
+          const state = await client.getMatchState(highlightlyId);
+          const description = state?.description.toLowerCase() ?? "";
+          if (description.includes("half time") && match.status !== "HALFTIME") {
+            await prisma.fixture.update({
+              where: { id: match.id },
+              data: { status: "HALFTIME", minute: state!.clock ?? match.minute },
+            });
+            logger.info({ fixtureId: match.id }, "Statut corrigé en HALFTIME via Highlightly (football-data.org bloqué)");
+          } else if (
+            (description.includes("2nd half") || description.includes("second half")) &&
+            match.status === "HALFTIME"
+          ) {
+            await prisma.fixture.update({
+              where: { id: match.id },
+              data: { status: "LIVE", minute: state!.clock ?? match.minute },
+            });
+            logger.info({ fixtureId: match.id }, "Statut corrigé en LIVE (2e mi-temps) via Highlightly (football-data.org bloqué)");
+          }
+        } catch (cause) {
+          logger.warn({ fixtureId: match.id, cause }, "Échec du repli d'état via Highlightly, ignoré");
+        }
       }
     } catch (cause) {
       // Une erreur sur un match (id introuvable, quota Highlightly épuisé pour

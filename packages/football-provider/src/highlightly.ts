@@ -155,6 +155,22 @@ export class HighlightlyClient {
   async getStatistics(highlightlyMatchId: number): Promise<HighlightlyTeamStatistics[]> {
     return this.request<HighlightlyTeamStatistics[]>(`/football/statistics/${highlightlyMatchId}`);
   }
+
+  /**
+   * État temps réel (mi-temps/2e mi-temps/terminé + minute) — utilisé en
+   * secours quand football-data.org reste bloqué sur IN_PLAY. Bug réel
+   * constaté en prod (2026-09-05) : Newcastle-Bournemouth au repos dans la
+   * réalité (confirmé ici, `description: "Half time"`) mais football-data.org
+   * gardait IN_PLAY avec le MÊME lastUpdated pendant plus de 6 minutes
+   * d'affilée — un vrai blocage côté fournisseur, pas notre code. Renvoie
+   * `null` si le match n'est pas (ou plus) trouvé.
+   */
+  async getMatchState(highlightlyMatchId: number): Promise<{ description: string; clock: number | null } | null> {
+    const result = await this.request<Array<{ state: { description: string; clock: number | null } }>>(
+      `/football/matches/${highlightlyMatchId}`,
+    );
+    return result[0]?.state ?? null;
+  }
 }
 
 export function createHighlightlyClient(apiKey: string): HighlightlyClient {
