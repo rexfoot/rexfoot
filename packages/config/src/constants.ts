@@ -29,16 +29,26 @@ export const PAGE_SIZE_VIDEOS = 24;
  * apps/worker/src/scheduler.ts : `live` doit rester STRICTEMENT INFÉRIEUR à
  * LIVE_SCORES_INTERVAL_DURING_MATCHES_MS, sinon un cycle de sync sur deux ne
  * ferait que relire le cache au lieu d'aller chercher un score vraiment à jour.
+ * `live` resserré à 10s le 2026-09-05 (demande explicite : un but visible sur
+ * Sofascore doit apparaître sur RexFoot en moins de 30s) pour suivre le
+ * passage de LIVE_SCORES_INTERVAL_DURING_MATCHES_MS à 15s — 4 requêtes/min
+ * pour ce seul job, très large sous les 16/min budgétées.
  */
 export const CACHE_TTL_SECONDS = {
-  live: 40,
+  live: 10,
   fixturesShortTerm: 6 * 60 * 60,
   standings: 8 * 60 * 60,
   staticEntities: 24 * 60 * 60,
 } as const;
 
-/** Intervalle de polling client (ms) recommandé pour les pages qui affichent du direct. */
-export const LIVE_POLL_INTERVAL_MS = 15_000;
+/**
+ * Intervalle de polling client (ms) recommandé pour les pages qui affichent
+ * du direct. Resserré à 10s le 2026-09-05 (demande explicite : plus de
+ * retard visible vs Sofascore sans rafraîchir la page) — toujours couplé à
+ * `needsPolling()` dans useMatchDetail.ts/useMatchesList.ts, qui coupe le
+ * polling dès qu'aucun match n'est en direct ni imminent.
+ */
+export const LIVE_POLL_INTERVAL_MS = 10_000;
 
 /**
  * Fenêtre (heures) pendant laquelle un article marqué isBreaking=true est

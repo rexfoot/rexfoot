@@ -21,11 +21,14 @@ export const JobName = {
 // (12E/mois depuis le 2026-09-05 — l'ancien plan gratuit retardait les scores
 // DELIBEREMENT, un cycle de sync plus rapide n'y aurait rien change) :
 // 20 requetes/MINUTE, aucun plafond quotidien — voir MAX_REQUESTS_PER_WINDOW
-// dans footballDataOrg.ts. Avec cette marge, un cycle toutes les 45s pendant
-// un match (le cas qui compte le plus) ne consomme que 2-4 requetes/min,
-// large sous la limite. Idle laisse a 3 min : sert seulement a detecter
-// qu'un match vient de commencer, moins critique que la fraicheur en direct.
-const LIVE_SCORES_INTERVAL_DURING_MATCHES_MS = 45 * 1000;
+// dans footballDataOrg.ts. Resserre a 15s le 2026-09-05 (demande explicite :
+// un but visible sur Sofascore doit apparaitre sur RexFoot en moins de 30s,
+// sans dependre du repli Highlightly a 10 min) — 4 requetes/min pour ce seul
+// job, large sous la limite meme avec les appels occasionnels de
+// finalizeRecentMatches/staleLive dans le meme cycle. Idle laisse a 3 min :
+// sert seulement a detecter qu'un match vient de commencer, moins critique
+// que la fraicheur en direct.
+const LIVE_SCORES_INTERVAL_DURING_MATCHES_MS = 15 * 1000;
 const LIVE_SCORES_INTERVAL_IDLE_MS = 3 * 60 * 1000;
 
 export function createSyncQueue(): Queue {

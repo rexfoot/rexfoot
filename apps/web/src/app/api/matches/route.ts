@@ -31,5 +31,9 @@ export async function GET(request: Request) {
     page: parsed.data.page,
   });
 
-  return NextResponse.json({ matches, hasMore });
+  // Explicite (demandé 2026-09-05) : Cloudflare renvoyait déjà DYNAMIC pour
+  // cette route en pratique, mais rien ne l'empêchait de changer d'avis sans
+  // ce header — le polling live (useMatchesList.ts) dépend d'une réponse
+  // jamais mise en cache par un intermédiaire.
+  return NextResponse.json({ matches, hasMore }, { headers: { "Cache-Control": "no-store" } });
 }

@@ -10,5 +10,6 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   const match = await getMatchById(id);
   if (!match) return apiError(404, "Match introuvable");
 
-  return NextResponse.json({ match });
+  // Explicite (demandé 2026-09-05) — voir même commentaire dans /api/matches/route.ts.
+  return NextResponse.json({ match }, { headers: { "Cache-Control": "no-store" } });
 }
