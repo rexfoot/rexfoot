@@ -62,7 +62,22 @@ async function main(): Promise<void> {
         case JobName.syncMatchEvents:
           return syncMatchEvents();
         case JobName.syncLiveScores: {
-          const hadLiveMatches = await syncLiveScores();
+          // Bug réel constaté en prod (2026-09-05, juste après le passage à
+          // une cadence de 15s) : football-data.org a renvoyé un 429, ce qui
+          // faisait planter toute la boucle AVANT scheduleNextLiveScoresRun —
+          // la chaîne auto-replanifiée s'arrêtait alors pour de bon (plus
+          // aucun "Scores en direct synchronisés" dans les logs ensuite, tant
+          // qu'un redéploiement ne relançait pas registerScheduledJobs). Une
+          // seule erreur transitoire du fournisseur ne doit jamais interrompre
+          // le direct indéfiniment : on replanifie toujours, y compris en cas
+          // d'échec (cadence rapide par défaut dans ce cas, plus sûr que de
+          // supposer "plus aucun match en direct").
+          let hadLiveMatches = true;
+          try {
+            hadLiveMatches = await syncLiveScores();
+          } catch (cause) {
+            logger.error({ cause }, "Échec de syncLiveScores, replanifié quand même (cadence rapide par précaution)");
+          }
           await scheduleNextLiveScoresRun(queue, hadLiveMatches);
           return hadLiveMatches;
         }

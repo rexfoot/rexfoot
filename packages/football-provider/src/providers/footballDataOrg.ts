@@ -76,7 +76,7 @@ export class FootballDataOrgProvider implements FootballDataProvider {
     this.requestTimestamps.push(now);
   }
 
-  private async request<T>(path: string, query: Record<string, string | undefined> = {}): Promise<T> {
+  private async request<T>(path: string, query: Record<string, string | undefined> = {}, isRetry = false): Promise<T> {
     await this.throttle();
 
     const url = new URL(BASE_URL + path);
@@ -89,6 +89,18 @@ export class FootballDataOrgProvider implements FootballDataProvider {
       response = await fetch(url, { headers: { "X-Auth-Token": this.config.apiKey } });
     } catch (cause) {
       throw new FootballProviderError(`Échec réseau vers football-data.org (${path})`, cause);
+    }
+
+    // Un 429 isolé (constaté en prod 2026-09-05, juste après le passage à une
+    // cadence de 15s — probablement deux process se chevauchant brièvement
+    // pendant un redéploiement, chacun avec son propre throttle process-local)
+    // ne doit pas remonter comme une erreur dure : une seule reprise après le
+    // délai indiqué (Retry-After, sinon 5s par défaut) absorbe ce genre de pic
+    // transitoire sans perdre le cycle de synchro en cours.
+    if (response.status === 429 && !isRetry) {
+      const retryAfterSeconds = Number.parseInt(response.headers.get("Retry-After") ?? "5", 10);
+      await new Promise((resolve) => setTimeout(resolve, (Number.isNaN(retryAfterSeconds) ? 5 : retryAfterSeconds) * 1000));
+      return this.request<T>(path, query, true);
     }
 
     if (!response.ok) {
