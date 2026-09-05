@@ -17,7 +17,17 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { FormBadge } from "@/components/FormBadge";
 import { FavoriteButton } from "@/components/FavoriteButton";
 
-export const revalidate = 3600;
+// Était 3600 (1h) — bug réel constaté en prod (2026-09-05) : cette page
+// rend <MatchCard> directement avec les données serveur (sans le mécanisme
+// de polling client de MatchesListClient), donc un match en direct au
+// moment du rendu restait affiché EN DIRECT avec son ancien score jusqu'à
+// une heure après sa vraie fin. Pas remplacé par MatchesListClient comme
+// teams/[slug] : getFixturesForCompetition() renvoie TOUTE la saison (pas
+// de plafond), alors que /api/matches est paginé à PAGE_SIZE_MATCHES —
+// switcher aurait fait disparaître la plupart des matchs de la page.
+// Resserrer `revalidate` reste une vraie amélioration (jusqu'à 1h de retard
+// possible -> 1 min) sans ce compromis.
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ slug: string }>;

@@ -6,7 +6,7 @@ import { Link } from "@/i18n/navigation";
 import { getTeamBySlug, getTeamFixtures } from "@/lib/data/teams";
 import { TeamCrest } from "@/components/TeamCrest";
 import { PlayerAvatar } from "@/components/PlayerAvatar";
-import { MatchCard } from "@/components/MatchCard";
+import { MatchesListClient } from "@/components/MatchesListClient";
 import { EmptyState } from "@/components/EmptyState";
 import { SectionHeader } from "@/components/SectionHeader";
 import { FavoriteButton } from "@/components/FavoriteButton";
@@ -87,18 +87,22 @@ export default async function TeamPage({ params }: PageProps) {
 
       <section>
         <SectionHeader title={t("matchesTitle")} />
-        {fixtures.length === 0 ? (
-          <EmptyState icon={Users} title={t("noMatches")} />
-        ) : (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {fixtures.map((fixture) => (
-              <MatchCard
-                key={fixture.id}
-                match={{ ...fixture, kickoffAt: fixture.kickoffAt.toISOString() }}
-              />
-            ))}
-          </div>
-        )}
+        {/*
+         * MatchesListClient (pas un simple map() server-side) — bug réel
+         * constaté en prod (2026-09-05) : cette page a `revalidate = 3600`
+         * (1h), et un <MatchCard> rendu directement avec les données serveur
+         * ne se rafraîchit jamais côté client. Un match en direct au moment
+         * du rendu pouvait donc rester affiché EN DIRECT avec un score figé
+         * jusqu'à une heure après sa vraie fin. MatchesListClient poll via
+         * /api/matches (voir son nouveau paramètre `team`) comme sur
+         * l'accueil et /matches, indépendamment du cache de la page.
+         */}
+        <MatchesListClient
+          apiUrl={`/api/matches?team=${team.slug}`}
+          initialMatches={fixtures.map((f) => ({ ...f, kickoffAt: f.kickoffAt.toISOString() }))}
+          emptyTitle={t("noMatches")}
+          listClassName="grid-cols-1 gap-3 sm:grid-cols-2"
+        />
       </section>
     </div>
   );

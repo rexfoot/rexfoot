@@ -57,10 +57,18 @@ export async function getMatchesOfTheDay(): Promise<MatchSummary[]> {
 export interface GetMatchesParams {
   date?: Date;
   competitionSlug?: string;
+  teamSlug?: string;
   page?: number;
 }
 
-export async function getMatches({ date, competitionSlug, page = 1 }: GetMatchesParams = {}): Promise<{
+/**
+ * `teamSlug` (demandé 2026-09-05) — sert la page équipe (teams/[slug]) via
+ * MatchesListClient au lieu d'un simple map() server-side sans polling : un
+ * match affiché là restait bloqué EN DIRECT/à l'ancien score jusqu'à
+ * `revalidate` (1h, voir teams/[slug]/page.tsx) même largement terminé
+ * entre-temps, faute de tout mécanisme de rafraîchissement côté client.
+ */
+export async function getMatches({ date, competitionSlug, teamSlug, page = 1 }: GetMatchesParams = {}): Promise<{
   matches: MatchSummary[];
   hasMore: boolean;
 }> {
@@ -76,11 +84,16 @@ export async function getMatches({ date, competitionSlug, page = 1 }: GetMatches
   if (competitionSlug) {
     where.competition = { slug: competitionSlug };
   }
+  if (teamSlug) {
+    where.OR = [{ homeTeam: { slug: teamSlug } }, { awayTeam: { slug: teamSlug } }];
+  }
 
   const take = PAGE_SIZE_MATCHES;
   const rows = await prisma.fixture.findMany({
     where,
-    orderBy: { kickoffAt: "asc" },
+    // Page équipe : les matchs les plus récents (passés/en cours) d'abord,
+    // même tri que l'ancien getTeamFixtures() qu'elle remplace.
+    orderBy: { kickoffAt: teamSlug ? "desc" : "asc" },
     select: matchSelect,
     take: take + 1,
     skip: (page - 1) * take,

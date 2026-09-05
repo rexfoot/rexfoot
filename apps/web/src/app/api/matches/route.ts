@@ -6,6 +6,7 @@ import { enforceRateLimit } from "@/lib/api-response";
 const querySchema = z.object({
   date: z.string().datetime().optional(),
   competition: z.string().optional(),
+  team: z.string().optional(),
   page: z.coerce.number().int().positive().optional(),
 });
 
@@ -18,6 +19,7 @@ export async function GET(request: Request) {
   const parsed = querySchema.safeParse({
     date: searchParams.get("date") ?? undefined,
     competition: searchParams.get("competition") ?? undefined,
+    team: searchParams.get("team") ?? undefined,
     page: searchParams.get("page") ?? undefined,
   });
 
@@ -28,6 +30,7 @@ export async function GET(request: Request) {
   const { matches, hasMore } = await getMatches({
     date: parsed.data.date ? new Date(parsed.data.date) : undefined,
     competitionSlug: parsed.data.competition,
+    teamSlug: parsed.data.team,
     page: parsed.data.page,
   });
 
