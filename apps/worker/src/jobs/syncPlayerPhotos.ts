@@ -11,6 +11,18 @@ import { logger } from "../lib/logger.js";
 const BASE_URL = "https://www.thesportsdb.com/api/v1/json/3";
 const MAX_PLAYERS_PER_RUN = 25;
 const DELAY_BETWEEN_REQUESTS_MS = 1_500;
+// Beaucoup de noms ne correspondent qu'à une fiche TheSportsDB sans aucune
+// photo (ex. "_Retired-Soccer", strThumb/strCutout tous deux null) : ce
+// joueur reste indéfiniment dans le filtre `photoUrl: null` et, sans le
+// tirage aléatoire ci-dessous, un simple `take` sans `orderBy` renvoie le
+// même sous-ensemble en tête à chaque run (ordre de scan Postgres stable) —
+// ces cas sans issue monopolisaient alors les 25 essais de CHAQUE run,
+// empêchant tout le reste de la file d'être ne serait-ce que tenté (bug vécu
+// le 2026-09-05 : composition d'un match du jour toujours sans aucune photo
+// des heures après le déploiement du ciblage "équipes du jour"). Piocher un
+// lot au hasard dans un pool plus large fait tourner l'échantillon d'un run
+// à l'autre, donc les cas sans issue ne bloquent plus que statistiquement.
+const CANDIDATE_POOL_SIZE = 200;
 
 interface TheSportsDbPlayer {
   strPlayer: string;
@@ -22,6 +34,17 @@ interface TheSportsDbPlayer {
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function pickRandomSample<T>(pool: T[], count: number): T[] {
+  const copy = [...pool];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const temp = copy[i]!;
+    copy[i] = copy[j]!;
+    copy[j] = temp;
+  }
+  return copy.slice(0, count);
 }
 
 const normalize = (s: string) => s.toLowerCase().trim();
@@ -62,8 +85,9 @@ function pickBestMatch(candidates: TheSportsDbPlayer[], nationality: string | nu
  * match en direct — la file d'attente générale, sans ordre précis, pouvait
  * mettre des heures à atteindre l'équipe d'un match du jour parmi tous les
  * joueurs sans photo de la base). Le reste du lot, s'il en reste, retombe
- * sur la file générale — jamais bloquant, l'auto-rotation vient du filtre
- * `photoUrl: null` qui se réduit tout seul à mesure que des photos sont trouvées.
+ * sur la file générale. Le tirage est aléatoire dans chaque pool (voir
+ * pickRandomSample) pour qu'un sous-ensemble sans photo disponible ne
+ * monopolise pas indéfiniment les créneaux d'un run à l'autre.
  */
 export async function syncPlayerPhotos(): Promise<void> {
   const today = new Date();
@@ -78,20 +102,20 @@ export async function syncPlayerPhotos(): Promise<void> {
     ],
   };
 
-  const priorityPlayers = await prisma.player.findMany({
+  const priorityPool = await prisma.player.findMany({
     where: { photoUrl: null, teamMemberships: { some: { team: teamPlayingTodayFilter } } },
-    take: MAX_PLAYERS_PER_RUN,
+    take: CANDIDATE_POOL_SIZE,
     select: { id: true, displayName: true, nationality: true },
   });
 
-  let players = priorityPlayers;
+  let players = pickRandomSample(priorityPool, MAX_PLAYERS_PER_RUN);
   if (players.length < MAX_PLAYERS_PER_RUN) {
-    const fallback = await prisma.player.findMany({
+    const fallbackPool = await prisma.player.findMany({
       where: { photoUrl: null, id: { notIn: players.map((p) => p.id) } },
-      take: MAX_PLAYERS_PER_RUN - players.length,
+      take: CANDIDATE_POOL_SIZE,
       select: { id: true, displayName: true, nationality: true },
     });
-    players = [...players, ...fallback];
+    players = [...players, ...pickRandomSample(fallbackPool, MAX_PLAYERS_PER_RUN - players.length)];
   }
   if (players.length === 0) return;
 
