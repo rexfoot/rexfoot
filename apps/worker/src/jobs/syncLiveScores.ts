@@ -2,6 +2,7 @@ import { prisma } from "@rexfoot/db";
 import { hasAnyFootballProviderKey } from "@rexfoot/config";
 import { createFootballProvider, getActiveProviderName, type FootballDataProvider } from "@rexfoot/football-provider";
 import { logger } from "../lib/logger.js";
+import { notifyWriters } from "../lib/notifyWriters.js";
 
 const PROVIDER_NAME = getActiveProviderName();
 
@@ -89,12 +90,21 @@ export async function syncLiveScores(): Promise<boolean> {
   for (const fixtureDto of liveFixtures) {
     const existing = await prisma.fixture.findUnique({
       where: { provider_externalId: { provider: PROVIDER_NAME, externalId: fixtureDto.externalId } },
+      include: { homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } },
     });
     if (!existing) {
       // Un match en direct qui n'a pas été vu par syncFixtures (ex. compétition
       // non-vedette) — on l'ignore plutôt que de créer une entrée sans
       // équipes/compétition correctement résolues.
       continue;
+    }
+
+    // Notification "coup d'envoi" aux rédacteurs (demandé par Hicham le
+    // 2026-09-05) : uniquement sur la transition SCHEDULED -> LIVE/HALFTIME,
+    // jamais renvoyée ensuite (chaque cycle ultérieur ne fait que rafraîchir
+    // un match déjà en direct).
+    if (existing.status === "SCHEDULED") {
+      void notifyWriters(`⚽ ¡Comenzó! ${existing.homeTeam.name} vs ${existing.awayTeam.name}`);
     }
 
     await prisma.fixture.update({
@@ -126,6 +136,7 @@ export async function syncLiveScores(): Promise<boolean> {
   // même jour, mais ici côté syncLiveScores lui-même).
   const staleLive = await prisma.fixture.findMany({
     where: { provider: PROVIDER_NAME, status: { in: ["LIVE", "HALFTIME"] } },
+    include: { homeTeam: { select: { name: true } }, awayTeam: { select: { name: true } } },
   });
   for (const fixture of staleLive) {
     if (liveExternalIds.has(fixture.externalId)) continue;
@@ -138,6 +149,18 @@ export async function syncLiveScores(): Promise<boolean> {
       );
       continue;
     }
+
+    // Notification "fin du match" aux rédacteurs (demandé par Hicham le
+    // 2026-09-05) : uniquement au moment précis où le match bascule en
+    // FINISHED, jamais renvoyée (finalizeRecentMatches touche ce fixture
+    // ensuite mais son statut reste FINISHED, donc cette condition ne
+    // redevient jamais vraie).
+    if (detail.status === "FINISHED") {
+      void notifyWriters(
+        `🏁 Final: ${fixture.homeTeam.name} ${detail.homeScore ?? "?"}-${detail.awayScore ?? "?"} ${fixture.awayTeam.name}`,
+      );
+    }
+
     await prisma.fixture.update({
       where: { id: fixture.id },
       data: {

@@ -39,6 +39,16 @@ const envSchema = z.object({
 
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(60),
   RATE_LIMIT_WINDOW_SECONDS: z.coerce.number().int().positive().default(60),
+
+  // Notifications WhatsApp aux rédacteurs (début/fin de match, buts) via
+  // CallMeBot (gratuit, usage personnel — chaque destinataire doit d'abord
+  // ajouter le bot dans ses contacts WhatsApp et obtenir sa propre apikey,
+  // voir apps/worker/src/lib/notifyWriters.ts). JSON brut : tableau
+  // [{name, phone, apikey}] — laissé en string ici (jamais un schéma zod
+  // imbriqué) pour ne jamais faire planter tout le worker au démarrage si
+  // Hicham modifie cette variable dans Railway avec une virgule en trop —
+  // le parsing tolérant vit dans notifyWriters.ts.
+  WHATSAPP_WRITER_NOTIFY_TARGETS: z.string().optional().default(""),
 });
 
 export type Env = z.infer<typeof envSchema>;

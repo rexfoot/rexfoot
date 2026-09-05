@@ -6,6 +6,7 @@ import {
   type HighlightlyTeamLineup,
 } from "@rexfoot/football-provider";
 import { logger } from "../lib/logger.js";
+import { notifyWriters } from "../lib/notifyWriters.js";
 
 // Highlightly (plan gratuit) : 100 requêtes/jour, aucun plafond horaire strict
 // documenté. Ce job tourne toutes les SYNC_INTERVAL_MINUTES (voir scheduler.ts)
@@ -74,6 +75,13 @@ interface MatchTeams {
   awayTeamName: string;
 }
 
+const GOAL_EVENT_TYPES: readonly FixtureEventType[] = ["GOAL", "OWN_GOAL", "PENALTY"];
+
+/** Clé composite pour détecter un événement déjà connu (jamais un id stable côté Highlightly ici). */
+function eventKey(type: string, minute: number, extraMinute: number | null, teamId: string, detail: string | null): string {
+  return `${type}|${minute}|${extraMinute ?? ""}|${teamId}|${detail ?? ""}`;
+}
+
 /**
  * Remplace tous les événements connus du match par ceux renvoyés par
  * Highlightly (liste complète à jour à chaque appel, jamais un diff
@@ -84,8 +92,30 @@ interface MatchTeams {
  * stocké tel quel dans `detail` (buteur/sanctionné, ou joueur ENTRANT pour une
  * SUBSTITUTION) et `detailOut` (joueur SORTANT, uniquement pour une
  * SUBSTITUTION) — voir les badges d'événements sur MatchCard.tsx.
+ *
+ * Notifie aussi les rédacteurs (demandé par Hicham le 2026-09-05) pour tout
+ * BUT réellement nouveau depuis le dernier cycle — jamais pour les autres
+ * types (cartons/remplacements), ni renvoyé une deuxième fois pour un but
+ * déjà notifié. Comme cette fonction efface puis recrée tous les événements
+ * à chaque appel, on doit comparer contre l'ancien état AVANT de le
+ * supprimer (une clé composite type/minute/équipe/joueur, faute d'id stable
+ * côté Highlightly).
  */
 async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events: HighlightlyEvent[]): Promise<void> {
+  const previousEvents = await prisma.fixtureEvent.findMany({
+    where: { fixtureId },
+    select: { type: true, minute: true, extraMinute: true, teamId: true, detail: true },
+  });
+  const previousKeys = new Set(
+    previousEvents.map((e) => eventKey(e.type, e.minute, e.extraMinute, e.teamId, e.detail)),
+  );
+  // Premier import d'événements pour ce match (ex. highlightlyId tout juste
+  // résolu, en retard sur un match déjà bien avancé) : tous les buts
+  // paraîtraient "nouveaux" par rapport à un historique vide — on
+  // n'envoie donc aucune notification ce cycle-là, seulement à partir du
+  // suivant pour les vrais nouveaux buts.
+  const isFirstImport = previousEvents.length === 0;
+
   await prisma.fixtureEvent.deleteMany({ where: { fixtureId } });
 
   for (const event of events) {
@@ -97,6 +127,18 @@ async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events
 
     const teamId = sameTeam(event.team.name, teams.homeTeamName) ? teams.homeTeamId : teams.awayTeamId;
     const { minute, extraMinute } = parseMinute(event.time);
+
+    if (
+      !isFirstImport &&
+      GOAL_EVENT_TYPES.includes(type) &&
+      !previousKeys.has(eventKey(type, minute, extraMinute, teamId, event.player))
+    ) {
+      const teamName = teamId === teams.homeTeamId ? teams.homeTeamName : teams.awayTeamName;
+      const minuteLabel = extraMinute ? `${minute}+${extraMinute}` : `${minute}`;
+      void notifyWriters(
+        `⚽ GOL de ${event.player ?? "?"} (${minuteLabel}') — ${teamName} | ${teams.homeTeamName} vs ${teams.awayTeamName}`,
+      );
+    }
 
     await prisma.fixtureEvent.create({
       data: {
