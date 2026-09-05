@@ -347,35 +347,51 @@ export async function syncMatchEvents(): Promise<void> {
       } catch (cause) {
         logger.warn({ fixtureId: match.id, cause }, "Échec de synchro des statistiques, ignoré");
       }
-      // Repli LIVE <-> HALFTIME via Highlightly, jamais SCHEDULED/FINISHED
-      // (ces transitions restent la responsabilité exclusive de
-      // syncLiveScores.ts / finalizeRecentMatches — voir leur commentaire).
-      // Bug réel constaté en prod (2026-09-05) : football-data.org est resté
-      // bloqué sur IN_PLAY (même lastUpdated) plus de 6 minutes alors que le
-      // match était réellement au repos (confirmé ici via Highlightly,
-      // description "Half time") — Hicham l'a vu en direct sur mobile.
+      // Repli LIVE <-> HALFTIME + minute via Highlightly, jamais
+      // SCHEDULED/FINISHED (ces transitions restent la responsabilité
+      // exclusive de syncLiveScores.ts / finalizeRecentMatches — voir leur
+      // commentaire). Bug réel constaté en prod (2026-09-05) : football-
+      // data.org est resté bloqué sur IN_PLAY (même lastUpdated) plus de 6
+      // minutes alors que le match était réellement au repos (confirmé ici
+      // via Highlightly, description "Half time") — Hicham l'a vu en direct
+      // sur mobile.
+      //
+      // Deuxième bug réel constaté en prod, le même jour, corrigé ici :
+      // la première version de ce repli ne posait `minute` QUE pile au
+      // moment du changement de statut (LIVE<->HALFTIME) — donc pendant tout
+      // le reste d'une mi-temps (ex. de la 60e à la 74e minute), plus aucune
+      // mise à jour n'arrivait, la minute affichée restant figée alors que
+      // le match continuait (Hicham : "hemos quedado en el minuto 60 el
+      // partido llego a 75"). `minute` doit se poser à CHAQUE cycle dès que
+      // Highlightly le fournit, indépendamment de tout changement de statut.
       if (!match.isFinalPass) {
         try {
           const state = await client.getMatchState(highlightlyId);
-          const description = state?.description.toLowerCase() ?? "";
-          if (description.includes("half time") && match.status !== "HALFTIME") {
-            await prisma.fixture.update({
-              where: { id: match.id },
-              data: { status: "HALFTIME", minute: state!.clock ?? match.minute },
-            });
-            logger.info({ fixtureId: match.id }, "Statut corrigé en HALFTIME via Highlightly (football-data.org bloqué)");
-          } else if (
-            (description.includes("2nd half") || description.includes("second half")) &&
-            match.status === "HALFTIME"
-          ) {
-            await prisma.fixture.update({
-              where: { id: match.id },
-              data: { status: "LIVE", minute: state!.clock ?? match.minute },
-            });
-            logger.info({ fixtureId: match.id }, "Statut corrigé en LIVE (2e mi-temps) via Highlightly (football-data.org bloqué)");
+          if (state) {
+            const description = state.description.toLowerCase();
+            const data: { status?: "HALFTIME" | "LIVE"; minute?: number } = {};
+
+            if (description.includes("half time") && match.status !== "HALFTIME") {
+              data.status = "HALFTIME";
+            } else if (
+              (description.includes("2nd half") || description.includes("second half")) &&
+              match.status === "HALFTIME"
+            ) {
+              data.status = "LIVE";
+            }
+            if (state.clock !== null) {
+              data.minute = state.clock;
+            }
+
+            if (Object.keys(data).length > 0) {
+              await prisma.fixture.update({ where: { id: match.id }, data });
+              if (data.status) {
+                logger.info({ fixtureId: match.id, status: data.status }, "Statut corrigé via Highlightly (football-data.org bloqué)");
+              }
+            }
           }
         } catch (cause) {
-          logger.warn({ fixtureId: match.id, cause }, "Échec du repli d'état via Highlightly, ignoré");
+          logger.warn({ fixtureId: match.id, cause }, "Échec du repli d'état/minute via Highlightly, ignoré");
         }
       }
     } catch (cause) {
