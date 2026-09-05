@@ -149,7 +149,16 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     { repeat: { every: 10 * 60 * 1000 }, jobId: JobName.syncMatchEvents, ...DEFAULT_JOB_OPTS },
   );
 
-  await scheduleNextLiveScoresRun(queue, false);
+  // Premier check volontairement rapide (pas l'attente idle complete de 3
+  // min) : au demarrage, on ne sait pas encore s'il y a un match en direct —
+  // attendre l'intervalle idle par defaut retarderait inutilement la toute
+  // premiere detection a chaque redeploiement, justement le moment ou un
+  // match peut deja etre en cours.
+  await queue.add(
+    JobName.syncLiveScores,
+    {},
+    { delay: 10 * 1000, jobId: `${JobName.syncLiveScores}-startup-${Date.now()}`, ...DEFAULT_JOB_OPTS },
+  );
 }
 
 export async function scheduleNextLiveScoresRun(queue: Queue, hadLiveMatches: boolean): Promise<void> {
