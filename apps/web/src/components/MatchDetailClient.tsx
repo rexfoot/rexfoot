@@ -1,19 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { ListChecks } from "lucide-react";
+import { ListChecks, Goal } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { TeamCrest } from "./TeamCrest";
 import { CompetitionBadge } from "./CompetitionBadge";
 import { EmptyState } from "./EmptyState";
-import { ShareButtons } from "./ShareButtons";
 import { MatchCard } from "./MatchCard";
 import { FormBadge } from "./FormBadge";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { bestKnownMinute } from "@/lib/match-minute";
 import { cn } from "@/lib/cn";
-import type { LineupPlayer, MatchDetail, MatchSummary, TeamStatisticsSummary } from "@/lib/types";
+import type { LineupPlayer, MatchDetail, MatchEventSummary, MatchSummary, TeamStatisticsSummary } from "@/lib/types";
 
 type QuickTab = "composition" | "standings" | "nextMatch";
 
@@ -68,8 +67,10 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
           <TeamColumn name={match.awayTeam.name} crestUrl={match.awayTeam.crestUrl} />
         </div>
 
-        <div className="mt-6 border-t border-rf-border pt-5">
-          <ShareButtons title={`${match.homeTeam.name} vs ${match.awayTeam.name}`} />
+        <div className="mt-6 grid grid-cols-3 gap-4 border-t border-rf-border pt-5">
+          <MatchScorers events={match.events} teamId={match.homeTeam.id} align="start" />
+          <div />
+          <MatchScorers events={match.events} teamId={match.awayTeam.id} align="end" />
         </div>
       </div>
 
@@ -301,6 +302,56 @@ function StatisticsTable({ match }: { match: MatchDetail }) {
         );
       })}
     </div>
+  );
+}
+
+const GOAL_EVENT_TYPES: ReadonlySet<MatchEventSummary["type"]> = new Set(["GOAL", "PENALTY", "OWN_GOAL"]);
+
+function formatEventMinute(minute: number, extraMinute: number | null): string {
+  return extraMinute ? `${minute}+${extraMinute}'` : `${minute}'`;
+}
+
+/**
+ * Remplace le bloc "Partager" sous le score par les buteurs (demandé par
+ * Hicham le 2026-09-05) — un but par ligne, trié par minute, aligné du côté
+ * de l'équipe qui a marqué (colonnes domicile/extérieur de la grille du
+ * score juste au-dessus).
+ */
+function MatchScorers({
+  events,
+  teamId,
+  align,
+}: {
+  events: MatchEventSummary[];
+  teamId: string;
+  align: "start" | "end";
+}) {
+  const t = useTranslations("matches");
+  const scorers = events
+    .filter((e) => e.teamId === teamId && GOAL_EVENT_TYPES.has(e.type) && e.detail)
+    .sort((a, b) => a.minute - b.minute);
+
+  if (scorers.length === 0) return null;
+
+  return (
+    <ul className={cn("space-y-1", align === "end" ? "text-end" : "text-start")}>
+      {scorers.map((event) => (
+        <li
+          key={event.id}
+          className={cn(
+            "flex items-center gap-1.5 text-xs text-rf-fg-subtle",
+            align === "end" && "flex-row-reverse",
+          )}
+        >
+          <Goal size={12} className={cn("shrink-0", event.type === "OWN_GOAL" ? "text-rf-live" : "text-rf-gold")} />
+          <span className="truncate">
+            {event.detail}
+            {event.type === "OWN_GOAL" ? ` (${t("ownGoal")})` : ""}
+          </span>
+          <span className="shrink-0 text-rf-fg-subtle/70">{formatEventMinute(event.minute, event.extraMinute)}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
