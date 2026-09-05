@@ -21,13 +21,15 @@ function StatusBadge({
   status,
   minute,
   events,
+  kickoffAt,
 }: {
   status: MatchSummary["status"];
   minute: number | null;
   events: MatchEventSummary[];
+  kickoffAt: string;
 }) {
   const t = useTranslations("matches");
-  const knownMinute = bestKnownMinute(minute, events);
+  const knownMinute = bestKnownMinute(minute, events, kickoffAt);
 
   switch (status) {
     case "LIVE":
@@ -171,7 +173,7 @@ export function MatchCard({ match, className }: MatchCardProps) {
             {formatKickoff(match.kickoffAt, toIntlLocale(locale))}
           </span>
         ) : (
-          <StatusBadge status={match.status} minute={match.minute} events={match.events} />
+          <StatusBadge status={match.status} minute={match.minute} events={match.events} kickoffAt={match.kickoffAt} />
         )}
       </div>
 

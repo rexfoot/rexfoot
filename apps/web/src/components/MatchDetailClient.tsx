@@ -19,7 +19,7 @@ type QuickTab = "composition" | "standings" | "nextMatch";
 function useStatusLabel(match: MatchDetail): string {
   const t = useTranslations("matches");
   const locale = useLocale();
-  const knownMinute = bestKnownMinute(match.minute, match.events);
+  const knownMinute = bestKnownMinute(match.minute, match.events, match.kickoffAt);
 
   switch (match.status) {
     case "LIVE":
