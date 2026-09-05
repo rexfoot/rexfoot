@@ -53,7 +53,11 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
         </div>
 
         <div className="grid grid-cols-3 items-center gap-4">
-          <TeamColumn name={match.homeTeam.name} crestUrl={match.homeTeam.crestUrl} />
+          <TeamColumn
+            name={match.homeTeam.name}
+            crestUrl={match.homeTeam.crestUrl}
+            position={findStandingPosition(match.standings, match.homeTeam.slug)}
+          />
           <div className="text-center">
             {hasScore ? (
               <p className="font-display text-4xl font-extrabold text-rf-fg">
@@ -64,7 +68,11 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
             )}
             <p className={`mt-2 text-sm font-semibold ${isLive ? "text-rf-live" : "text-rf-fg-muted"}`}>{statusLabel}</p>
           </div>
-          <TeamColumn name={match.awayTeam.name} crestUrl={match.awayTeam.crestUrl} />
+          <TeamColumn
+            name={match.awayTeam.name}
+            crestUrl={match.awayTeam.crestUrl}
+            position={findStandingPosition(match.standings, match.awayTeam.slug)}
+          />
         </div>
 
         <div className="mt-6 grid grid-cols-3 gap-4 border-t border-rf-border pt-5">
@@ -355,10 +363,24 @@ function MatchScorers({
   );
 }
 
-function TeamColumn({ name, crestUrl }: { name: string; crestUrl: string | null }) {
+/** Position actuelle de l'équipe dans le classement affiché sous l'onglet Classement — même source, pas de calcul séparé. */
+function findStandingPosition(standings: MatchDetail["standings"], teamSlug: string): number | null {
+  return standings.find((row) => row.team.slug === teamSlug)?.position ?? null;
+}
+
+function TeamColumn({
+  name,
+  crestUrl,
+  position,
+}: {
+  name: string;
+  crestUrl: string | null;
+  position: number | null;
+}) {
   return (
     <div className="flex flex-col items-center gap-2 text-center">
       <TeamCrest crestUrl={crestUrl} teamName={name} size="lg" />
+      {position !== null && <span className="text-xs font-semibold text-rf-fg-subtle">#{position}</span>}
       <span className="text-sm font-medium text-rf-fg">{name}</span>
     </div>
   );
