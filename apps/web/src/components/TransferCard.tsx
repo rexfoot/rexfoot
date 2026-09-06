@@ -5,9 +5,16 @@ import { TRANSFER_STATUS_STYLES } from "@/lib/transfer-status";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { cn } from "@/lib/cn";
 
+// Fuseau fixe : voir le commentaire equivalent dans MatchCard.tsx (evite un
+// mismatch d'hydratation serveur/navigateur pres de minuit UTC).
 function formatDate(date: Date | null, locale: string): string | null {
   if (!date) return null;
-  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "Europe/Paris",
+  }).format(date);
 }
 
 export function TransferCard({ transfer }: { transfer: Transfer }) {

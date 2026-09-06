@@ -1,7 +1,16 @@
-/** Date de publication formatée pour les cartes/hero actu (`null` si pas encore publié). */
+/**
+ * Date de publication formatée pour les cartes/hero actu (`null` si pas encore
+ * publié). Fuseau fixe (voir MatchCard.tsx) : évite un mismatch d'hydratation
+ * serveur/navigateur pour les articles publiés près de minuit UTC.
+ */
 export function formatArticleDate(date: Date | null, locale: string): string | null {
   if (!date) return null;
-  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat(locale, {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Paris",
+  }).format(date);
 }
 
 const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [

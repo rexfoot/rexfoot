@@ -9,9 +9,11 @@ import { toIntlLocale } from "@/lib/intl-locale";
 import { cn } from "@/lib/cn";
 import type { NationalityPlayerEntry } from "@/lib/types";
 
+// Fuseau fixe : voir le commentaire equivalent dans MatchCard.tsx (evite un
+// mismatch d'hydratation serveur/navigateur sur l'heure affichee).
 function formatKickoff(iso: string, locale: string): string {
   const date = new Date(iso);
-  return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" });
 }
 
 function MatchStatus({ entry }: { entry: NationalityPlayerEntry }) {

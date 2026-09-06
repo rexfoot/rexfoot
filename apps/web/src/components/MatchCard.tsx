@@ -8,13 +8,20 @@ import { toIntlLocale } from "@/lib/intl-locale";
 import { bestKnownMinute } from "@/lib/match-minute";
 import { cn } from "@/lib/cn";
 
+// Fuseau fixe (heure des compétitions européennes) plutôt que le fuseau local
+// du visiteur : sinon le serveur (UTC) et le navigateur du visiteur affichent
+// des heures différentes pour le même horaire, ce qui casse l'hydratation
+// React (le HTML rendu par le serveur ne correspond plus à celui du client).
+const KICKOFF_TIME_ZONE = "Europe/Paris";
+
 function formatKickoff(iso: string, locale: string): string {
   const date = new Date(iso);
   const today = new Date();
-  const isToday = date.toDateString() === today.toDateString();
-  const time = date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+  const dayKey = (d: Date) => d.toLocaleDateString("en-CA", { timeZone: KICKOFF_TIME_ZONE });
+  const isToday = dayKey(date) === dayKey(today);
+  const time = date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit", timeZone: KICKOFF_TIME_ZONE });
   if (isToday) return time;
-  return `${date.toLocaleDateString(locale, { day: "2-digit", month: "short" })} · ${time}`;
+  return `${date.toLocaleDateString(locale, { day: "2-digit", month: "short", timeZone: KICKOFF_TIME_ZONE })} · ${time}`;
 }
 
 function useStatusLabel(match: MatchSummary): { label: string; isLive: boolean } {

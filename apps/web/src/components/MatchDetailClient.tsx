@@ -34,7 +34,13 @@ function useStatusLabel(match: MatchDetail): string {
     case "CANCELLED":
       return t("cancelled");
     default:
-      return new Date(match.kickoffAt).toLocaleString(toIntlLocale(locale), { dateStyle: "long", timeStyle: "short" });
+      // Fuseau fixe : voir le commentaire equivalent dans MatchCard.tsx (evite
+      // un mismatch d'hydratation serveur/navigateur sur l'heure affichee).
+      return new Date(match.kickoffAt).toLocaleString(toIntlLocale(locale), {
+        dateStyle: "long",
+        timeStyle: "short",
+        timeZone: "Europe/Paris",
+      });
   }
 }
 
