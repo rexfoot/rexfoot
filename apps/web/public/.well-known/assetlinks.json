@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.rexfoot.app",
+      "sha256_cert_fingerprints": [
+        "E2:03:27:BF:91:62:AC:92:06:97:EC:38:04:54:E3:97:B3:A9:7D:4D:A0:D2:18:1B:8B:AE:79:2F:A0:C4:8E:8A"
+      ]
+    }
+  }
+]
