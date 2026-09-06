@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ListChecks, Goal } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { TeamGoogleLink } from "./TeamGoogleLink";
@@ -9,13 +9,16 @@ import { EmptyState } from "./EmptyState";
 import { MatchCard } from "./MatchCard";
 import { FormBadge } from "./FormBadge";
 import { FormationPitch, SubstitutesList } from "./FormationPitch";
+import { GoalCelebration } from "./GoalCelebration";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { bestKnownMinute } from "@/lib/match-minute";
 import { cn } from "@/lib/cn";
-import type { MatchDetail, MatchEventSummary, MatchSummary, TeamStatisticsSummary } from "@/lib/types";
+import type { MatchDetail, MatchEventSummary, MatchSummary } from "@/lib/types";
 
 type QuickTab = "composition" | "standings" | "nextMatch";
+
+const GOAL_EVENT_TYPES: ReadonlySet<MatchEventSummary["type"]> = new Set(["GOAL", "PENALTY", "OWN_GOAL"]);
 
 function useStatusLabel(match: MatchDetail): string {
   const t = useTranslations("matches");
@@ -50,9 +53,12 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
   const statusLabel = useStatusLabel(match);
   const isLive = match.status === "LIVE" || match.status === "HALFTIME";
   const hasScore = match.homeScore !== null && match.awayScore !== null;
+  const goal = useGoalCelebration(match);
 
   return (
     <div className="space-y-8">
+      <GoalCelebration trigger={goal.trigger} label={goal.label} />
+
       <div className="rounded-2xl border border-rf-border bg-rf-bg-card p-6">
         <div className="mb-4 flex items-center justify-between">
           <CompetitionBadge logoUrl={match.competition.logoUrl} name={match.competition.name} />
@@ -93,17 +99,37 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
       </div>
 
       <QuickTabs match={match} />
-
-      {match.teamStatistics.length > 0 && (
-        <section>
-          <h2 className="mb-3 font-display text-lg font-bold text-rf-fg">{t("statistics")}</h2>
-          <div className="rounded-xl border border-rf-border bg-rf-bg-card p-4">
-            <StatisticsTable match={match} />
-          </div>
-        </section>
-      )}
     </div>
   );
+}
+
+/**
+ * Détecte une hausse du score total (nouveau but) entre deux rendus et
+ * déclenche l'animation GoalCelebration — jamais au tout premier rendu
+ * (prevTotal démarre à `null`), sinon un match déjà à 2-1 à l'ouverture de
+ * la page fêterait un but qui n'a pas eu lieu pendant que l'utilisateur
+ * regardait.
+ */
+function useGoalCelebration(match: MatchDetail): { trigger: number; label: string } {
+  const prevTotalRef = useRef<number | null>(null);
+  const [state, setState] = useState<{ trigger: number; label: string }>({ trigger: 0, label: "" });
+
+  useEffect(() => {
+    if (match.homeScore === null || match.awayScore === null) return;
+    const total = match.homeScore + match.awayScore;
+
+    if (prevTotalRef.current !== null && total > prevTotalRef.current) {
+      const latestGoal = [...match.events]
+        .filter((e) => GOAL_EVENT_TYPES.has(e.type))
+        .sort((a, b) => b.minute - a.minute)[0];
+      const scorerTeam = latestGoal?.teamId === match.homeTeam.id ? match.homeTeam.name : match.awayTeam.name;
+      const label = latestGoal?.detail ? `${latestGoal.detail} — ${scorerTeam}` : scorerTeam;
+      setState((s) => ({ trigger: s.trigger + 1, label }));
+    }
+    prevTotalRef.current = total;
+  }, [match.homeScore, match.awayScore, match.events, match.homeTeam.id, match.homeTeam.name, match.awayTeam.name]);
+
+  return state;
 }
 
 /**
@@ -267,54 +293,6 @@ function NextMatchPanel({ match }: { match: MatchDetail }) {
     </div>
   );
 }
-
-function StatisticsTable({ match }: { match: MatchDetail }) {
-  const t = useTranslations("matches");
-  const home = match.teamStatistics.find((s) => s.teamId === match.homeTeam.id);
-  const away = match.teamStatistics.find((s) => s.teamId === match.awayTeam.id);
-  if (!home && !away) return null;
-
-  const rows: Array<{ label: string; key: Exclude<keyof TeamStatisticsSummary, "teamId">; suffix?: string }> = [
-    { label: t("possession"), key: "possession", suffix: "%" },
-    { label: t("expectedGoals"), key: "expectedGoals" },
-    { label: t("shots"), key: "shotsTotal" },
-    { label: t("shotsOnTarget"), key: "shotsOnTarget" },
-    { label: t("bigChancesCreated"), key: "bigChancesCreated" },
-    { label: t("corners"), key: "corners" },
-    { label: t("fouls"), key: "fouls" },
-    { label: t("offsides"), key: "offsides" },
-    { label: t("yellowCards"), key: "yellowCards" },
-    { label: t("redCards"), key: "redCards" },
-  ];
-
-  return (
-    <div className="space-y-3">
-      {rows.map(({ label, key, suffix }) => {
-        const homeVal = home?.[key] ?? null;
-        const awayVal = away?.[key] ?? null;
-        if (homeVal === null && awayVal === null) return null;
-        const total = (homeVal ?? 0) + (awayVal ?? 0);
-        const homeShare = total > 0 ? ((homeVal ?? 0) / total) * 100 : 50;
-
-        return (
-          <div key={key}>
-            <div className="mb-1 flex items-center justify-between text-sm text-rf-fg">
-              <span className="font-semibold">{homeVal ?? "-"}{suffix ?? ""}</span>
-              <span className="text-xs text-rf-fg-subtle">{label}</span>
-              <span className="font-semibold">{awayVal ?? "-"}{suffix ?? ""}</span>
-            </div>
-            <div className="flex h-1.5 overflow-hidden rounded-full bg-rf-border">
-              <div className="bg-rf-live" style={{ width: `${homeShare}%` }} />
-              <div className="flex-1 bg-rf-fg-muted" />
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-const GOAL_EVENT_TYPES: ReadonlySet<MatchEventSummary["type"]> = new Set(["GOAL", "PENALTY", "OWN_GOAL"]);
 
 function formatEventMinute(minute: number, extraMinute: number | null): string {
   return extraMinute ? `${minute}+${extraMinute}'` : `${minute}'`;
