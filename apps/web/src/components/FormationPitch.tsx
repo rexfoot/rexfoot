@@ -56,17 +56,18 @@ function PlayerAvatar({ player, side }: { player: LineupPlayer; side: Side }) {
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div className="relative">
-        <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 border-white/90 bg-rf-bg-elevated shadow-lg sm:h-16 sm:w-16">
+        <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-white/90 bg-rf-bg-elevated shadow-lg sm:h-20 sm:w-20">
           {player.photoUrl ? (
-            <Image src={player.photoUrl} alt={player.name} width={64} height={64} className="h-full w-full object-cover" unoptimized />
+            <Image src={player.photoUrl} alt={player.name} width={96} height={96} className="h-full w-full object-cover" unoptimized />
           ) : (
-            <User size={26} className="text-rf-fg-subtle" strokeWidth={1.5} />
+            <User size={30} className="text-rf-fg-subtle sm:hidden" strokeWidth={1.5} />
           )}
+          {!player.photoUrl && <User size={40} className="hidden text-rf-fg-subtle sm:block" strokeWidth={1.5} />}
         </div>
         {player.number !== null && (
           <span
             className={cn(
-              "absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full text-[11px] font-bold sm:h-6 sm:w-6 sm:text-xs",
+              "absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold sm:h-8 sm:w-8 sm:text-sm",
               NUMBER_BADGE_CLASS[side],
             )}
           >
@@ -74,7 +75,7 @@ function PlayerAvatar({ player, side }: { player: LineupPlayer; side: Side }) {
           </span>
         )}
       </div>
-      <span className="max-w-[76px] truncate text-center text-xs font-medium text-white drop-shadow-sm sm:max-w-[96px] sm:text-sm">
+      <span className="max-w-[72px] truncate text-center text-xs font-semibold text-white drop-shadow-sm sm:max-w-[112px] sm:text-base">
         {player.name}
       </span>
     </div>
@@ -84,7 +85,7 @@ function PlayerAvatar({ player, side }: { player: LineupPlayer; side: Side }) {
 function PlayerRow({ players, side }: { players: LineupPlayer[]; side: Side }) {
   if (players.length === 0) return null;
   return (
-    <div className="flex items-start justify-around px-2">
+    <div className="flex items-start justify-around px-1">
       {players.map((player, i) => (
         <PlayerAvatar key={`${player.name}-${i}`} player={player} side={side} />
       ))}
@@ -100,7 +101,7 @@ export function FormationPitch({ home, away }: { home: LineupSummary; away: Line
   if (homeRows.length === 0 && awayRows.length === 0) return null;
 
   return (
-    <div className="relative aspect-[4/5] w-full overflow-hidden rounded-3xl bg-gradient-to-b from-green-800 via-green-700 to-green-800 shadow-xl sm:aspect-[5/6]">
+    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl bg-gradient-to-b from-green-800 via-green-700 to-green-800 shadow-2xl ring-1 ring-white/10">
       {/* Bandes de tonte, purement décoratives */}
       <div className="pointer-events-none absolute inset-0">
         {Array.from({ length: 6 }).map((_, i) => (
@@ -108,20 +109,22 @@ export function FormationPitch({ home, away }: { home: LineupSummary; away: Line
         ))}
       </div>
       {/* Lignes du terrain, purement décoratives */}
-      <div className="pointer-events-none absolute inset-0 opacity-50">
+      <div className="pointer-events-none absolute inset-0 opacity-60">
         <div className="absolute inset-2 rounded-sm border-2 border-white/70" />
         <div className="absolute left-1/2 right-0 top-1/2 h-0.5 -translate-x-1/2 -translate-y-1/2 bg-white/70" style={{ width: "calc(100% - 1rem)" }} />
         <div className="absolute left-1/2 top-1/2 h-24 w-24 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/70" />
         <div className="absolute left-1/2 top-2 h-16 w-32 -translate-x-1/2 border-2 border-t-0 border-white/70" />
         <div className="absolute bottom-2 left-1/2 h-16 w-32 -translate-x-1/2 border-2 border-b-0 border-white/70" />
       </div>
+      {/* Vignette de stade, purement décorative */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.35)_100%)]" />
 
-      <div className="relative flex h-1/2 flex-col justify-around py-4">
+      <div className="relative flex h-1/2 flex-col justify-around py-3 sm:py-5">
         {awayRows.map((row, i) => (
           <PlayerRow key={i} players={row} side="away" />
         ))}
       </div>
-      <div className="relative flex h-1/2 flex-col-reverse justify-around py-4">
+      <div className="relative flex h-1/2 flex-col-reverse justify-around py-3 sm:py-5">
         {homeRows.map((row, i) => (
           <PlayerRow key={i} players={row} side="home" />
         ))}
