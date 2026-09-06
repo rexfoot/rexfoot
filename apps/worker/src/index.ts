@@ -3,7 +3,14 @@ import { getEnv, hasAnyFootballProviderKey } from "@rexfoot/config";
 import { hasAiProviderConfigured } from "@rexfoot/ai-provider";
 import { createBullMqConnection } from "./lib/redis.js";
 import { logger } from "./lib/logger.js";
-import { SYNC_QUEUE_NAME, JobName, createSyncQueue, registerScheduledJobs, scheduleNextLiveScoresRun } from "./scheduler.js";
+import {
+  SYNC_QUEUE_NAME,
+  JobName,
+  createSyncQueue,
+  registerScheduledJobs,
+  scheduleNextLiveScoresRun,
+  scheduleNextMatchEventsRun,
+} from "./scheduler.js";
 import { syncFixtures } from "./jobs/syncFixtures.js";
 import { syncLiveScores } from "./jobs/syncLiveScores.js";
 import { syncStandings } from "./jobs/syncStandings.js";
@@ -59,8 +66,19 @@ async function main(): Promise<void> {
           return syncYoutubeVideos();
         case JobName.weeklyRecap:
           return generateWeeklyRecap();
-        case JobName.syncMatchEvents:
-          return syncMatchEvents();
+        case JobName.syncMatchEvents: {
+          // Même principe de résilience que syncLiveScores ci-dessous : un
+          // échec transitoire (quota Highlightly épuisé, requête en timeout)
+          // ne doit jamais interrompre la chaîne auto-replanifiée pour de bon.
+          let hadLiveMatches = true;
+          try {
+            hadLiveMatches = await syncMatchEvents();
+          } catch (cause) {
+            logger.error({ cause }, "Échec de syncMatchEvents, replanifié quand même (cadence rapide par précaution)");
+          }
+          await scheduleNextMatchEventsRun(queue, hadLiveMatches);
+          return hadLiveMatches;
+        }
         case JobName.syncLiveScores: {
           // Bug réel constaté en prod (2026-09-05, juste après le passage à
           // une cadence de 15s) : football-data.org a renvoyé un 429, ce qui

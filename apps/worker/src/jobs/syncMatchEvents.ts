@@ -273,11 +273,17 @@ async function syncStatistics(client: HighlightlyClient, highlightlyId: number, 
   }
 }
 
-export async function syncMatchEvents(): Promise<void> {
+/**
+ * Renvoie `true` si des matchs sont LIVE/HALFTIME en ce moment (résolus ou
+ * non chez Highlightly) — pilote la cadence auto-replanifiée du job (voir
+ * scheduleNextMatchEventsRun dans scheduler.ts), même principe que
+ * syncLiveScores.ts.
+ */
+export async function syncMatchEvents(): Promise<boolean> {
   const client = createHighlightlyClientIfConfigured();
   if (!client) {
     logger.info("Aucune clé Highlightly configurée — syncMatchEvents ignoré (pas de fausse donnée générée)");
-    return;
+    return false;
   }
 
   const matchSelect = {
@@ -360,6 +366,8 @@ export async function syncMatchEvents(): Promise<void> {
     }),
   ]);
 
+  const hadLiveMatches = resolvedLiveMatches.length + unresolvedLiveMatches.length > 0;
+
   const matches = [
     ...resolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false })),
     ...unresolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false })),
@@ -367,7 +375,7 @@ export async function syncMatchEvents(): Promise<void> {
     ...recentlyFinishedMatches.map((m) => ({ ...m, isFinalPass: true })),
   ];
 
-  if (matches.length === 0) return;
+  if (matches.length === 0) return hadLiveMatches;
 
   for (const match of matches) {
     try {
@@ -478,4 +486,6 @@ export async function syncMatchEvents(): Promise<void> {
       logger.warn({ fixtureId: match.id, cause }, "Échec de synchro des événements pour ce match, ignoré");
     }
   }
+
+  return hadLiveMatches;
 }

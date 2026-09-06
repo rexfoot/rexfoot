@@ -31,6 +31,21 @@ export const JobName = {
 const LIVE_SCORES_INTERVAL_DURING_MATCHES_MS = 15 * 1000;
 const LIVE_SCORES_INTERVAL_IDLE_MS = 3 * 60 * 1000;
 
+// Highlightly plan Pro depuis le 2026-09-06 (7500 requêtes/jour, contre 100
+// sur l'ancien plan gratuit qui justifiait les 10 min fixes ci-dessous
+// pendant des années) : un but/carton/remplacement pouvait mettre jusqu'à
+// 10 min à apparaître sur RexFoot après avoir déjà été visible ailleurs —
+// Hicham a signalé ce retard explicitement. 60s pendant un match reste large
+// sous la limite (~12 req/s documentée par RapidAPI pour ce plan) même avec
+// plusieurs matchs simultanés + les lookups de résolution d'ID ; borné pour
+// qu'une grosse journée de matchs ne consomme pas tout le quota journalier
+// avant le soir (voir MAX_MATCHES_PER_RUN/MAX_LOOKUP_PER_RUN dans
+// syncMatchEvents.ts pour le budget par cycle). Idle laissé à 10 min :
+// aucune urgence à détecter un nouveau match hors direct, syncLiveScores
+// s'en charge déjà en 15s.
+const MATCH_EVENTS_INTERVAL_DURING_MATCHES_MS = 60 * 1000;
+const MATCH_EVENTS_INTERVAL_IDLE_MS = 10 * 60 * 1000;
+
 export function createSyncQueue(): Queue {
   return new Queue(SYNC_QUEUE_NAME, { connection: createBullMqConnection() });
 }
@@ -72,6 +87,16 @@ async function removeOrphanedLiveScoresJobs(queue: Queue): Promise<void> {
   }
 }
 
+/** Même problème, même remède que removeOrphanedLiveScoresJobs — voir son commentaire. */
+async function removeOrphanedMatchEventsJobs(queue: Queue): Promise<void> {
+  const pending = await queue.getJobs(["delayed", "waiting"]);
+  for (const job of pending) {
+    if (job.name === JobName.syncMatchEvents) {
+      await job.remove();
+    }
+  }
+}
+
 const DEFAULT_JOB_OPTS = { removeOnComplete: { count: 20 }, removeOnFail: { count: 50 } };
 
 /**
@@ -84,6 +109,7 @@ const DEFAULT_JOB_OPTS = { removeOnComplete: { count: 20 }, removeOnFail: { coun
 export async function registerScheduledJobs(queue: Queue): Promise<void> {
   await removeAllRepeatableJobs(queue);
   await removeOrphanedLiveScoresJobs(queue);
+  await removeOrphanedMatchEventsJobs(queue);
 
   await queue.add(
     JobName.syncFixtures,
@@ -148,13 +174,15 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     {},
     { repeat: { pattern: "0 8 * * 1" }, jobId: JobName.weeklyRecap, ...DEFAULT_JOB_OPTS },
   );
-  // Highlightly (quota gratuit 100 req/jour) : 10 min plutôt que la cadence
-  // syncLiveScores — voir MAX_MATCHES_PER_RUN dans syncMatchEvents.ts pour le
-  // détail du budget. Ne fait rien s'il n'y a aucun match en direct.
+  // syncMatchEvents suit désormais le même principe auto-replanifié que
+  // syncLiveScores ci-dessous (voir MATCH_EVENTS_INTERVAL_*_MS) plutôt qu'un
+  // repeat fixe — départ rapide pour la même raison qu'au démarrage de
+  // syncLiveScores : ne pas attendre l'intervalle idle avant la première
+  // détection d'un match déjà en cours.
   await queue.add(
     JobName.syncMatchEvents,
     {},
-    { repeat: { every: 10 * 60 * 1000 }, jobId: JobName.syncMatchEvents, ...DEFAULT_JOB_OPTS },
+    { delay: 10 * 1000, jobId: `${JobName.syncMatchEvents}-startup-${Date.now()}`, ...DEFAULT_JOB_OPTS },
   );
 
   // Premier check volontairement rapide (pas l'attente idle complete de 3
@@ -175,5 +203,15 @@ export async function scheduleNextLiveScoresRun(queue: Queue, hadLiveMatches: bo
     JobName.syncLiveScores,
     {},
     { delay, jobId: `${JobName.syncLiveScores}-${Date.now()}`, ...DEFAULT_JOB_OPTS },
+  );
+}
+
+/** Même principe que scheduleNextLiveScoresRun, pour syncMatchEvents (voir MATCH_EVENTS_INTERVAL_*_MS). */
+export async function scheduleNextMatchEventsRun(queue: Queue, hadLiveMatches: boolean): Promise<void> {
+  const delay = hadLiveMatches ? MATCH_EVENTS_INTERVAL_DURING_MATCHES_MS : MATCH_EVENTS_INTERVAL_IDLE_MS;
+  await queue.add(
+    JobName.syncMatchEvents,
+    {},
+    { delay, jobId: `${JobName.syncMatchEvents}-${Date.now()}`, ...DEFAULT_JOB_OPTS },
   );
 }
