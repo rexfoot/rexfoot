@@ -7,6 +7,7 @@ import { SITE_NAME } from "@rexfoot/config";
 import { routing, isRtl } from "@/i18n/routing";
 import { buildAlternates, ogLocale } from "@/lib/seo/alternates";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import "../globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -105,6 +106,7 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildRootJsonLd()) }}
         />
         <GoogleAnalytics />
+        <ServiceWorkerRegister />
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
     </html>
