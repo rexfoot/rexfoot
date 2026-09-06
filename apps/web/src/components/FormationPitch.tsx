@@ -2,7 +2,52 @@ import Image from "next/image";
 import { User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
-import type { LineupPlayer, LineupSummary } from "@/lib/types";
+import type { LineupPlayer, LineupSummary, MatchEventSummary } from "@/lib/types";
+
+const stripDiacritics = (s: string) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "");
+
+/**
+ * "Sergio Herrera" -> "S. Herrera" pour tenir sur le pitch sans coupure au
+ * milieu d'un mot (le `truncate` CSS précédent donnait des noms tronqués
+ * illisibles type "Íñigo Arguib..." — pas professionnel). Laisse intact un
+ * nom déjà abrégé par la source (ex. "F. Boyomo").
+ */
+function shortName(fullName: string): string {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1 || parts[0].endsWith(".")) return fullName;
+  return `${parts[0][0]}. ${parts.slice(1).join(" ")}`;
+}
+
+/**
+ * Compare deux noms de joueur en tolérant les formats différents entre
+ * l'événement SUBSTITUTION (nom complet) et la liste de remplaçants (parfois
+ * déjà abrégée, ex. "Xanet Oláiz Ibarzábal" vs "X. Olaiz") — un token
+ * significatif (>=3 lettres) en commun suffit.
+ */
+function namesLikelyMatch(a: string, b: string): boolean {
+  const tokens = (s: string) =>
+    stripDiacritics(s.toLowerCase())
+      .replace(/\./g, "")
+      .split(/\s+/)
+      .filter((t) => t.length >= 3);
+  const ta = tokens(a);
+  const tb = tokens(b);
+  return ta.some((t) => tb.includes(t));
+}
+
+/**
+ * Retire du banc les joueurs déjà sortis en cours de match : Highlightly les
+ * laisse dans `substitutes` après leur remplacement au lieu de les enlever,
+ * ce qui donnait une liste "remplaçants" gonflée et trompeuse (des joueurs
+ * qui ne peuvent plus entrer, mélangés aux vrais remplaçants disponibles).
+ */
+export function filterActiveSubstitutes(lineup: LineupSummary, events: MatchEventSummary[]): LineupSummary {
+  const outNames = events
+    .filter((e): e is MatchEventSummary & { detailOut: string } => e.type === "SUBSTITUTION" && e.teamId === lineup.teamId && !!e.detailOut)
+    .map((e) => e.detailOut);
+  if (outNames.length === 0) return lineup;
+  return { ...lineup, substitutes: lineup.substitutes.filter((p) => !outNames.some((out) => namesLikelyMatch(out, p.name))) };
+}
 
 /** "4-2-3-1" -> [4, 2, 3, 1]. Vide (formation inconnue/mal formée) si non exploitable. */
 function parseFormation(formation: string | null): number[] {
@@ -52,22 +97,47 @@ const NUMBER_BADGE_CLASS: Record<Side, string> = {
   away: "bg-amber-500 text-rf-bg",
 };
 
-function PlayerAvatar({ player, side }: { player: LineupPlayer; side: Side }) {
+// Lignes de 5 joueurs (défenses à trois/back-five) : avatar réduit d'un cran
+// pour ne jamais déborder sur les téléphones étroits (~360px de large).
+type AvatarSize = "normal" | "compact";
+
+const AVATAR_SIZE_CLASS: Record<AvatarSize, string> = {
+  normal: "h-16 w-16 sm:h-24 sm:w-24",
+  compact: "h-12 w-12 sm:h-16 sm:w-16",
+};
+const BADGE_SIZE_CLASS: Record<AvatarSize, string> = {
+  normal: "h-6 w-6 text-xs sm:h-8 sm:w-8 sm:text-sm",
+  compact: "h-5 w-5 text-[11px] sm:h-6 sm:w-6 sm:text-xs",
+};
+const NAME_SIZE_CLASS: Record<AvatarSize, string> = {
+  normal: "max-w-[80px] text-xs sm:max-w-[130px] sm:text-sm",
+  compact: "max-w-[62px] text-[11px] sm:max-w-[96px] sm:text-xs",
+};
+const ICON_SIZE: Record<AvatarSize, [number, number]> = {
+  normal: [32, 44],
+  compact: [22, 30],
+};
+
+function PlayerAvatar({ player, side, size }: { player: LineupPlayer; side: Side; size: AvatarSize }) {
+  const [iconSm, iconLg] = ICON_SIZE[size];
   return (
     <div className="flex flex-col items-center gap-1.5">
       <div className="relative">
-        <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-full border-2 border-white/90 bg-rf-bg-elevated shadow-lg sm:h-20 sm:w-20">
+        <div className={cn("flex items-center justify-center overflow-hidden rounded-full border-2 border-white/90 bg-rf-bg-elevated shadow-lg", AVATAR_SIZE_CLASS[size])}>
           {player.photoUrl ? (
             <Image src={player.photoUrl} alt={player.name} width={96} height={96} className="h-full w-full object-cover" unoptimized />
           ) : (
-            <User size={30} className="text-rf-fg-subtle sm:hidden" strokeWidth={1.5} />
+            <>
+              <User size={iconSm} className="text-rf-fg-subtle sm:hidden" strokeWidth={1.5} />
+              <User size={iconLg} className="hidden text-rf-fg-subtle sm:block" strokeWidth={1.5} />
+            </>
           )}
-          {!player.photoUrl && <User size={40} className="hidden text-rf-fg-subtle sm:block" strokeWidth={1.5} />}
         </div>
         {player.number !== null && (
           <span
             className={cn(
-              "absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold sm:h-8 sm:w-8 sm:text-sm",
+              "absolute -bottom-1 -right-1 flex items-center justify-center rounded-full font-bold",
+              BADGE_SIZE_CLASS[size],
               NUMBER_BADGE_CLASS[side],
             )}
           >
@@ -75,19 +145,18 @@ function PlayerAvatar({ player, side }: { player: LineupPlayer; side: Side }) {
           </span>
         )}
       </div>
-      <span className="max-w-[72px] truncate text-center text-xs font-semibold text-white drop-shadow-sm sm:max-w-[112px] sm:text-base">
-        {player.name}
-      </span>
+      <span className={cn("truncate text-center font-semibold text-white drop-shadow-sm", NAME_SIZE_CLASS[size])}>{shortName(player.name)}</span>
     </div>
   );
 }
 
 function PlayerRow({ players, side }: { players: LineupPlayer[]; side: Side }) {
   if (players.length === 0) return null;
+  const size: AvatarSize = players.length >= 5 ? "compact" : "normal";
   return (
     <div className="flex items-start justify-around px-1">
       {players.map((player, i) => (
-        <PlayerAvatar key={`${player.name}-${i}`} player={player} side={side} />
+        <PlayerAvatar key={`${player.name}-${i}`} player={player} side={side} size={size} />
       ))}
     </div>
   );

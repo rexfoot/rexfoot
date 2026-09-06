@@ -8,7 +8,7 @@ import { CompetitionBadge } from "./CompetitionBadge";
 import { EmptyState } from "./EmptyState";
 import { MatchCard } from "./MatchCard";
 import { FormBadge } from "./FormBadge";
-import { FormationPitch, SubstitutesList } from "./FormationPitch";
+import { FormationPitch, SubstitutesList, filterActiveSubstitutes } from "./FormationPitch";
 import { GoalCelebration } from "./GoalCelebration";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
@@ -176,12 +176,15 @@ function QuickTabs({ match }: { match: MatchDetail }) {
 /** Style Sofascore : un seul pitch partagé (extérieur en haut, domicile en bas), demandé par Hicham le 2026-09-05. */
 function CompositionPanel({ match }: { match: MatchDetail }) {
   const t = useTranslations("matches");
-  const home = match.lineups.find((l) => l.teamId === match.homeTeam.id);
-  const away = match.lineups.find((l) => l.teamId === match.awayTeam.id);
+  const rawHome = match.lineups.find((l) => l.teamId === match.homeTeam.id);
+  const rawAway = match.lineups.find((l) => l.teamId === match.awayTeam.id);
 
-  if (!home || !away) {
+  if (!rawHome || !rawAway) {
     return <EmptyState icon={ListChecks} title={t("noLineups")} />;
   }
+
+  const home = filterActiveSubstitutes(rawHome, match.events);
+  const away = filterActiveSubstitutes(rawAway, match.events);
 
   return (
     <div className="space-y-3">
