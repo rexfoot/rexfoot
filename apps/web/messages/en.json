@@ -268,7 +268,27 @@
   },
   "footer": {
     "legalLink": "Legal notice",
+    "privacyLink": "Privacy policy",
     "rights": "All rights reserved."
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "metaDescription": "RexFoot privacy policy: data collected, cookies, and your rights.",
+    "introTitle": "1. Purpose",
+    "introBody": "This privacy policy describes how RexFoot (rexfoot.com) handles data when you browse the site and, where applicable, use the RexFoot Android app.",
+    "dataTitle": "2. Data collected",
+    "dataBody": "Browsing without an account: no personal data is collected. An anonymous technical identifier (cookie) may be set to count page views for statistical purposes, with no link to your identity.\nCreating an account (optional): email address, password (stored encrypted, never in plain text), display name and, if you choose, a profile picture. This information is used to sign you in, manage your favorites and, if enabled, display a public profile.\nAudience measurement: RexFoot may use an analytics tool (e.g. Google Analytics) to understand overall site usage through aggregated, anonymous statistics.",
+    "useTitle": "3. How data is used",
+    "useBody": "The data collected is used solely to operate the site and app (sign-in, favorites, profile display), improve the service, and keep it secure (limiting abuse, preventing fraud).",
+    "sharingTitle": "4. Data sharing",
+    "sharingBody": "RexFoot does not sell or rent your personal data to third parties for any purpose.\nYour data is only shared with the technical providers strictly necessary to operate the site (hosting, database), who access it only to perform the requested services and are bound by confidentiality.",
+    "cookiesTitle": "5. Cookies",
+    "cookiesBody": "RexFoot does not use advertising cookies. A technical cookie may be used to keep you signed in if you have an account, remember your preferences (such as language), or anonymously count page views.",
+    "rightsTitle": "6. Your rights",
+    "rightsBody": "You may at any time request access to, correction of, or deletion of your personal data, as well as deletion of your account, by writing to the address below. Requests are handled within a reasonable timeframe, in accordance with applicable data protection law.",
+    "contactTitle": "7. Contact",
+    "contactBody": "For any question about this privacy policy or your personal data, you can contact RexFoot at: footrexofficial@gmail.com.",
+    "lastUpdated": "Last updated: September 6, 2026"
   },
   "legal": {
     "title": "Legal notice",

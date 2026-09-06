@@ -268,7 +268,27 @@
   },
   "footer": {
     "legalLink": "Mentions légales",
+    "privacyLink": "Politique de confidentialité",
     "rights": "Tous droits réservés."
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "metaDescription": "Politique de confidentialité de RexFoot : données collectées, cookies et vos droits.",
+    "introTitle": "1. Objet",
+    "introBody": "La présente politique de confidentialité décrit la manière dont RexFoot (rexfoot.com) traite les données lors de votre navigation sur le site et, le cas échéant, dans l'application Android RexFoot.",
+    "dataTitle": "2. Données collectées",
+    "dataBody": "Consultation du site sans compte : aucune donnée personnelle n'est collectée. Un identifiant technique anonyme (cookie) peut être déposé afin de compter les vues des pages de manière statistique, sans lien avec votre identité.\nCréation d'un compte (facultative) : adresse e-mail, mot de passe (stocké de façon chiffrée, jamais en clair), nom d'affichage et, si vous le souhaitez, une photo de profil. Ces informations permettent de vous connecter, de gérer vos favoris et, si vous l'activez, d'afficher un profil public.\nMesure d'audience : RexFoot peut utiliser un outil de mesure d'audience (par exemple Google Analytics) afin de comprendre l'utilisation globale du site à travers des statistiques agrégées et anonymes.",
+    "useTitle": "3. Utilisation des données",
+    "useBody": "Les données collectées sont utilisées exclusivement pour faire fonctionner le site et l'application (connexion, favoris, affichage du profil), améliorer le service, et assurer sa sécurité (limitation des abus, prévention de la fraude).",
+    "sharingTitle": "4. Partage des données",
+    "sharingBody": "RexFoot ne vend ni ne loue vos données personnelles à des tiers, à quelque fin que ce soit.\nVos données ne sont partagées qu'avec les prestataires techniques strictement nécessaires au fonctionnement du site (hébergement, base de données), qui n'y ont accès que pour exécuter les services demandés et sont tenus à la confidentialité.",
+    "cookiesTitle": "5. Cookies",
+    "cookiesBody": "RexFoot n'utilise pas de cookies publicitaires. Un cookie technique peut être utilisé pour maintenir votre connexion si vous avez un compte, mémoriser vos préférences (comme la langue) ou compter les vues de pages de façon anonyme.",
+    "rightsTitle": "6. Vos droits",
+    "rightsBody": "Vous pouvez à tout moment demander l'accès, la rectification ou la suppression de vos données personnelles, ainsi que la suppression de votre compte, en écrivant à l'adresse indiquée ci-dessous. Toute demande sera traitée dans un délai raisonnable, conformément à la réglementation applicable en matière de protection des données personnelles.",
+    "contactTitle": "7. Contact",
+    "contactBody": "Pour toute question relative à cette politique de confidentialité ou à vos données personnelles, vous pouvez contacter RexFoot à l'adresse suivante : footrexofficial@gmail.com.",
+    "lastUpdated": "Dernière mise à jour : 6 septembre 2026"
   },
   "legal": {
     "title": "Mentions légales",

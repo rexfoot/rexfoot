@@ -12,9 +12,14 @@ export async function Footer() {
         <span>
           © {year} {SITE_NAME}. {t("rights")}
         </span>
-        <Link href="/mentions-legales" className="underline hover:text-rf-fg">
-          {t("legalLink")}
-        </Link>
+        <div className="flex gap-4">
+          <Link href="/mentions-legales" className="underline hover:text-rf-fg">
+            {t("legalLink")}
+          </Link>
+          <Link href="/confidentialite" className="underline hover:text-rf-fg">
+            {t("privacyLink")}
+          </Link>
+        </div>
       </div>
     </footer>
   );
