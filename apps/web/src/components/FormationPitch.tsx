@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { User } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/cn";
 import type { LineupPlayer, LineupSummary, MatchEventSummary } from "@/lib/types";
@@ -16,6 +15,20 @@ function shortName(fullName: string): string {
   const parts = fullName.trim().split(/\s+/).filter(Boolean);
   if (parts.length <= 1 || parts[0].endsWith(".")) return fullName;
   return `${parts[0][0]}. ${parts.slice(1).join(" ")}`;
+}
+
+/**
+ * "Gabriel Suazo" -> "GS". Beaucoup de joueurs n'ont pas de photo résolue
+ * (TheSportsDB limité en quota, voir mémoire projet) — un mur de silhouettes
+ * grises identiques rend le pitch illisible et donne une impression d'app
+ * cassée. Des initiales colorées par équipe, comme un avatar Slack/Gmail,
+ * restent lisibles et distinctes même sans photo.
+ */
+function initials(fullName: string): string {
+  const parts = fullName.trim().replace(/\./g, "").split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 /**
@@ -106,6 +119,11 @@ const NUMBER_TEXT_CLASS: Record<Side, string> = {
   away: "text-amber-400",
 };
 
+const AVATAR_FALLBACK_CLASS: Record<Side, string> = {
+  home: "bg-gradient-to-br from-blue-600/50 to-blue-950/60 text-blue-50",
+  away: "bg-gradient-to-br from-amber-500/50 to-amber-900/60 text-amber-50",
+};
+
 // Lignes de 5 joueurs (défenses à trois/back-five) : avatar réduit d'un cran
 // pour ne jamais déborder sur les téléphones étroits (~360px de large).
 type AvatarSize = "normal" | "compact";
@@ -118,23 +136,25 @@ const NAME_SIZE_CLASS: Record<AvatarSize, string> = {
   normal: "max-w-[88px] text-xs sm:max-w-[136px] sm:text-sm",
   compact: "max-w-[68px] text-[11px] sm:max-w-[104px] sm:text-xs",
 };
-const ICON_SIZE: Record<AvatarSize, [number, number]> = {
-  normal: [32, 44],
-  compact: [22, 30],
+const INITIALS_TEXT_CLASS: Record<AvatarSize, string> = {
+  normal: "text-lg sm:text-2xl",
+  compact: "text-sm sm:text-lg",
 };
 
 function PlayerAvatar({ player, side, size }: { player: LineupPlayer; side: Side; size: AvatarSize }) {
-  const [iconSm, iconLg] = ICON_SIZE[size];
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className={cn("flex items-center justify-center overflow-hidden rounded-full border-2 border-white/90 bg-rf-bg-elevated shadow-lg", AVATAR_SIZE_CLASS[size])}>
+      <div
+        className={cn(
+          "flex items-center justify-center overflow-hidden rounded-full border-2 border-white/90 shadow-lg",
+          AVATAR_SIZE_CLASS[size],
+          player.photoUrl ? "bg-rf-bg-elevated" : AVATAR_FALLBACK_CLASS[side],
+        )}
+      >
         {player.photoUrl ? (
           <Image src={player.photoUrl} alt={player.name} width={96} height={96} className="h-full w-full object-cover" unoptimized />
         ) : (
-          <>
-            <User size={iconSm} className="text-rf-fg-subtle sm:hidden" strokeWidth={1.5} />
-            <User size={iconLg} className="hidden text-rf-fg-subtle sm:block" strokeWidth={1.5} />
-          </>
+          <span className={cn("font-bold tracking-wide", INITIALS_TEXT_CLASS[size])}>{initials(player.name)}</span>
         )}
       </div>
       <span className={cn("block truncate text-center drop-shadow-sm", NAME_SIZE_CLASS[size])}>
@@ -200,11 +220,16 @@ function SubstituteRow({ player, side }: { player: LineupPlayer; side: Side }) {
       >
         {player.number ?? "-"}
       </span>
-      <div className="flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full bg-rf-bg-elevated">
+      <div
+        className={cn(
+          "flex h-6 w-6 shrink-0 items-center justify-center overflow-hidden rounded-full",
+          player.photoUrl ? "bg-rf-bg-elevated" : AVATAR_FALLBACK_CLASS[side],
+        )}
+      >
         {player.photoUrl ? (
           <Image src={player.photoUrl} alt={player.name} width={24} height={24} className="h-full w-full object-cover" unoptimized />
         ) : (
-          <User size={14} className="text-rf-fg-subtle" strokeWidth={1.5} />
+          <span className="text-[9px] font-bold">{initials(player.name)}</span>
         )}
       </div>
       <span className="truncate">{player.name}</span>
