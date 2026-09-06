@@ -295,7 +295,7 @@ export async function syncMatchEvents(): Promise<void> {
   const now = new Date();
   const cooldownCutoff = new Date(now.getTime() - LOOKUP_RETRY_COOLDOWN_MS);
 
-  const [resolvedLiveMatches, unresolvedLiveMatches, recentlyFinishedMatches] = await Promise.all([
+  const [resolvedLiveMatches, unresolvedLiveMatches, orphanedFinishedMatches, recentlyFinishedMatches] = await Promise.all([
     // Déjà résolus : toujours tous traités (jamais plafonné par
     // MAX_MATCHES_PER_RUN) — un match déjà suivi ne doit plus jamais être
     // privé de son rafraîchissement events/stats au profit d'un nouveau
@@ -323,6 +323,25 @@ export async function syncMatchEvents(): Promise<void> {
       take: MAX_LOOKUP_PER_RUN,
       select: matchSelect,
     }),
+    // Bug réel constaté en prod (2026-09-06, quota Highlightly journalier
+    // épuisé pendant que des matchs La Liga étaient encore en direct) : un
+    // match qui passe à FINISHED sans jamais avoir résolu highlightlyId
+    // devenait orphelin d'événements pour toujours — il sort du filtre
+    // LIVE/HALFTIME ci-dessus (qui ne le revoit plus) sans jamais entrer
+    // dans la passe finale ci-dessous (qui exige justement highlightlyId
+    // non-null). Une seule tentative de rattrapage, même fenêtre que la
+    // passe finale pour ne pas retenter indéfiniment un vieux match.
+    prisma.fixture.findMany({
+      where: {
+        status: "FINISHED",
+        highlightlyId: null,
+        OR: [{ highlightlyLookupAttemptedAt: null }, { highlightlyLookupAttemptedAt: { lt: cooldownCutoff } }],
+        kickoffAt: { gte: new Date(now.getTime() - FINAL_EVENTS_RECHECK_WINDOW_MS) },
+      },
+      orderBy: [{ highlightlyLookupAttemptedAt: { sort: "asc", nulls: "first" } }, { kickoffAt: "asc" }],
+      take: MAX_LOOKUP_PER_RUN,
+      select: matchSelect,
+    }),
     // Passe finale unique par match (voir finalEventsConfirmedAt) — jamais
     // rejouée indéfiniment, bornée à une fenêtre de quelques heures post-match.
     prisma.fixture.findMany({
@@ -344,6 +363,7 @@ export async function syncMatchEvents(): Promise<void> {
   const matches = [
     ...resolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false })),
     ...unresolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false })),
+    ...orphanedFinishedMatches.map((m) => ({ ...m, isFinalPass: true })),
     ...recentlyFinishedMatches.map((m) => ({ ...m, isFinalPass: true })),
   ];
 
