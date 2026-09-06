@@ -182,6 +182,22 @@
     "publicProfileHint": "Un perfil público muestra tu nombre, tu foto y tus favoritos a cualquier persona con el enlace — desactivado por defecto.",
     "viewPublicProfile": "Ver mi perfil público"
   },
+  "deleteAccount": {
+    "title": "Eliminar mi cuenta",
+    "metaDescription": "Cómo eliminar tu cuenta de RexFoot y tus datos personales.",
+    "warning": "Esta acción es definitiva. Tu cuenta, favoritos, comentarios y likes, y todos los datos asociados se eliminarán de inmediato y no podrán recuperarse.",
+    "dataDeleted": "Datos eliminados junto con tu cuenta: correo electrónico, contraseña, nombre público, foto de perfil, favoritos, comentarios y likes en vídeos, notificaciones.",
+    "confirmButton": "Eliminar mi cuenta",
+    "confirmPrompt": "¿Estás seguro? Esta acción no se puede deshacer.",
+    "confirmFinalButton": "Sí, eliminar definitivamente",
+    "cancelButton": "Cancelar",
+    "deletingButton": "Eliminando…",
+    "errorMessage": "Ha ocurrido un error. Inténtalo de nuevo, o escríbenos a la dirección de abajo.",
+    "loggedOutIntro": "Para eliminar tu cuenta de RexFoot y todos los datos personales asociados, inicia sesión y vuelve a esta página: la eliminación se hace en un solo clic.",
+    "loginCta": "Iniciar sesión",
+    "cantLogin": "Si ya no puedes iniciar sesión en tu cuenta, escríbenos a la dirección de abajo indicando el correo de tu cuenta. Eliminaremos tu cuenta y tus datos en un plazo de 30 días.",
+    "contactEmail": "footrexofficial@gmail.com"
+  },
   "profile": {
     "metaTitle": "Perfil de {name}",
     "memberSince": "Miembro desde {date}",

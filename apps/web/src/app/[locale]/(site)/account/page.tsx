@@ -12,6 +12,7 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { EmptyState } from "@/components/EmptyState";
 import { PublicLogoutButton } from "@/components/PublicLogoutButton";
 import { PublicProfileToggle } from "@/components/PublicProfileToggle";
+import { DeleteAccountButton } from "@/components/DeleteAccountButton";
 import { buildAlternates } from "@/lib/seo/alternates";
 
 export const dynamic = "force-dynamic";
@@ -22,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AccountPage() {
-  const t = await getTranslations("account");
+  const [t, tDelete] = await Promise.all([getTranslations("account"), getTranslations("deleteAccount")]);
   const user = await getCurrentUser();
   if (!user) {
     const locale = await getLocale();
@@ -101,6 +102,12 @@ export default async function AccountPage() {
             )}
           </div>
         )}
+      </section>
+
+      <section className="space-y-2">
+        <h2 className="font-display text-lg font-bold text-rf-fg">{tDelete("title")}</h2>
+        <p className="text-sm text-rf-fg-subtle">{tDelete("warning")}</p>
+        <DeleteAccountButton />
       </section>
     </div>
   );

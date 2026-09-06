@@ -182,6 +182,22 @@
     "publicProfileHint": "A public profile shows your name, photo and favorites to anyone with the link — off by default.",
     "viewPublicProfile": "View my public profile"
   },
+  "deleteAccount": {
+    "title": "Delete my account",
+    "metaDescription": "How to delete your RexFoot account and personal data.",
+    "warning": "This action is permanent. Your account, favorites, comments and likes, and all associated data will be deleted immediately and cannot be recovered.",
+    "dataDeleted": "Data deleted with your account: email address, password, display name, profile picture, favorites, video comments and likes, notifications.",
+    "confirmButton": "Delete my account",
+    "confirmPrompt": "Are you sure? This action cannot be undone.",
+    "confirmFinalButton": "Yes, delete permanently",
+    "cancelButton": "Cancel",
+    "deletingButton": "Deleting…",
+    "errorMessage": "Something went wrong. Try again, or email us at the address below.",
+    "loggedOutIntro": "To delete your RexFoot account and all associated personal data, sign in and come back to this page: deletion is one click away.",
+    "loginCta": "Sign in",
+    "cantLogin": "If you can no longer sign in to your account, email us at the address below with your account's email address. We will delete your account and data within 30 days.",
+    "contactEmail": "footrexofficial@gmail.com"
+  },
   "profile": {
     "metaTitle": "{name}'s profile",
     "memberSince": "Member since {date}",

@@ -74,6 +74,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { pathname: "/signup", changeFrequency: "yearly", priority: 0.3 },
       { pathname: "/mentions-legales", changeFrequency: "yearly", priority: 0.2 },
       { pathname: "/confidentialite", changeFrequency: "yearly", priority: 0.2 },
+      { pathname: "/supprimer-mon-compte", changeFrequency: "yearly", priority: 0.2 },
     ]),
     ...expand(
       competitions.map((c) => ({ pathname: `/competitions/${c.slug}`, lastModified: c.updatedAt, priority: 0.7 })),
