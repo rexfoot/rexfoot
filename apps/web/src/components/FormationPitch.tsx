@@ -97,6 +97,15 @@ const NUMBER_BADGE_CLASS: Record<Side, string> = {
   away: "bg-amber-500 text-rf-bg",
 };
 
+// Sur le pitch même (contrairement au banc ci-dessous), le numéro n'est plus
+// un badge rond superposé à la photo mais un simple chiffre coloré devant le
+// nom (convention Google : "23 Omar El Hilali") — plus propre, sans rien
+// cacher du visage du joueur.
+const NUMBER_TEXT_CLASS: Record<Side, string> = {
+  home: "text-blue-400",
+  away: "text-amber-400",
+};
+
 // Lignes de 5 joueurs (défenses à trois/back-five) : avatar réduit d'un cran
 // pour ne jamais déborder sur les téléphones étroits (~360px de large).
 type AvatarSize = "normal" | "compact";
@@ -105,13 +114,9 @@ const AVATAR_SIZE_CLASS: Record<AvatarSize, string> = {
   normal: "h-16 w-16 sm:h-24 sm:w-24",
   compact: "h-12 w-12 sm:h-16 sm:w-16",
 };
-const BADGE_SIZE_CLASS: Record<AvatarSize, string> = {
-  normal: "h-6 w-6 text-xs sm:h-8 sm:w-8 sm:text-sm",
-  compact: "h-5 w-5 text-[11px] sm:h-6 sm:w-6 sm:text-xs",
-};
 const NAME_SIZE_CLASS: Record<AvatarSize, string> = {
-  normal: "max-w-[80px] text-xs sm:max-w-[130px] sm:text-sm",
-  compact: "max-w-[62px] text-[11px] sm:max-w-[96px] sm:text-xs",
+  normal: "max-w-[88px] text-xs sm:max-w-[136px] sm:text-sm",
+  compact: "max-w-[68px] text-[11px] sm:max-w-[104px] sm:text-xs",
 };
 const ICON_SIZE: Record<AvatarSize, [number, number]> = {
   normal: [32, 44],
@@ -122,30 +127,20 @@ function PlayerAvatar({ player, side, size }: { player: LineupPlayer; side: Side
   const [iconSm, iconLg] = ICON_SIZE[size];
   return (
     <div className="flex flex-col items-center gap-1.5">
-      <div className="relative">
-        <div className={cn("flex items-center justify-center overflow-hidden rounded-full border-2 border-white/90 bg-rf-bg-elevated shadow-lg", AVATAR_SIZE_CLASS[size])}>
-          {player.photoUrl ? (
-            <Image src={player.photoUrl} alt={player.name} width={96} height={96} className="h-full w-full object-cover" unoptimized />
-          ) : (
-            <>
-              <User size={iconSm} className="text-rf-fg-subtle sm:hidden" strokeWidth={1.5} />
-              <User size={iconLg} className="hidden text-rf-fg-subtle sm:block" strokeWidth={1.5} />
-            </>
-          )}
-        </div>
-        {player.number !== null && (
-          <span
-            className={cn(
-              "absolute -bottom-1 -right-1 flex items-center justify-center rounded-full font-bold",
-              BADGE_SIZE_CLASS[size],
-              NUMBER_BADGE_CLASS[side],
-            )}
-          >
-            {player.number}
-          </span>
+      <div className={cn("flex items-center justify-center overflow-hidden rounded-full border-2 border-white/90 bg-rf-bg-elevated shadow-lg", AVATAR_SIZE_CLASS[size])}>
+        {player.photoUrl ? (
+          <Image src={player.photoUrl} alt={player.name} width={96} height={96} className="h-full w-full object-cover" unoptimized />
+        ) : (
+          <>
+            <User size={iconSm} className="text-rf-fg-subtle sm:hidden" strokeWidth={1.5} />
+            <User size={iconLg} className="hidden text-rf-fg-subtle sm:block" strokeWidth={1.5} />
+          </>
         )}
       </div>
-      <span className={cn("truncate text-center font-semibold text-white drop-shadow-sm", NAME_SIZE_CLASS[size])}>{shortName(player.name)}</span>
+      <span className={cn("block truncate text-center drop-shadow-sm", NAME_SIZE_CLASS[size])}>
+        {player.number !== null && <span className={cn("font-bold", NUMBER_TEXT_CLASS[side])}>{player.number} </span>}
+        <span className="font-semibold text-white">{shortName(player.name)}</span>
+      </span>
     </div>
   );
 }
@@ -170,14 +165,8 @@ export function FormationPitch({ home, away }: { home: LineupSummary; away: Line
   if (homeRows.length === 0 && awayRows.length === 0) return null;
 
   return (
-    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl bg-gradient-to-b from-green-800 via-green-700 to-green-800 shadow-2xl ring-1 ring-white/10">
-      {/* Bandes de tonte, purement décoratives */}
-      <div className="pointer-events-none absolute inset-0">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className={cn("absolute inset-x-0 h-1/6", i % 2 === 0 ? "bg-white/[0.04]" : "")} style={{ top: `${i * (100 / 6)}%` }} />
-        ))}
-      </div>
-      {/* Lignes du terrain, purement décoratives */}
+    <div className="relative aspect-[3/4] w-full overflow-hidden rounded-3xl bg-green-800 shadow-2xl ring-1 ring-white/10">
+      {/* Lignes du terrain, purement décoratives — fond plat façon Google, sans texture de tonte */}
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <div className="absolute inset-2 rounded-sm border-2 border-white/70" />
         <div className="absolute left-1/2 right-0 top-1/2 h-0.5 -translate-x-1/2 -translate-y-1/2 bg-white/70" style={{ width: "calc(100% - 1rem)" }} />
@@ -185,8 +174,6 @@ export function FormationPitch({ home, away }: { home: LineupSummary; away: Line
         <div className="absolute left-1/2 top-2 h-16 w-32 -translate-x-1/2 border-2 border-t-0 border-white/70" />
         <div className="absolute bottom-2 left-1/2 h-16 w-32 -translate-x-1/2 border-2 border-b-0 border-white/70" />
       </div>
-      {/* Vignette de stade, purement décorative */}
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.35)_100%)]" />
 
       <div className="relative flex h-1/2 flex-col justify-around py-3 sm:py-5">
         {awayRows.map((row, i) => (
