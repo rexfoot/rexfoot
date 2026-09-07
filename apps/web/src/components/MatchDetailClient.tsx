@@ -10,6 +10,7 @@ import { MatchCard } from "./MatchCard";
 import { FormBadge } from "./FormBadge";
 import { FormationPitch, SubstitutesList, filterActiveSubstitutes } from "./FormationPitch";
 import { GoalCelebration } from "./GoalCelebration";
+import { LiveAudioPlayer } from "./LiveAudioPlayer";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
 import { bestKnownMinute } from "@/lib/match-minute";
@@ -97,6 +98,8 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
           <MatchScorers events={match.events} teamId={match.awayTeam.id} align="end" />
         </div>
       </div>
+
+      <LiveAudioPlayer />
 
       <QuickTabs match={match} />
     </div>

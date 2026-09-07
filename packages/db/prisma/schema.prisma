@@ -881,3 +881,13 @@ model AuditLog {
 
   @@index([targetType, targetId])
 }
+
+/// Ligne unique (id fixe "singleton") pilotant le lecteur audio YouTube Live
+/// affiché sur les pages match. Pas de détection automatique via l'API YouTube
+/// Data v3 pour l'instant (demande explicite de Hicham, 2026-09-07 : toggle
+/// manuel en attendant) — isLive est basculé à la main depuis /admin/live-audio.
+model LiveAudioStream {
+  id        String   @id @default("singleton")
+  isLive    Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+}

@@ -50,6 +50,9 @@ export const CACHE_TTL_SECONDS = {
  */
 export const LIVE_POLL_INTERVAL_MS = 10_000;
 
+/** Poll du statut du commentaire audio en direct (toggle admin) sur les pages match — pas de socket dédié, juste un booléen, un intervalle plus large que LIVE_POLL_INTERVAL_MS suffit. */
+export const LIVE_AUDIO_POLL_INTERVAL_MS = 20_000;
+
 /**
  * Fenêtre (heures) pendant laquelle un article marqué isBreaking=true est
  * effectivement traité comme urgent (bandeau, badge) après sa publication —

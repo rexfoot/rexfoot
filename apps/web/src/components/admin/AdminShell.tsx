@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Newspaper, ArrowLeftRight, Film, Users, UserCog } from "lucide-react";
+import { LayoutDashboard, Newspaper, ArrowLeftRight, Film, Users, UserCog, Radio } from "lucide-react";
 import type { UserRole } from "@rexfoot/db";
 import { can } from "@/lib/auth/permissions";
 import { LogoutButton } from "./LogoutButton";
@@ -14,7 +14,7 @@ interface NavEntry {
   href: string;
   icon: typeof LayoutDashboard;
   /** Omis = visible pour tous les rôles admin. */
-  requires?: "viewNews" | "viewTransfers" | "viewVideos" | "manageUsers";
+  requires?: "viewNews" | "viewTransfers" | "viewVideos" | "manageUsers" | "manageLiveAudio";
 }
 
 const NAV_ITEMS: NavEntry[] = [
@@ -22,6 +22,7 @@ const NAV_ITEMS: NavEntry[] = [
   { label: "Actualités", href: "/admin/news", icon: Newspaper, requires: "viewNews" },
   { label: "Mercato", href: "/admin/transfers", icon: ArrowLeftRight, requires: "viewTransfers" },
   { label: "Vidéos", href: "/admin/videos", icon: Film, requires: "viewVideos" },
+  { label: "Direct audio", href: "/admin/live-audio", icon: Radio, requires: "manageLiveAudio" },
   { label: "Utilisateurs", href: "/admin/users", icon: Users, requires: "manageUsers" },
   { label: "Mon compte", href: "/admin/account", icon: UserCog },
 ];

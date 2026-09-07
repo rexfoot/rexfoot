@@ -34,6 +34,7 @@ export const PERMISSIONS = {
   manageVideos: ["ADMIN", "EDITOR", "MODERATOR"],
   viewVideos: ["ADMIN", "EDITOR", "MODERATOR", "ANALYST"],
   manageUsers: ["ADMIN"],
+  manageLiveAudio: ["ADMIN"],
 } satisfies Record<string, UserRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;
