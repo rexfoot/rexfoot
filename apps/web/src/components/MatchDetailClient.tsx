@@ -173,7 +173,7 @@ function QuickTabs({ match }: { match: MatchDetail }) {
   );
 }
 
-/** Style Sofascore : un seul pitch partagé (extérieur en haut, domicile en bas), demandé par Hicham le 2026-09-05. */
+/** Style Sofascore/Google : un seul pitch partagé (extérieur en haut, domicile en bas), demandé par Hicham le 2026-09-05, agrandi et enrichi d'événements le 2026-09-07. */
 function CompositionPanel({ match }: { match: MatchDetail }) {
   const t = useTranslations("matches");
   const rawHome = match.lineups.find((l) => l.teamId === match.homeTeam.id);
@@ -187,14 +187,17 @@ function CompositionPanel({ match }: { match: MatchDetail }) {
   const away = filterActiveSubstitutes(rawAway, match.events);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <TeamFormationHeader team={match.awayTeam} formation={away.formation} matchId={match.id} competitionSlug={match.competition.slug} />
-      <FormationPitch home={home} away={away} />
+      <FormationPitch home={home} away={away} events={match.events} />
       <TeamFormationHeader team={match.homeTeam} formation={home.formation} matchId={match.id} competitionSlug={match.competition.slug} />
 
-      <div className="grid grid-cols-1 gap-4 border-t border-rf-border pt-4 sm:grid-cols-2">
-        <SubstitutesList lineup={home} side="home" />
-        <SubstitutesList lineup={away} side="away" />
+      <div className="border-t border-rf-border pt-4">
+        <h3 className="mb-3 text-center text-xs font-bold uppercase tracking-widest text-rf-fg-subtle">{t("bench")}</h3>
+        <div className="grid grid-cols-2 gap-3 sm:gap-6">
+          <SubstitutesList lineup={home} side="home" events={match.events} team={match.homeTeam} />
+          <SubstitutesList lineup={away} side="away" events={match.events} team={match.awayTeam} />
+        </div>
       </div>
     </div>
   );
@@ -212,9 +215,9 @@ function TeamFormationHeader({
   competitionSlug: string;
 }) {
   return (
-    <div className="flex items-center gap-2 text-sm font-semibold text-rf-fg">
-      <TeamGoogleLink team={team} matchId={matchId} competitionSlug={competitionSlug} surface="lineup" size="sm" />
-      {formation && <span className="font-normal text-rf-fg-subtle">({formation})</span>}
+    <div className="flex items-center justify-center gap-2 text-base font-bold text-rf-fg">
+      <TeamGoogleLink team={team} matchId={matchId} competitionSlug={competitionSlug} surface="lineup" size="md" />
+      {formation && <span className="rounded-full bg-rf-bg-elevated px-2.5 py-0.5 text-xs font-semibold text-rf-fg-subtle">{formation}</span>}
     </div>
   );
 }

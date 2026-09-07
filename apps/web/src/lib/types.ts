@@ -7,9 +7,14 @@ export interface MatchEventSummary {
   minute: number;
   extraMinute: number | null;
   teamId: string;
-  /** Buteur/joueur sanctionné, ou joueur ENTRANT pour une SUBSTITUTION. */
+  /**
+   * Buteur/joueur sanctionné, ou joueur qui SORT pour une SUBSTITUTION.
+   * Corrigé le 2026-09-07 : vérifié sur un match réel (RCD Espanyol–Sevilla)
+   * en croisant chaque event de sub avec titulaires/remplaçants — le nom du
+   * champ suggère l'inverse, voir FormationPitch.tsx (getPlayerEvents).
+   */
   detail: string | null;
-  /** Joueur SORTANT — uniquement renseigné pour une SUBSTITUTION. */
+  /** Joueur qui ENTRE — uniquement renseigné pour une SUBSTITUTION (voir la note sur `detail` ci-dessus). */
   detailOut: string | null;
 }
 

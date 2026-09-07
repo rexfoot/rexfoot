@@ -114,9 +114,12 @@ function eventKey(type: string, minute: number, extraMinute: number | null, team
  * L'équipe est résolue par comparaison de nom (jamais d'id Highlightly côté
  * équipe stocké chez nous) ; le joueur n'est jamais résolu vers notre table
  * Player (aucune correspondance d'id fiable entre fournisseurs) — son nom est
- * stocké tel quel dans `detail` (buteur/sanctionné, ou joueur ENTRANT pour une
- * SUBSTITUTION) et `detailOut` (joueur SORTANT, uniquement pour une
- * SUBSTITUTION) — voir les badges d'événements sur MatchCard.tsx.
+ * stocké tel quel dans `detail` (buteur/sanctionné, ou joueur qui SORT pour
+ * une SUBSTITUTION) et `detailOut` (joueur qui ENTRE, uniquement pour une
+ * SUBSTITUTION) — voir les badges d'événements sur MatchCard.tsx. Sémantique
+ * contre-intuitive (le nom des champs Highlightly `player`/`substituted`
+ * suggère l'inverse) vérifiée le 2026-09-07 sur un match réel, voir
+ * apps/web/src/components/FormationPitch.tsx.
  *
  * Notifie aussi les rédacteurs (demandé par Hicham le 2026-09-05) pour tout
  * BUT réellement nouveau depuis le dernier cycle — jamais pour les autres
