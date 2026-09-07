@@ -42,7 +42,7 @@ export async function generateMetadata({
     },
     twitter: { card: "summary_large_image", title: t("title"), description: t("description") },
     icons: { icon: "/favicon.ico", apple: `/${locale}/apple-icon.png` },
-    verification: { google: "2XBaY5zTQbk39aUgVQLhQOfZRmRnYxBMDRPKZ2S3Yao" },
+    verification: { google: "fb3QYMo5tbpDvbzF5eEU2jD9WUlkpa4Quui4Xeud_MU" },
   };
 }
 
