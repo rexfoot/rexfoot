@@ -3,6 +3,7 @@ import {
   createHighlightlyClientIfConfigured,
   type HighlightlyClient,
   type HighlightlyEvent,
+  type HighlightlyLineupPlayer,
   type HighlightlyTeamLineup,
 } from "@rexfoot/football-provider";
 import { logger } from "../lib/logger.js";
@@ -175,8 +176,8 @@ async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events
         minute,
         extraMinute,
         teamId,
-        detail: event.player,
-        detailOut: type === "SUBSTITUTION" ? event.substituted : null,
+        detail: decodeHtmlEntities(event.player),
+        detailOut: type === "SUBSTITUTION" ? decodeHtmlEntities(event.substituted) : null,
       },
     });
   }
@@ -188,8 +189,35 @@ interface FlatLineupPlayer {
   position: string | null;
 }
 
+// Bug réel constaté en prod (2026-09-07, Everton-Manchester United) : Highlightly
+// renvoie certains noms de joueurs déjà échappés HTML (ex. "O&apos;Brien" au lieu
+// de "O'Brien") -- probablement un artefact côté fournisseur, un template HTML
+// jamais déséchappé avant d'atterrir dans leur JSON. Affiché tel quel côté React
+// (texte, pas innerHTML), l'entité reste visible littéralement. Décodé une seule
+// fois ici, à la frontière avec le fournisseur, pour que toutes les données
+// stockées (compositions, événements) soient déjà propres.
+const HTML_ENTITIES: Record<string, string> = {
+  "&apos;": "'",
+  "&#39;": "'",
+  "&#x27;": "'",
+  "&quot;": '"',
+  "&amp;": "&",
+  "&lt;": "<",
+  "&gt;": ">",
+  "&nbsp;": " ",
+};
+
+function decodeHtmlEntities<T extends string | null>(value: T): T {
+  if (!value) return value;
+  return value.replace(/&(apos|#39|#x27|quot|amp|lt|gt|nbsp);/g, (m) => HTML_ENTITIES[m] ?? m) as T;
+}
+
 function flattenLineup(team: HighlightlyTeamLineup): FlatLineupPlayer[] {
-  return team.initialLineup.flat().map((p) => ({ name: p.name, number: p.number, position: p.position }));
+  return team.initialLineup.flat().map((p) => ({ name: decodeHtmlEntities(p.name), number: p.number, position: p.position }));
+}
+
+function decodeSubstitutes(players: HighlightlyLineupPlayer[]): HighlightlyLineupPlayer[] {
+  return players.map((p) => ({ ...p, name: decodeHtmlEntities(p.name) }));
 }
 
 /** Une composition ne change jamais une fois le match commencé — jamais refetchée si déjà connue. */
@@ -216,12 +244,12 @@ async function syncLineupsIfMissing(
         teamId,
         formation: team.formation,
         startingXI: flattenLineup(team) as unknown as Prisma.InputJsonValue,
-        substitutes: team.substitutes as unknown as Prisma.InputJsonValue,
+        substitutes: decodeSubstitutes(team.substitutes) as unknown as Prisma.InputJsonValue,
       },
       update: {
         formation: team.formation,
         startingXI: flattenLineup(team) as unknown as Prisma.InputJsonValue,
-        substitutes: team.substitutes as unknown as Prisma.InputJsonValue,
+        substitutes: decodeSubstitutes(team.substitutes) as unknown as Prisma.InputJsonValue,
       },
     });
   }
