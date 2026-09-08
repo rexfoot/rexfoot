@@ -59,6 +59,22 @@ function sameTeam(a: string, b: string): boolean {
   return na === nb || na.includes(nb) || nb.includes(na);
 }
 
+// Bug réel constaté en prod (2026-09-08) : football-data.org modélise les
+// compétitions internationales avec une "area" continentale ("Europe" pour la
+// Ligue des champions, "World" pour la Coupe du monde) au lieu d'un vrai pays.
+// Passé tel quel à findMatchId (voir son commentaire dans highlightly.ts :
+// countryName doit être absent pour une compétition internationale), ce
+// pseudo-pays fait échouer la recherche en silence — highlightlyId ne se
+// résout jamais, donc ni minute en direct, ni composition, pour AUCUN match de
+// Ligue des champions (constaté sur PAE AEK-LASK Linz et Club Brugge-Aston
+// Villa, tous deux LIVE avec highlightlyId toujours null).
+const NON_COUNTRY_AREA_NAMES = new Set(["Europe", "World"]);
+
+function highlightlyCountryName(countryName: string | null): string | undefined {
+  if (!countryName || NON_COUNTRY_AREA_NAMES.has(countryName)) return undefined;
+  return countryName;
+}
+
 /**
  * Best-effort : un type d'événement Highlightly non reconnu est ignoré (log
  * debug) plutôt que de faire échouer toute la synchro d'un match pour un seul
@@ -422,7 +438,7 @@ export async function syncMatchEvents(): Promise<boolean> {
           match.homeTeam.name,
           match.awayTeam.name,
           match.kickoffAt.toISOString(),
-          match.competition.countryName,
+          highlightlyCountryName(match.competition.countryName),
         );
         if (!highlightlyId) {
           logger.warn({ fixtureId: match.id, home: match.homeTeam.name, away: match.awayTeam.name }, "Match introuvable chez Highlightly, ignoré");
