@@ -1,6 +1,7 @@
 import { prisma, type FixtureEventType, type Prisma } from "@rexfoot/db";
 import {
   createHighlightlyClientIfConfigured,
+  sameTeamName,
   type HighlightlyClient,
   type HighlightlyEvent,
   type HighlightlyLineupPlayer,
@@ -53,11 +54,7 @@ const LOOKUP_RETRY_COOLDOWN_MS = 30 * 60 * 1000;
 const FINAL_EVENTS_RECHECK_DELAY_MS = 105 * 60 * 1000;
 const FINAL_EVENTS_RECHECK_WINDOW_MS = 4 * 60 * 60 * 1000;
 
-const normalize = (s: string) => s.toLowerCase().trim();
-function sameTeam(a: string, b: string): boolean {
-  const [na, nb] = [normalize(a), normalize(b)];
-  return na === nb || na.includes(nb) || nb.includes(na);
-}
+const sameTeam = sameTeamName;
 
 // Bug réel constaté en prod (2026-09-08) : football-data.org modélise les
 // compétitions internationales avec une "area" continentale ("Europe" pour la
@@ -74,6 +71,21 @@ function highlightlyCountryName(countryName: string | null): string | undefined 
   if (!countryName || NON_COUNTRY_AREA_NAMES.has(countryName)) return undefined;
   return countryName;
 }
+
+// Ids de compétition Highlightly (propres, distincts de football-data.org)
+// pour les 4 compétitions internationales de FEATURED_COMPETITION_SLUGS —
+// vérifiés en direct le 2026-09-09 (voir le commentaire de `findMatchId`
+// dans highlightly.ts pour l'incident qui a motivé cette table). Sans elle,
+// `highlightlyCountryName` renvoyant `undefined` pour ces compétitions
+// forçait une recherche sur les matchs du monde entier, plafonnée à 300
+// résultats — un but/carton/composition pouvait ne jamais apparaître pour un
+// match tombé au-delà de ce plafond, sans aucune erreur visible.
+const HIGHLIGHTLY_LEAGUE_ID_BY_SLUG: Record<string, number> = {
+  "champions-league": 2486,
+  "europa-league": 3337,
+  "european-championship": 4188,
+  "world-cup": 1635,
+};
 
 /**
  * Best-effort : un type d'événement Highlightly non reconnu est ignoré (log
@@ -342,7 +354,7 @@ export async function syncMatchEvents(): Promise<boolean> {
     minute: true,
     homeTeam: { select: { id: true, name: true } },
     awayTeam: { select: { id: true, name: true } },
-    competition: { select: { countryName: true } },
+    competition: { select: { countryName: true, slug: true } },
   } as const;
 
   const now = new Date();
@@ -434,11 +446,13 @@ export async function syncMatchEvents(): Promise<boolean> {
         }
 
         await prisma.fixture.update({ where: { id: match.id }, data: { highlightlyLookupAttemptedAt: new Date() } });
+        const leagueId = HIGHLIGHTLY_LEAGUE_ID_BY_SLUG[match.competition.slug];
         highlightlyId = await client.findMatchId(
           match.homeTeam.name,
           match.awayTeam.name,
           match.kickoffAt.toISOString(),
-          highlightlyCountryName(match.competition.countryName),
+          leagueId ? undefined : highlightlyCountryName(match.competition.countryName),
+          leagueId,
         );
         if (!highlightlyId) {
           logger.warn({ fixtureId: match.id, home: match.homeTeam.name, away: match.awayTeam.name }, "Match introuvable chez Highlightly, ignoré");

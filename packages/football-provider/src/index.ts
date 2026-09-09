@@ -16,6 +16,7 @@ export { RedisCachingProvider } from "./cache/redisCachingProvider";
 export {
   HighlightlyClient,
   HighlightlyProviderError,
+  sameTeamName,
   type HighlightlyEvent,
   type HighlightlyLineups,
   type HighlightlyLineupPlayer,

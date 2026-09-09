@@ -9,6 +9,39 @@
 
 const BASE_URL = "https://sport-highlights-api.p.rapidapi.com";
 
+// Mots génériques (suffixes/préfixes corporate + prépositions) à ignorer en
+// comparant un nom d'équipe Highlightly à un nom football-data.org — les deux
+// fournisseurs n'utilisent pas la même convention de nommage pour la même
+// équipe (ex. "Club Atlético de Madrid" chez football-data.org vs "Atlético
+// Madrid" chez Highlightly, "Sporting Clube de Portugal" vs "Sporting CP").
+// Bug réel constaté en prod (2026-09-09) : une simple comparaison par
+// sous-chaîne (sans retirer ces mots) échouait sur Atlético Madrid, Sporting
+// CP et Paris Saint-Germain (tiret vs espace) — highlightlyId ne se résolvait
+// jamais pour ces matchs malgré la bonne compétition/date, donc aucun
+// but/carton/composition synchronisé pour eux de toute la rencontre.
+const CLUB_NAME_STOPWORDS = new Set([
+  "fc", "cf", "sk", "cp", "sc", "ac", "afc", "fk", "club", "clube", "de", "do", "da",
+]);
+
+function normalizeTeamName(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "") // retire les accents (Š -> S, é -> e...)
+    .toLowerCase()
+    .replace(/[-.]/g, " ")
+    .split(/\s+/)
+    .filter((word) => word && !CLUB_NAME_STOPWORDS.has(word))
+    .join(" ")
+    .trim();
+}
+
+/** Compare deux noms d'équipe malgré des conventions de nommage différentes entre fournisseurs — voir CLUB_NAME_STOPWORDS. */
+export function sameTeamName(a: string, b: string): boolean {
+  const [na, nb] = [normalizeTeamName(a), normalizeTeamName(b)];
+  if (!na || !nb) return false;
+  return na === nb || na.includes(nb) || nb.includes(na);
+}
+
 export class HighlightlyProviderError extends Error {
   constructor(
     message: string,
@@ -111,26 +144,48 @@ export class HighlightlyClient {
    * match, donc aucun but/carton/composition jamais synchronisé de la
    * rencontre. Borné à MAX_PAGES pour ne pas exploser le quota journalier sur
    * un pays avec un nombre de matchs anormalement élevé.
+   *
+   * `leagueId` (optionnel) : passer l'id Highlightly de la compétition plutôt
+   * que `countryName` quand on le connaît — remplace le filtre pays par un
+   * filtre compétition directement dans la requête. Indispensable pour les
+   * compétitions internationales (Europe/World ne sont pas de vrais pays,
+   * donc `countryName` est déjà omis pour elles par l'appelant — voir
+   * `highlightlyCountryName` dans syncMatchEvents.ts) : sans `leagueId`, la
+   * recherche portait sur TOUS les matchs du monde entier ce jour-là, et le
+   * plafond MAX_PAGES (300 résultats) ratait les matchs qui n'y figuraient
+   * pas.
+   *
+   * Double bug réel constaté en prod (2026-09-09, soirée Ligue des Champions
+   * à 4 matchs simultanés à 19h) : Liverpool-Atlético, Sporting-Galatasaray
+   * et PSG-Slovan Bratislava sont restés sans le moindre événement toute la
+   * rencontre (highlightlyId jamais résolu, 0 but affiché malgré un score
+   * exact) alors que Napoli-Arsenal, tombé plus tôt dans le classement
+   * mondial de ce jour-là, avait bien été trouvé. `leagueId` seul n'aurait
+   * pas suffi : `sameTeamName` (voir plus haut) échouait aussi sur ces trois
+   * matchs précis ("Club Atlético de Madrid" vs "Atlético Madrid", "Sporting
+   * Clube de Portugal" vs "Sporting CP", tiret vs espace pour Paris
+   * Saint-Germain) — une simple comparaison par sous-chaîne n'absorbe pas ces
+   * écarts de nommage entre football-data.org et Highlightly. Les deux fixes
+   * (leagueId + sameTeamName) étaient nécessaires ensemble.
    */
   async findMatchId(
     homeTeamName: string,
     awayTeamName: string,
     dateISO: string,
     countryName?: string | null,
+    leagueId?: number,
   ): Promise<number | null> {
     const date = dateISO.slice(0, 10);
-    const normalize = (s: string) => s.toLowerCase().trim();
-    const sameTeam = (a: string, b: string) => {
-      const [na, nb] = [normalize(a), normalize(b)];
-      return na === nb || na.includes(nb) || nb.includes(na);
-    };
+    const sameTeam = (a: string, b: string) => sameTeamName(a, b);
 
     const PAGE_SIZE = 100;
     const MAX_PAGES = 3;
     for (let page = 0; page < MAX_PAGES; page++) {
       const result = await this.request<{ data: HighlightlyMatchSearchResult[]; pagination?: { totalCount: number } }>(
         "/football/matches",
-        { date, countryName: countryName ?? undefined, offset: String(page * PAGE_SIZE), limit: String(PAGE_SIZE) },
+        leagueId
+          ? { date, leagueId: String(leagueId), offset: String(page * PAGE_SIZE), limit: String(PAGE_SIZE) }
+          : { date, countryName: countryName ?? undefined, offset: String(page * PAGE_SIZE), limit: String(PAGE_SIZE) },
       );
 
       const match = result.data.find(
