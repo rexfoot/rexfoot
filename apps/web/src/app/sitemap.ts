@@ -47,7 +47,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   const [teams, players, competitions, videos, articles, matches] = await Promise.all([
     prisma.team.findMany({ select: { slug: true, updatedAt: true } }),
-    prisma.player.findMany({ select: { slug: true, updatedAt: true } }),
+    // Sans ce filtre, tous les joueurs jamais synchronisés (partis depuis
+    // longtemps inclus) finissent dans le sitemap : ~2800 joueurs × 3 langues,
+    // 89% des URLs du sitemap, qui dilue le budget de crawl de Google au
+    // détriment des articles/pages à forte valeur.
+    prisma.player.findMany({
+      select: { slug: true, updatedAt: true },
+      where: { teamMemberships: { some: { leftAt: null } } },
+    }),
     prisma.competition.findMany({ select: { slug: true, updatedAt: true }, where: { isActive: true } }),
     prisma.video.findMany({
       select: { slug: true, updatedAt: true },
