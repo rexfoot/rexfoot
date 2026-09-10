@@ -5,6 +5,7 @@ import { requirePermission, apiError } from "@/lib/api-response";
 import { storeImageAsset, deleteAssetFromUrl, AssetUploadError } from "@/lib/data/assets";
 import { notifyBreakingNews } from "@/lib/data/notifications-admin";
 import { NEWS_CATEGORY_VALUES } from "@/lib/news-categories";
+import { publishToFacebook } from "@/lib/social/facebook";
 import { textToHtml } from "@/lib/text-to-html";
 
 const fieldsSchema = z.object({
@@ -88,6 +89,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     status === "PUBLISHED" && isBreaking && (existing.status !== "PUBLISHED" || breakingSince !== existing.breakingSince);
   if (justBecameBreaking) {
     await notifyBreakingNews(updated);
+  }
+
+  // Ne poste sur Facebook qu'au moment où l'article devient publié pour la
+  // première fois — jamais à chaque modification d'un article déjà publié.
+  const justPublished = status === "PUBLISHED" && existing.status !== "PUBLISHED";
+  if (justPublished) {
+    await publishToFacebook({ title: updated.title, slug: updated.slug, summary: updated.summary });
   }
 
   return NextResponse.json({ ok: true });
