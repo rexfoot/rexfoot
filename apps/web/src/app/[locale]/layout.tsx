@@ -100,6 +100,13 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
       dir={isRtl(locale) ? "rtl" : "ltr"}
       className={`${inter.variable} ${outfit.variable} h-full antialiased`}
     >
+      <head>
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4763917863811490"
+          crossOrigin="anonymous"
+        ></script>
+      </head>
       <body className="min-h-full">
         <script
           type="application/ld+json"
