@@ -1,5 +1,9 @@
 import { Queue } from "bullmq";
+import { prisma } from "@rexfoot/db";
+import { getActiveProviderName } from "@rexfoot/football-provider";
 import { createBullMqConnection } from "./lib/redis.js";
+
+const PROVIDER_NAME = getActiveProviderName();
 
 export const SYNC_QUEUE_NAME = "rexfoot-sync";
 
@@ -197,8 +201,40 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
   );
 }
 
+// Petite marge après le coup d'envoi théorique avant de vérifier : laisse le
+// temps au fournisseur de basculer son propre statut, évite de taper juste
+// avant et de devoir attendre un cycle idle complet en plus si le fournisseur
+// n'a pas encore mis à jour.
+const KICKOFF_CHECK_BUFFER_MS = 5 * 1000;
+
+/**
+ * En cadence idle, ne pas attendre bêtement l'intervalle complet
+ * (LIVE_SCORES_INTERVAL_IDLE_MS) si un coup d'envoi connu tombe avant —
+ * sinon un match qui démarre pendant cette fenêtre reste affiché "à venir"
+ * jusqu'à 3 min après avoir réellement commencé (bug régulièrement signalé
+ * par Hicham à chaque nouvelle journée de matchs : "les matchs ont commencé
+ * et RexFoot n'affiche rien"). Complète le filet de rattrapage réactif de
+ * `kickoffPending` dans syncLiveScores.ts, qui ne peut lui-même se déclencher
+ * qu'AU check suivant — celui-ci vise à avancer ce check au bon moment plutôt
+ * que de découvrir le retard après coup.
+ */
+async function nextKnownKickoffDelayMs(defaultDelayMs: number): Promise<number> {
+  const next = await prisma.fixture.findFirst({
+    where: {
+      provider: PROVIDER_NAME,
+      status: "SCHEDULED",
+      kickoffAt: { gt: new Date(), lte: new Date(Date.now() + defaultDelayMs) },
+    },
+    orderBy: { kickoffAt: "asc" },
+    select: { kickoffAt: true },
+  });
+  if (!next) return defaultDelayMs;
+  return Math.max(next.kickoffAt.getTime() - Date.now() + KICKOFF_CHECK_BUFFER_MS, KICKOFF_CHECK_BUFFER_MS);
+}
+
 export async function scheduleNextLiveScoresRun(queue: Queue, hadLiveMatches: boolean): Promise<void> {
-  const delay = hadLiveMatches ? LIVE_SCORES_INTERVAL_DURING_MATCHES_MS : LIVE_SCORES_INTERVAL_IDLE_MS;
+  const defaultDelay = hadLiveMatches ? LIVE_SCORES_INTERVAL_DURING_MATCHES_MS : LIVE_SCORES_INTERVAL_IDLE_MS;
+  const delay = hadLiveMatches ? defaultDelay : await nextKnownKickoffDelayMs(defaultDelay);
   await queue.add(
     JobName.syncLiveScores,
     {},

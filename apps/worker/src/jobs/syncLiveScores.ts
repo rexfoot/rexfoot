@@ -269,9 +269,27 @@ export async function syncLiveScores(): Promise<boolean> {
     where: { provider: PROVIDER_NAME, status: { in: ["LIVE", "HALFTIME"] } },
   });
 
+  // Bug régulièrement signalé par Hicham à chaque nouvelle journée de matchs
+  // ("les matchs ont commencé et RexFoot n'affiche rien") : un match dont le
+  // coup d'envoi réel est déjà passé reste SCHEDULED chez nous jusqu'à ce que
+  // getLiveScores() le confirme LIVE — et tant que stillLiveCount reste à 0,
+  // la cadence retombe sur l'intervalle idle (3 min, voir scheduler.ts), donc
+  // jusqu'à 3 min d'affichage "à venir" après un coup d'envoi déjà visible
+  // ailleurs (Sofascore). Ce signal force la cadence rapide dès que le coup
+  // d'envoi est passé, sans attendre la confirmation LIVE. Borné à
+  // MAX_CUP_MATCH_DURATION_MS pour ignorer un match reporté dont le
+  // kickoffAt n'a jamais été mis à jour (sinon cadence rapide indéfiniment).
+  const kickoffPending = await prisma.fixture.count({
+    where: {
+      provider: PROVIDER_NAME,
+      status: "SCHEDULED",
+      kickoffAt: { lte: new Date(), gte: new Date(Date.now() - MAX_CUP_MATCH_DURATION_MS) },
+    },
+  });
+
   logger.info(
-    { count: liveFixtures.length, resolved: staleLive.length, finalScoreCorrections: corrected, forcedFinished, stillLiveCount },
+    { count: liveFixtures.length, resolved: staleLive.length, finalScoreCorrections: corrected, forcedFinished, stillLiveCount, kickoffPending },
     "Scores en direct synchronisés",
   );
-  return stillLiveCount > 0;
+  return stillLiveCount > 0 || kickoffPending > 0;
 }
