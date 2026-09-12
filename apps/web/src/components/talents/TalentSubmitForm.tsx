@@ -152,6 +152,11 @@ export function TalentSubmitForm() {
         >
           {t("confirmation.whatsappCta")}
         </a>
+        {/* La confusion réelle ("pas d'endroit pour la vidéo") vient de ce que
+            le bouton ci-dessus ouvre juste WhatsApp avec un texte prérempli —
+            joindre le fichier vidéo est une étape manuelle DANS WhatsApp,
+            jamais évidente sans cette précision explicite. */}
+        <p className="rounded-xl border border-rf-border bg-rf-bg-elevated p-3 text-sm font-medium text-rf-fg">{t("confirmation.attachHint")}</p>
         <p className="text-xs text-rf-fg-subtle">{t("confirmation.videoRules")}</p>
         <Link href="/talents" className="block text-sm font-semibold text-rf-orange">
           {t("confirmation.backHome")}

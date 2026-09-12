@@ -229,6 +229,7 @@
     "confirmation": {
       "title": "Ton profil a bien été envoyé !",
       "body": "Il ne reste qu'une étape : envoie ta vidéo de présentation sur WhatsApp pour que l'équipe RexFoot puisse valider ton profil.",
+      "attachHint": "Une fois WhatsApp ouvert : appuie sur le trombone 📎 pour joindre ton fichier vidéo à ce message, puis envoie.",
       "whatsappCta": "📲 Envoyer ma vidéo sur WhatsApp",
       "videoRules": "Vidéo maximum 5 minutes. Présente-toi simplement (nom, âge, poste…) puis montre tes meilleures actions.",
       "whatsappMessageTemplate": "Bonjour RexFoot, je souhaite présenter mon profil dans RexFoot Talents.\n\nNom : {lastName}\nPrénom : {firstName}\nÂge : {age}\nNationalité : {nationality}\nPays actuel : {currentCountry}\nVille : {city}\nPoste : {position}\nClub : {club}\nStatut : {situation}\nPays recherchés : {targetCountries}\n\nJe joins ma vidéo.",
