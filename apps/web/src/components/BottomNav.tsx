@@ -11,6 +11,7 @@ import { cn } from "@/lib/cn";
 export function BottomNav() {
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const items = NAV_ITEMS.filter((item) => !item.hideInBottomNav);
 
   return (
     <nav
@@ -19,7 +20,7 @@ export function BottomNav() {
       aria-label="Navigation principale"
     >
       <ul className="flex items-stretch justify-around">
-        {NAV_ITEMS.map((item) => {
+        {items.map((item) => {
           const Icon = NAV_ICONS[item.icon];
           const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
           const accent = NAV_ACCENT[item.icon];

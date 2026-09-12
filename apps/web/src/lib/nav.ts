@@ -1,6 +1,15 @@
 export interface NavItem {
   href: string;
   icon: "home" | "matches" | "standings" | "portraits" | "video" | "news" | "talents" | "more";
+  /**
+   * Masqué dans BottomNav (mobile) uniquement — utilisé pour Talents,
+   * qui a déjà son propre raccourci dans MobileHeader (icône étoile, en
+   * haut) depuis le 2026-09-12. Demandé par Hicham pour libérer une place
+   * dans la barre du bas, déjà chargée (Portraits vient d'y arriver).
+   * Sidebar (desktop, pas de raccourci équivalent en haut) ignore ce champ
+   * et affiche toujours l'entrée.
+   */
+  hideInBottomNav?: boolean;
 }
 
 /**
@@ -20,5 +29,5 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/portraits", icon: "portraits" },
   { href: "/video", icon: "video" },
   { href: "/news", icon: "news" },
-  { href: "/talents", icon: "talents" },
+  { href: "/talents", icon: "talents", hideInBottomNav: true },
 ];
