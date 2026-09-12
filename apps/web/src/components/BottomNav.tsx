@@ -19,7 +19,10 @@ export function BottomNav() {
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       aria-label="Navigation principale"
     >
-      <ul className="flex items-stretch justify-around">
+      {/* gap-1 : sans ça, 6 items en flex-1 se touchent bord à bord sur les
+          petits écrans (constaté par Hicham entre "Classements" et
+          "Portraits", les deux libellés les plus longs). */}
+      <ul className="flex items-stretch justify-around gap-1">
         {items.map((item) => {
           const Icon = NAV_ICONS[item.icon];
           const isActive = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -29,7 +32,7 @@ export function BottomNav() {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex flex-col items-center gap-1 px-0.5 py-2.5 text-[10px] font-medium transition-colors",
+                  "flex flex-col items-center gap-1 px-1 py-2.5 text-[10px] font-medium transition-colors",
                   isActive ? accent.text : "text-rf-fg-muted",
                 )}
                 aria-current={isActive ? "page" : undefined}
