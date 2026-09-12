@@ -117,6 +117,14 @@
     "noArticles": "Aún no hay análisis publicados",
     "noArticlesDescription": "Los análisis tácticos y a fondo de RexFoot llegarán aquí próximamente."
   },
+  "portraits": {
+    "title": "Retratos",
+    "subtitle": "Las mejores historias de jugadores, protagonista del mes.",
+    "metaDescription": "Retratos e historias de jugadores destacados del fútbol internacional, seleccionados por RexFoot.",
+    "badge": "Retrato",
+    "noArticles": "Aún no hay retratos publicados",
+    "noArticlesDescription": "Los próximos retratos y protagonistas del mes aparecerán aquí."
+  },
   "mercato": {
     "title": "Mercado",
     "metaDescription": "Todos los rumores y fichajes oficiales del mercado de fútbol, con su nivel de fiabilidad.",
@@ -363,7 +371,7 @@
     "home": "Inicio",
     "matches": "Partidos",
     "standings": "Clasificaciones",
-    "mercato": "Mercado",
+    "portraits": "Retratos",
     "video": "Vídeo",
     "news": "Actualidad",
     "talents": "Talentos",

@@ -38,6 +38,30 @@ export async function getAnalysisArticles(limit = PAGE_SIZE_DEFAULT) {
   });
 }
 
+/**
+ * Portraits — remplace Mercato dans le menu principal (demandé par Hicham le
+ * 2026-09-12 : aucun trafic sur /mercato, alors que les rumeurs de transfert
+ * peuvent toujours être publiées comme un article normal, catégorie
+ * TRANSFERTS). Même principe que getAnalysisArticles, filtrée sur
+ * NewsCategory.PORTRAITS.
+ */
+export async function getPortraitArticles(limit = PAGE_SIZE_DEFAULT) {
+  return prisma.newsArticle.findMany({
+    where: { status: "PUBLISHED", publishedAt: { not: null }, category: "PORTRAITS" },
+    orderBy: { publishedAt: "desc" },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      summary: true,
+      coverImageUrl: true,
+      publishedAt: true,
+      category: true,
+    },
+    take: limit,
+  });
+}
+
 export async function getNewsArticleBySlug(slug: string) {
   return prisma.newsArticle.findFirst({
     where: { slug, status: "PUBLISHED" },

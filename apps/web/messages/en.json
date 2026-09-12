@@ -117,6 +117,14 @@
     "noArticles": "No analysis published yet",
     "noArticlesDescription": "RexFoot's tactical breakdowns and in-depth analysis will show up here soon."
   },
+  "portraits": {
+    "title": "Portraits",
+    "subtitle": "The best player stories, spotlight of the month.",
+    "metaDescription": "Portraits and standout player stories from international football, curated by RexFoot.",
+    "badge": "Portrait",
+    "noArticles": "No portrait published yet",
+    "noArticlesDescription": "The next player portraits and spotlights will show up here."
+  },
   "mercato": {
     "title": "Transfers",
     "metaDescription": "All official football transfers and rumors, with their reliability level.",
@@ -363,7 +371,7 @@
     "home": "Home",
     "matches": "Matches",
     "standings": "Standings",
-    "mercato": "Transfers",
+    "portraits": "Portraits",
     "video": "Video",
     "news": "News",
     "talents": "Talents",

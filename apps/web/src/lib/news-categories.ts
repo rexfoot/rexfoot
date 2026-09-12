@@ -7,6 +7,7 @@ export const NEWS_CATEGORY_LABELS: Record<NewsCategory, string> = {
   INTERVIEWS: "Interviews",
   COMPETITIONS: "Compétitions",
   INTERNATIONAL: "International",
+  PORTRAITS: "Portraits",
   AUTRE: "Autre",
 };
 

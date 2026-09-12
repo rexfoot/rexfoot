@@ -79,8 +79,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { pathname: "/talents/decouvrir", changeFrequency: "daily", priority: 0.7 },
       { pathname: "/talents/recruteurs", changeFrequency: "weekly", priority: 0.5 },
       { pathname: "/analysis", changeFrequency: "daily", priority: 0.7 },
+      { pathname: "/portraits", changeFrequency: "daily", priority: 0.7 },
       { pathname: "/classements", changeFrequency: "daily", priority: 0.7 },
-      { pathname: "/mercato", changeFrequency: "hourly", priority: 0.7 },
+      // Retiré du menu principal le 2026-09-12 (voir lib/nav.ts) mais la page
+      // et ses données existent toujours — priorité abaissée plutôt que
+      // supprimée, l'URL reste valide et indexable.
+      { pathname: "/mercato", changeFrequency: "weekly", priority: 0.4 },
       { pathname: "/login", changeFrequency: "yearly", priority: 0.3 },
       { pathname: "/signup", changeFrequency: "yearly", priority: 0.3 },
       { pathname: "/mentions-legales", changeFrequency: "yearly", priority: 0.2 },
