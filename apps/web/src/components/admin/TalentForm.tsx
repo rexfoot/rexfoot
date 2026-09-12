@@ -70,6 +70,7 @@ interface TalentFormInitial {
   contactConsentGiven: boolean;
   status: TalentModerationStatus;
   videoId: string | null;
+  videoPlaybackUrl: string | null;
 }
 
 interface TalentFormProps {
@@ -275,6 +276,20 @@ export function TalentForm({ talentId, initial }: TalentFormProps) {
         />
         Le joueur autorise l&apos;affichage d&apos;un bouton WhatsApp direct sur son profil
       </label>
+
+      {initial.videoPlaybackUrl && (
+        <FieldGroup label="Vidéo actuelle" hint="Reçue via YouTube (lien fourni par le joueur) ou via WhatsApp puis ré-uploadée — vérifie le contenu avant de valider le profil.">
+          <div className="overflow-hidden rounded-2xl bg-rf-bg-elevated">
+            <iframe
+              src={initial.videoPlaybackUrl}
+              title="Vidéo du joueur"
+              allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+              allowFullScreen
+              className="aspect-video w-full border-0"
+            />
+          </div>
+        </FieldGroup>
+      )}
 
       <TalentVideoUpload talentId={talentId} hasExistingVideo={Boolean(initial.videoId)} />
 

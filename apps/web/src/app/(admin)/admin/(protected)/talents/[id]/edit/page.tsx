@@ -44,6 +44,7 @@ export default async function AdminTalentEditPage({ params }: PageProps) {
           contactConsentGiven: talent.contactConsentGiven,
           status: talent.status,
           videoId: talent.videoId,
+          videoPlaybackUrl: talent.video?.playbackUrl ?? null,
         }}
       />
     </div>

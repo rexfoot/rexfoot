@@ -13,6 +13,7 @@ import {
   targetCountryFlagUrl,
   targetCountryName,
 } from "@/lib/talents/target-countries";
+import { parseYoutubeVideoId } from "@/lib/talents/youtube";
 
 const TALENT_POSITIONS = [
   "GOALKEEPER",
@@ -54,6 +55,12 @@ export function TalentSubmitForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
+  const [videoSubmitted, setVideoSubmitted] = useState(false);
+  // YouTube par défaut (demandé par Hicham le 2026-09-12 : télécharger puis
+  // ré-uploader chaque vidéo WhatsApp ne tient pas à l'échelle) — WhatsApp
+  // reste un repli pour qui n'a pas de compte YouTube.
+  const [videoMethod, setVideoMethod] = useState<"youtube" | "whatsapp">("youtube");
+  const [videoUrl, setVideoUrl] = useState("");
 
   const age = useMemo(() => computeAge(dateOfBirth), [dateOfBirth]);
   const isMinor = age !== null && age < MINOR_AGE_THRESHOLD;
@@ -84,6 +91,10 @@ export function TalentSubmitForm() {
       setError(t("form.requiredTargetCountry"));
       return;
     }
+    if (videoMethod === "youtube" && !parseYoutubeVideoId(videoUrl)) {
+      setError(t("form.videoUrlInvalid"));
+      return;
+    }
 
     const payload = {
       firstName: String(formData.get("firstName") ?? "").trim(),
@@ -104,6 +115,7 @@ export function TalentSubmitForm() {
       contactConsentGiven: formData.get("contactConsentGiven") === "on",
       consentGiven,
       parentConsentGiven,
+      videoUrl: videoMethod === "youtube" ? videoUrl.trim() : undefined,
     };
 
     setSubmitting(true);
@@ -115,6 +127,15 @@ export function TalentSubmitForm() {
     if (!response.ok) {
       const body = await response.json().catch(() => null);
       setError(body?.error ?? t("form.error"));
+      setSubmitting(false);
+      return;
+    }
+
+    const body = (await response.json().catch(() => null)) as { hasVideo?: boolean } | null;
+    if (body?.hasVideo) {
+      // Lien YouTube déjà attaché à la création : plus besoin de WhatsApp,
+      // le profil part directement en modération avec sa vidéo.
+      setVideoSubmitted(true);
       setSubmitting(false);
       return;
     }
@@ -137,6 +158,19 @@ export function TalentSubmitForm() {
     });
     setWhatsappUrl(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`);
     setSubmitting(false);
+  }
+
+  if (videoSubmitted) {
+    return (
+      <div className="mx-auto max-w-lg space-y-5 px-4 py-10 text-center">
+        <CheckCircle2 size={40} className="mx-auto text-rf-success" />
+        <h1 className="font-display text-2xl font-bold text-rf-fg">{t("confirmation.title")}</h1>
+        <p className="text-base text-rf-fg-muted">{t("confirmation.videoReceivedBody")}</p>
+        <Link href="/talents" className="block text-sm font-semibold text-rf-orange">
+          {t("confirmation.backHome")}
+        </Link>
+      </div>
+    );
   }
 
   if (whatsappUrl) {
@@ -306,6 +340,58 @@ export function TalentSubmitForm() {
           />
           {t("openToAny")}
         </label>
+      </section>
+
+      <section className="space-y-3">
+        <h2 className="text-sm font-bold uppercase tracking-wide text-rf-fg-subtle">{t("form.sectionVideo")}</h2>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <label
+            className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-sm font-medium transition-colors ${
+              videoMethod === "youtube" ? "border-rf-orange bg-rf-orange/10 text-rf-fg" : "border-rf-border text-rf-fg-muted"
+            }`}
+          >
+            <input
+              type="radio"
+              name="videoMethod"
+              value="youtube"
+              checked={videoMethod === "youtube"}
+              onChange={() => setVideoMethod("youtube")}
+              className="h-4 w-4 accent-rf-orange"
+            />
+            {t("form.videoMethodYoutube")}
+          </label>
+          <label
+            className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-sm font-medium transition-colors ${
+              videoMethod === "whatsapp" ? "border-rf-orange bg-rf-orange/10 text-rf-fg" : "border-rf-border text-rf-fg-muted"
+            }`}
+          >
+            <input
+              type="radio"
+              name="videoMethod"
+              value="whatsapp"
+              checked={videoMethod === "whatsapp"}
+              onChange={() => setVideoMethod("whatsapp")}
+              className="h-4 w-4 accent-rf-orange"
+            />
+            {t("form.videoMethodWhatsapp")}
+          </label>
+        </div>
+
+        {videoMethod === "youtube" ? (
+          <FieldGroup label={t("form.videoUrlLabel")} htmlFor="videoUrl" hint={t("form.videoUrlHint")}>
+            <AdminInput
+              id="videoUrl"
+              name="videoUrl"
+              type="url"
+              placeholder="https://youtube.com/watch?v=..."
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              required
+            />
+          </FieldGroup>
+        ) : (
+          <p className="text-sm text-rf-fg-muted">{t("form.videoMethodWhatsappHint")}</p>
+        )}
       </section>
 
       <section className="space-y-4">

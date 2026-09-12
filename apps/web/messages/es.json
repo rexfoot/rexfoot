@@ -224,10 +224,18 @@
       "submit": "Enviar mi perfil",
       "submitting": "Enviando…",
       "error": "Ha ocurrido un error, revisa el formulario e inténtalo de nuevo.",
-      "requiredTargetCountry": "Elige al menos un país, o «abierto a cualquier oportunidad»."
+      "requiredTargetCountry": "Elige al menos un país, o «abierto a cualquier oportunidad».",
+      "sectionVideo": "Vídeo de presentación",
+      "videoMethodYoutube": "🎥 Tengo un enlace de YouTube",
+      "videoMethodWhatsapp": "📲 Prefiero enviarlo por WhatsApp",
+      "videoUrlLabel": "Enlace de tu vídeo de YouTube",
+      "videoUrlHint": "Ponlo como «no listado» en YouTube si no quieres que sea público en otro sitio — solo RexFoot accederá a través de este enlace.",
+      "videoUrlInvalid": "Esto no parece una URL de YouTube válida.",
+      "videoMethodWhatsappHint": "Podrás enviarlo justo después de enviar este formulario."
     },
     "confirmation": {
       "title": "¡Tu perfil se ha enviado correctamente!",
+      "videoReceivedBody": "¡Tu vídeo se ha recibido correctamente! Tu perfil está ahora pendiente de revisión por el equipo de RexFoot.",
       "body": "Solo falta un paso: envía tu vídeo de presentación por WhatsApp para que el equipo de RexFoot pueda validar tu perfil.",
       "attachHint": "Una vez abierto WhatsApp: pulsa el clip 📎 para adjuntar tu archivo de vídeo a este mensaje y envíalo.",
       "attachStep1": "Pulsa el clip",

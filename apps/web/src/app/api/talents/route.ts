@@ -4,6 +4,7 @@ import { prisma } from "@rexfoot/db";
 import { apiError, enforceRateLimit } from "@/lib/api-response";
 import { generateUniqueTalentSlug } from "@/lib/data/talents-admin";
 import { TARGET_COUNTRIES } from "@/lib/talents/target-countries";
+import { parseYoutubeVideoId, youtubeEmbedUrl } from "@/lib/talents/youtube";
 
 const TALENT_POSITIONS = [
   "GOALKEEPER",
@@ -41,6 +42,11 @@ const bodySchema = z
     contactConsentGiven: z.boolean().default(false),
     consentGiven: z.boolean(),
     parentConsentGiven: z.boolean().default(false),
+    // Optionnel : si absent, le joueur passe par le repli WhatsApp existant
+    // (vidéo attachée manuellement dans la conversation, admin la reprend
+    // ensuite via /admin/talents). Demandé par Hicham (2026-09-12) pour éviter
+    // à l'admin de devoir télécharger puis ré-uploader chaque vidéo reçue.
+    videoUrl: z.string().trim().optional(),
   })
   .refine((data) => data.targetCountries.length > 0 || data.openToAnyCountry, {
     message: "Choisis au moins un pays, ou « ouvert à toutes les opportunités ».",
@@ -78,11 +84,38 @@ export async function POST(request: Request) {
     return apiError(400, "Le consentement du parent ou représentant légal est obligatoire pour un mineur.");
   }
 
+  let youtubeVideoId: string | null = null;
+  if (data.videoUrl) {
+    youtubeVideoId = parseYoutubeVideoId(data.videoUrl);
+    if (!youtubeVideoId) {
+      return apiError(400, "Le lien YouTube n'est pas valide. Vérifie que tu as bien copié l'URL complète de ta vidéo.");
+    }
+  }
+
   const slug = await generateUniqueTalentSlug(data.firstName, data.lastName);
+
+  // Créée avant le profil car TalentProfile.videoId la référence — jamais
+  // approuvée automatiquement (moderationStatus PENDING) : c'est le contenu
+  // le plus important à vérifier avant publication, un lien YouTube valide ne
+  // garantit rien sur ce qu'il contient réellement.
+  const video = youtubeVideoId
+    ? await prisma.video.create({
+        data: {
+          title: `${data.firstName} ${data.lastName} — RexFoot Talents`,
+          slug: `talent-${slug}`,
+          providerName: "youtube",
+          providerAssetId: youtubeVideoId,
+          playbackUrl: youtubeEmbedUrl(youtubeVideoId),
+          status: "READY",
+          moderationStatus: "PENDING",
+        },
+      })
+    : null;
 
   const profile = await prisma.talentProfile.create({
     data: {
       slug,
+      videoId: video?.id,
       firstName: data.firstName,
       lastName: data.lastName,
       dateOfBirth: data.dateOfBirth,
@@ -107,5 +140,5 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ ok: true, id: profile.id });
+  return NextResponse.json({ ok: true, id: profile.id, hasVideo: Boolean(video) });
 }
