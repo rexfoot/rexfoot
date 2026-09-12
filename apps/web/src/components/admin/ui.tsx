@@ -21,13 +21,15 @@ interface FieldGroupProps {
   htmlFor?: string;
   hint?: string;
   children: ReactNode;
+  /** Override de couleur du label — ex. "text-rf-orange" pour faire ressortir un champ critique (voir le lien vidéo sur le formulaire Talents). */
+  labelClassName?: string;
 }
 
 /** Bloc label + champ + astuce optionnelle — unité de base de tous les formulaires admin. */
-export function FieldGroup({ label, htmlFor, hint, children }: FieldGroupProps) {
+export function FieldGroup({ label, htmlFor, hint, children, labelClassName }: FieldGroupProps) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-sm font-semibold text-rf-fg">
+      <label htmlFor={htmlFor} className={cn("mb-1.5 block text-sm font-semibold text-rf-fg", labelClassName)}>
         {label}
       </label>
       {children}

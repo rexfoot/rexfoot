@@ -287,7 +287,12 @@ export function TalentSubmitForm() {
           sur YouTube, voir YoutubeUploadGuide. */}
       <section className="space-y-3">
         <h2 className="text-sm font-bold uppercase tracking-wide text-rf-fg-subtle">{t("form.sectionVideo")}</h2>
-        <FieldGroup label={t("form.videoUrlLabel")} htmlFor="videoUrl" hint={t("confirmation.videoRules")}>
+        <FieldGroup
+          label={t("form.videoUrlLabel")}
+          htmlFor="videoUrl"
+          hint={t("confirmation.videoRules")}
+          labelClassName="text-rf-orange"
+        >
           <AdminInput
             id="videoUrl"
             name="videoUrl"
@@ -296,6 +301,7 @@ export function TalentSubmitForm() {
             value={videoUrl}
             onChange={(e) => setVideoUrl(e.target.value)}
             required
+            className="border-rf-orange/40 focus:border-rf-orange"
           />
         </FieldGroup>
         <p className="text-xs text-rf-fg-subtle">{t("form.videoUrlHint")}</p>
