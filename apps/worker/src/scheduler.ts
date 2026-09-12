@@ -242,9 +242,20 @@ export async function scheduleNextLiveScoresRun(queue: Queue, hadLiveMatches: bo
   );
 }
 
-/** Même principe que scheduleNextLiveScoresRun, pour syncMatchEvents (voir MATCH_EVENTS_INTERVAL_*_MS). */
+/**
+ * Même principe que scheduleNextLiveScoresRun — mais le commentaire le disait
+ * déjà sans que le code le fasse (bug réel constaté en prod, 2026-09-12,
+ * Hicham : "minute" affichée jusqu'à ~6 min en retard). Cause : football-
+ * data.org ne renseigne quasiment jamais `minute` sur ce plan (voir
+ * syncLiveScores.ts) — c'est syncMatchEvents.ts (repli Highlightly) qui la
+ * pose, mais SANS ce réveil anticipé il restait bloqué sur son intervalle
+ * idle (10 min) jusqu'à 10 min après un coup d'envoi déjà détecté par
+ * syncLiveScores (qui, lui, se réveille au bon moment). Le score/statut
+ * apparaissaient à l'heure, la minute non.
+ */
 export async function scheduleNextMatchEventsRun(queue: Queue, hadLiveMatches: boolean): Promise<void> {
-  const delay = hadLiveMatches ? MATCH_EVENTS_INTERVAL_DURING_MATCHES_MS : MATCH_EVENTS_INTERVAL_IDLE_MS;
+  const defaultDelay = hadLiveMatches ? MATCH_EVENTS_INTERVAL_DURING_MATCHES_MS : MATCH_EVENTS_INTERVAL_IDLE_MS;
+  const delay = hadLiveMatches ? defaultDelay : await nextKnownKickoffDelayMs(defaultDelay);
   await queue.add(
     JobName.syncMatchEvents,
     {},
