@@ -231,6 +231,52 @@ async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events
   }
 }
 
+// Uniquement GOAL/PENALTY ici, jamais OWN_GOAL : sans confirmation du sens
+// d'attribution des CSG chez Highlightly (le camp qui EN BÉNÉFICIE ou celui
+// du joueur fautif), les compter à tort ferait empirer un score déjà juste
+// plutôt que corriger un vrai retard — voir le commentaire de la fonction.
+const SAFE_SCORE_EVENT_TYPES: readonly FixtureEventType[] = ["GOAL", "PENALTY"];
+
+/**
+ * Bug réel constaté en prod (2026-09-12, Real Madrid-Rayo Vallecano) :
+ * football-data.org (source du score affiché, voir syncLiveScores.ts) restait
+ * bloqué à 1-0 alors que Highlightly listait déjà 2 buts pour le Real Madrid
+ * (pénalty Mbappé 14', but Carreras 17', les deux confirmés côté Highlightly
+ * brut) — Hicham l'a vu en direct ("les deux buts ne remontent pas").
+ * Highlightly n'est habituellement qu'un enrichissement (minute, compositions,
+ * stats), jamais la source du score — mais rien n'empêchait déjà de compter
+ * ses propres buts recensés comme garde-fou de fraîcheur : ne corrige que
+ * vers le HAUT (jamais une régression, au cas où Highlightly serait lui-même
+ * en retard ou aurait un but en double), jamais utilisé pour FAIRE BAISSER un
+ * score déjà avancé chez football-data.org.
+ */
+async function correctScoreFromEventsIfBehind(
+  fixtureId: string,
+  teams: MatchTeams,
+  events: HighlightlyEvent[],
+  currentHomeScore: number | null,
+  currentAwayScore: number | null,
+): Promise<void> {
+  let homeGoals = 0;
+  let awayGoals = 0;
+  for (const event of events) {
+    const type = mapEventType(event.type);
+    if (!type || !SAFE_SCORE_EVENT_TYPES.includes(type)) continue;
+    if (sameTeam(event.team.name, teams.homeTeamName)) homeGoals += 1;
+    else awayGoals += 1;
+  }
+
+  const homeScore = Math.max(currentHomeScore ?? 0, homeGoals);
+  const awayScore = Math.max(currentAwayScore ?? 0, awayGoals);
+  if (homeScore === currentHomeScore && awayScore === currentAwayScore) return;
+
+  logger.warn(
+    { fixtureId, before: `${currentHomeScore}-${currentAwayScore}`, after: `${homeScore}-${awayScore}` },
+    "Score corrigé depuis les événements Highlightly (football-data.org en retard)",
+  );
+  await prisma.fixture.update({ where: { id: fixtureId }, data: { homeScore, awayScore } });
+}
+
 interface FlatLineupPlayer {
   name: string;
   number: number | null;
@@ -383,6 +429,8 @@ export async function syncMatchEvents(): Promise<boolean> {
     highlightlyLookupAttemptedAt: true,
     status: true,
     minute: true,
+    homeScore: true,
+    awayScore: true,
     homeTeam: { select: { id: true, name: true } },
     awayTeam: { select: { id: true, name: true } },
     competition: { select: { countryName: true, slug: true } },
@@ -536,6 +584,20 @@ export async function syncMatchEvents(): Promise<boolean> {
         { fixtureId: match.id, events: events.length, finalPass: match.isFinalPass },
         "Événements de match synchronisés (Highlightly)",
       );
+
+      // Uniquement en direct, jamais lors de la passe finale (post-match) :
+      // celle-ci concerne la correction d'événements déjà connus (VAR...), pas
+      // un rattrapage de score qui pourrait entrer en conflit avec une
+      // correction tardive légitime de football-data.org (voir
+      // finalizeRecentMatches dans syncLiveScores.ts).
+      if (!match.isFinalPass) {
+        try {
+          await correctScoreFromEventsIfBehind(match.id, teams, events, match.homeScore, match.awayScore);
+        } catch (cause) {
+          logger.warn({ fixtureId: match.id, cause }, "Échec de correction du score depuis les événements, ignoré");
+        }
+      }
+
       emitFixtureUpdate(match.id);
 
       if (match.isFinalPass) {
