@@ -9,7 +9,9 @@ export async function publishToFacebook(article: { title: string; slug: string; 
   const accessToken = process.env.FACEBOOK_PAGE_ACCESS_TOKEN;
 
   if (!pageId || !accessToken) {
-    console.error("Facebook auto-publish: faltan variables de entorno, se omite.");
+    console.error(
+      `[Facebook] Variables FACEBOOK_PAGE_ID / FACEBOOK_PAGE_ACCESS_TOKEN manquantes — publication ignorée pour "${article.slug}".`,
+    );
     return;
   }
 
@@ -26,11 +28,17 @@ export async function publishToFacebook(article: { title: string; slug: string; 
     const res = await fetch(url, { method: "POST", body });
     const data = await res.json();
     if (!res.ok) {
-      console.error("Error publicando en Facebook:", data);
+      // Erreur Graph API (token expiré/révoqué, permission manquante, contenu
+      // refusé, etc.) : `data.error` contient toujours un message exploitable
+      // côté Meta — on le loggue en entier plutôt que de le résumer.
+      console.error(
+        `[Facebook] Échec de publication pour "${article.slug}" (HTTP ${res.status}):`,
+        JSON.stringify(data),
+      );
     } else {
-      console.log("Publicado en Facebook, post id:", data.id);
+      console.log(`[Facebook] Article "${article.slug}" publié avec succès (post id: ${data.id}).`);
     }
   } catch (err) {
-    console.error("Fallo de red publicando en Facebook:", err);
+    console.error(`[Facebook] Erreur réseau lors de la publication de "${article.slug}":`, err);
   }
 }
