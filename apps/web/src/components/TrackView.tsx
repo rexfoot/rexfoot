@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 
 interface TrackViewProps {
-  entityType: "ARTICLE" | "VIDEO" | "TEAM" | "PLAYER";
+  entityType: "ARTICLE" | "VIDEO" | "TEAM" | "PLAYER" | "TALENT_PROFILE";
   entityId: string;
 }
 

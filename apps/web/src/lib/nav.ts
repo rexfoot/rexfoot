@@ -1,6 +1,6 @@
 export interface NavItem {
   href: string;
-  icon: "home" | "matches" | "standings" | "mercato" | "video" | "news" | "more";
+  icon: "home" | "matches" | "standings" | "mercato" | "video" | "news" | "talents" | "more";
 }
 
 /**
@@ -15,4 +15,5 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/mercato", icon: "mercato" },
   { href: "/video", icon: "video" },
   { href: "/news", icon: "news" },
+  { href: "/talents", icon: "talents" },
 ];

@@ -150,6 +150,129 @@
     "scrollLeft": "Défiler vers la gauche",
     "scrollRight": "Défiler vers la droite"
   },
+  "talents": {
+    "metaDescription": "Découvrez le profil et la vidéo de {name}, joueur {nationality} actuellement en {country} à la recherche d'une nouvelle opportunité.",
+    "landing": {
+      "title": "REXFOOT TALENTS",
+      "subtitle": "Montre ton talent. Trouve ta prochaine opportunité.",
+      "metaDescription": "Présente gratuitement ton profil et ta vidéo sur RexFoot Talents et rends-toi visible auprès de clubs, recruteurs et professionnels du football.",
+      "pitch": "Tu recherches un club ou une nouvelle opportunité ? Présente gratuitement ton profil et ta vidéo sur RexFoot et rends ton profil visible auprès de clubs, recruteurs et professionnels du football.",
+      "ctaSubmit": "🎥 Présenter mon profil",
+      "ctaDiscover": "🔎 Découvrir les joueurs",
+      "freeNote": "100% gratuit pour les joueurs au lancement.",
+      "disclaimer": "RexFoot est une plateforme de visibilité et de découverte. RexFoot ne garantit pas qu'un joueur sera recruté."
+    },
+    "position": {
+      "GOALKEEPER": "Gardien",
+      "CENTRE_BACK": "Défenseur central",
+      "RIGHT_BACK": "Latéral droit",
+      "LEFT_BACK": "Latéral gauche",
+      "DEFENSIVE_MIDFIELDER": "Milieu défensif",
+      "CENTRE_MIDFIELDER": "Milieu central",
+      "ATTACKING_MIDFIELDER": "Milieu offensif",
+      "RIGHT_WINGER": "Ailier droit",
+      "LEFT_WINGER": "Ailier gauche",
+      "STRIKER": "Attaquant"
+    },
+    "foot": {
+      "LEFT": "Gauche",
+      "RIGHT": "Droit",
+      "BOTH": "Les deux"
+    },
+    "situation": {
+      "FREE_AGENT": "Sans club",
+      "IN_CLUB": "Je joue actuellement dans un club",
+      "SEEKING_CLUB": "Je recherche un nouveau club",
+      "CONTRACT_ENDING": "Je suis en fin de contrat"
+    },
+    "status": {
+      "PENDING": "En attente de validation",
+      "APPROVED": "Profil vérifié par RexFoot",
+      "REJECTED": "Refusé",
+      "HIDDEN": "Masqué"
+    },
+    "countryGroup": {
+      "northAfrica": "Afrique du Nord",
+      "gulf": "Moyen-Orient et Golfe",
+      "europe": "Europe"
+    },
+    "openToAny": "🌍 Je suis ouvert à toutes les opportunités",
+    "form": {
+      "title": "Présenter mon profil",
+      "metaDescription": "Présente ton profil et ta vidéo gratuitement sur RexFoot Talents en quelques minutes.",
+      "sectionPersonal": "Informations personnelles",
+      "firstName": "Prénom",
+      "lastName": "Nom",
+      "dateOfBirth": "Date de naissance",
+      "nationality": "Nationalité",
+      "currentCountry": "Pays où je vis actuellement",
+      "city": "Ville (facultatif)",
+      "sectionFootball": "Informations football",
+      "position": "Poste principal",
+      "secondaryPosition": "Poste secondaire (facultatif)",
+      "preferredFoot": "Pied fort",
+      "height": "Taille en cm (facultatif)",
+      "sectionSituation": "Quelle est votre situation actuelle ?",
+      "currentClub": "Nom du club",
+      "sectionTarget": "Où souhaitez-vous jouer ?",
+      "sectionConsent": "Consentement",
+      "consentText": "Je confirme que les informations et les vidéos que je transmets sont exactes et que j'ai le droit de les utiliser. J'autorise RexFoot à publier mon profil et ma vidéo dans RexFoot Talents.",
+      "minorNotice": "Ce joueur a moins de 18 ans : le consentement d'un parent ou représentant légal est obligatoire avant publication.",
+      "parentConsentText": "Je confirme être le parent ou le représentant légal de ce joueur mineur et j'autorise la publication de son profil et de sa vidéo.",
+      "whatsappNumber": "Numéro WhatsApp",
+      "contactConsent": "Autoriser RexFoot à afficher un bouton de contact WhatsApp direct sur mon profil public",
+      "submit": "Envoyer mon profil",
+      "submitting": "Envoi…",
+      "error": "Une erreur est survenue, vérifie le formulaire et réessaie.",
+      "requiredTargetCountry": "Choisis au moins un pays, ou « ouvert à toutes les opportunités »."
+    },
+    "confirmation": {
+      "title": "Ton profil a bien été envoyé !",
+      "body": "Il ne reste qu'une étape : envoie ta vidéo de présentation sur WhatsApp pour que l'équipe RexFoot puisse valider ton profil.",
+      "whatsappCta": "📲 Envoyer ma vidéo sur WhatsApp",
+      "videoRules": "Vidéo maximum 5 minutes. Présente-toi simplement (nom, âge, poste…) puis montre tes meilleures actions.",
+      "whatsappMessageTemplate": "Bonjour RexFoot, je souhaite présenter mon profil dans RexFoot Talents.\n\nNom : {lastName}\nPrénom : {firstName}\nÂge : {age}\nNationalité : {nationality}\nPays actuel : {currentCountry}\nVille : {city}\nPoste : {position}\nClub : {club}\nStatut : {situation}\nPays recherchés : {targetCountries}\n\nJe joins ma vidéo.",
+      "backHome": "Retour à RexFoot Talents"
+    },
+    "profile": {
+      "searchingFor": "🌍 Opportunités recherchées",
+      "about": "🎯 À propos du joueur",
+      "contactButton": "Contacter le joueur",
+      "contactViaWhatsapp": "Contacter sur WhatsApp",
+      "contactViaEmail": "Contacter via RexFoot",
+      "video": "🎥 Vidéo",
+      "noVideo": "Vidéo en cours de traitement.",
+      "verifiedBadge": "✓ Profil vérifié par RexFoot",
+      "pendingBadge": "Profil soumis",
+      "verifiedNote": "Ce badge signifie uniquement que le profil a été vérifié selon les critères de RexFoot — il ne garantit pas que le joueur sera recruté.",
+      "age": "{age} ans"
+    },
+    "discover": {
+      "title": "Découvrir les joueurs",
+      "metaDescription": "Découvrez des joueurs à la recherche d'une nouvelle opportunité, filtrés par pays, poste, âge et destination souhaitée.",
+      "searchPlaceholder": "Rechercher un joueur, un club, une nationalité…",
+      "filterCurrentCountry": "Pays actuel",
+      "filterNationality": "Nationalité",
+      "filterPosition": "Poste",
+      "filterSituation": "Statut",
+      "filterTargetCountry": "Pays recherché",
+      "filterAgeMin": "Âge min",
+      "searchButton": "Rechercher",
+      "filterAgeMax": "Âge max",
+      "filterAll": "Tous",
+      "noResultsTitle": "Aucun joueur ne correspond à ces critères",
+      "noResultsDescription": "Élargis tes filtres pour voir plus de profils.",
+      "viewProfile": "Voir le profil",
+      "resultsCount": "{count, plural, one {# joueur trouvé} other {# joueurs trouvés}}"
+    },
+    "recruiters": {
+      "title": "Vous êtes recruteur ?",
+      "metaDescription": "Découvrez des joueurs qui recherchent une nouvelle opportunité dans différents pays sur RexFoot Talents.",
+      "body": "Découvrez des joueurs qui recherchent une nouvelle opportunité dans différents pays.",
+      "cta": "Découvrir les joueurs",
+      "freeNote": "Accès gratuit au lancement."
+    }
+  },
   "auth": {
     "login": "Connexion",
     "emailLabel": "Email",
@@ -213,7 +336,8 @@
     "topArticle": "Article le plus lu",
     "topVideo": "Vidéo la plus regardée",
     "topTeam": "Club le plus consulté",
-    "topPlayer": "Joueur le plus recherché"
+    "topPlayer": "Joueur le plus recherché",
+    "topTalent": "Profil Talents le plus consulté"
   },
   "search": {
     "open": "Rechercher",
@@ -233,6 +357,7 @@
     "mercato": "Mercato",
     "video": "Vidéo",
     "news": "Actus",
+    "talents": "Talents",
     "login": "Se connecter",
     "account": "Mon compte"
   },

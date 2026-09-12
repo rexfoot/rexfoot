@@ -1,11 +1,11 @@
 import Image from "next/image";
 import { getTranslations } from "next-intl/server";
-import { TrendingUp, Newspaper, PlayCircle, Shield, User } from "lucide-react";
+import { TrendingUp, Newspaper, PlayCircle, Shield, User, Star } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { getTrending, type TrendingItem } from "@/lib/data/trending";
 import { EmptyState } from "@/components/EmptyState";
 
-const TYPE_ICON = { ARTICLE: Newspaper, VIDEO: PlayCircle, TEAM: Shield, PLAYER: User } as const;
+const TYPE_ICON = { ARTICLE: Newspaper, VIDEO: PlayCircle, TEAM: Shield, PLAYER: User, TALENT_PROFILE: Star } as const;
 
 /** Contenus les plus consultés sur 7 jours — jamais affiché tant qu'il n'y a pas de vraies vues (section 19 du plan). */
 export async function TrendingSection() {
@@ -20,6 +20,7 @@ export async function TrendingSection() {
     VIDEO: t("topVideo"),
     TEAM: t("topTeam"),
     PLAYER: t("topPlayer"),
+    TALENT_PROFILE: t("topTalent"),
   };
 
   if (items.length === 0) {

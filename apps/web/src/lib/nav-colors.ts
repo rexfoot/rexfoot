@@ -8,5 +8,6 @@ export const NAV_ACCENT: Record<NavItem["icon"], { text: string; bg: string }> =
   mercato: { text: "text-rf-mercato", bg: "bg-rf-mercato/15" },
   video: { text: "text-rf-video", bg: "bg-rf-video/15" },
   news: { text: "text-rf-news", bg: "bg-rf-news/15" },
+  talents: { text: "text-rf-orange", bg: "bg-rf-orange/15" },
   more: { text: "text-rf-gold", bg: "bg-rf-gold/15" },
 };

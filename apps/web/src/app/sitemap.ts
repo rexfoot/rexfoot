@@ -45,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const matchDateTo = new Date();
   matchDateTo.setDate(matchDateTo.getDate() + MATCH_WINDOW_DAYS_FUTURE);
 
-  const [teams, players, competitions, videos, articles, matches] = await Promise.all([
+  const [teams, players, competitions, videos, articles, talents, matches] = await Promise.all([
     prisma.team.findMany({ select: { slug: true, updatedAt: true } }),
     // Sans ce filtre, tous les joueurs jamais synchronisés (partis depuis
     // longtemps inclus) finissent dans le sitemap : ~2800 joueurs × 3 langues,
@@ -61,6 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       where: { moderationStatus: "APPROVED", publishedAt: { not: null } },
     }),
     prisma.newsArticle.findMany({ select: { slug: true, updatedAt: true }, where: { status: "PUBLISHED" } }),
+    prisma.talentProfile.findMany({ select: { slug: true, updatedAt: true }, where: { status: "APPROVED" } }),
     prisma.fixture.findMany({
       select: { id: true, updatedAt: true, status: true },
       where: { kickoffAt: { gte: matchDateFrom, lte: matchDateTo } },
@@ -74,6 +75,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { pathname: "/matches", changeFrequency: "always", priority: 0.9 },
       { pathname: "/video", changeFrequency: "hourly", priority: 0.8 },
       { pathname: "/news", changeFrequency: "hourly", priority: 0.8 },
+      { pathname: "/talents", changeFrequency: "daily", priority: 0.7 },
+      { pathname: "/talents/decouvrir", changeFrequency: "daily", priority: 0.7 },
+      { pathname: "/talents/recruteurs", changeFrequency: "weekly", priority: 0.5 },
       { pathname: "/analysis", changeFrequency: "daily", priority: 0.7 },
       { pathname: "/classements", changeFrequency: "daily", priority: 0.7 },
       { pathname: "/mercato", changeFrequency: "hourly", priority: 0.7 },
@@ -90,6 +94,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...expand(players.map((p) => ({ pathname: `/players/${p.slug}`, lastModified: p.updatedAt, priority: 0.5 }))),
     ...expand(videos.map((v) => ({ pathname: `/video/${v.slug}`, lastModified: v.updatedAt, priority: 0.5 }))),
     ...expand(articles.map((a) => ({ pathname: `/news/${a.slug}`, lastModified: a.updatedAt, priority: 0.5 }))),
+    ...expand(talents.map((tl) => ({ pathname: `/talents/${tl.slug}`, lastModified: tl.updatedAt, priority: 0.5 }))),
     ...expand(
       matches.map((m): RouteEntry => {
         const isLive = m.status === "LIVE" || m.status === "HALFTIME";

@@ -10,7 +10,7 @@ const VISITOR_COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 an
 const DEDUP_TTL_SECONDS = 30 * 60; // 30 min : un même visiteur ne recompte pas la même page en boucle
 
 const bodySchema = z.object({
-  entityType: z.enum(["ARTICLE", "VIDEO", "TEAM", "PLAYER"]),
+  entityType: z.enum(["ARTICLE", "VIDEO", "TEAM", "PLAYER", "TALENT_PROFILE"]),
   entityId: z.string().min(1),
 });
 

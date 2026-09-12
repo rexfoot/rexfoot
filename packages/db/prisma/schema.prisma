@@ -87,6 +87,7 @@ enum TrendingEntityType {
   VIDEO
   TEAM
   PLAYER
+  TALENT_PROFILE
 }
 
 enum VideoStatus {
@@ -170,11 +171,11 @@ model Competition {
   tier        Int             @default(100)
   isActive    Boolean         @default(true)
 
-  seasons               Season[]
+  seasons                Season[]
   teamCompetitionSeasons TeamCompetitionSeason[]
-  fixtures              Fixture[]
-  standings             Standing[]
-  news                  NewsArticle[]
+  fixtures               Fixture[]
+  standings              Standing[]
+  news                   NewsArticle[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -184,13 +185,13 @@ model Competition {
 }
 
 model Season {
-  id         String   @id @default(cuid())
+  id         String    @id @default(cuid())
   provider   String
   externalId String
   year       String
   startDate  DateTime?
   endDate    DateTime?
-  isCurrent  Boolean  @default(false)
+  isCurrent  Boolean   @default(false)
 
   competitionId String
   competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
@@ -220,17 +221,17 @@ model Team {
   venueCity   String?
   countryCode String?
 
-  competitionSeasons  TeamCompetitionSeason[]
-  playerMemberships   PlayerTeamMembership[]
-  homeFixtures        Fixture[]                @relation("HomeTeam")
-  awayFixtures        Fixture[]                @relation("AwayTeam")
-  standings           Standing[]
-  teamStatistics      TeamStatistics[]
-  playerStatistics    PlayerStatistics[]
-  lineups             Lineup[]
-  relatedNews         NewsArticle[]
-  relatedVideos       Video[]
-  fixtureEvents       FixtureEvent[]
+  competitionSeasons TeamCompetitionSeason[]
+  playerMemberships  PlayerTeamMembership[]
+  homeFixtures       Fixture[]               @relation("HomeTeam")
+  awayFixtures       Fixture[]               @relation("AwayTeam")
+  standings          Standing[]
+  teamStatistics     TeamStatistics[]
+  playerStatistics   PlayerStatistics[]
+  lineups            Lineup[]
+  relatedNews        NewsArticle[]
+  relatedVideos      Video[]
+  fixtureEvents      FixtureEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -262,13 +263,13 @@ model Player {
   /// code qui lit la nationalité d'un joueur doit préférer ce champ à `nationality`.
   nationalityOverride String?
 
-  teamMemberships  PlayerTeamMembership[]
-  statistics       PlayerStatistics[]
-  fixtureEvents    FixtureEvent[]           @relation("EventPlayer")
-  assistEvents     FixtureEvent[]           @relation("EventAssistPlayer")
-  relatedEvents    FixtureEvent[]           @relation("EventRelatedPlayer")
-  relatedNews      NewsArticle[]
-  relatedVideos    Video[]
+  teamMemberships PlayerTeamMembership[]
+  statistics      PlayerStatistics[]
+  fixtureEvents   FixtureEvent[]         @relation("EventPlayer")
+  assistEvents    FixtureEvent[]         @relation("EventAssistPlayer")
+  relatedEvents   FixtureEvent[]         @relation("EventRelatedPlayer")
+  relatedNews     NewsArticle[]
+  relatedVideos   Video[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -335,7 +336,7 @@ model Fixture {
   /// figé alors que le fournisseur avait corrigé en 1-0 plus d'une heure
   /// après la fin — notre sync ne revérifie jamais un match déjà FINISHED).
   /// Voir finalizeRecentMatches() dans syncLiveScores.ts.
-  finalScoreConfirmedAt DateTime?
+  finalScoreConfirmedAt  DateTime?
   /// Même principe que finalScoreConfirmedAt, mais pour les événements
   /// (buts/cartons) : un but refusé par la VAR après coup (ex. Carlos Espí,
   /// Betis-Real Madrid du 04/09/2026) reste enregistré comme un vrai but tant
@@ -348,7 +349,7 @@ model Fixture {
   /// fois par recherche nom d'équipe + date (voir apps/worker/src/jobs/
   /// syncMatchEvents.ts), puis mis en cache ici pour ne plus jamais refaire
   /// cette recherche : le quota gratuit (100 requêtes/jour) ne le permettrait pas.
-  highlightlyId Int? @unique
+  highlightlyId                Int?      @unique
   /// Dernière tentative (réussie ou non) de résolution de highlightlyId —
   /// null tant qu'aucune tentative n'a eu lieu. Bug réel constaté en prod
   /// (2026-09-05, journée à 11 matchs en direct simultanés) : sans ce champ,
@@ -386,54 +387,54 @@ model Fixture {
 }
 
 model FixtureEvent {
-  id            String           @id @default(cuid())
-  fixtureId     String
-  fixture       Fixture          @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
-  type          FixtureEventType
-  minute        Int
-  extraMinute   Int?
-  teamId        String
-  team          Team             @relation(fields: [teamId], references: [id])
+  id              String           @id @default(cuid())
+  fixtureId       String
+  fixture         Fixture          @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  type            FixtureEventType
+  minute          Int
+  extraMinute     Int?
+  teamId          String
+  team            Team             @relation(fields: [teamId], references: [id])
   playerId        String?
-  player          Player?  @relation("EventPlayer", fields: [playerId], references: [id])
+  player          Player?          @relation("EventPlayer", fields: [playerId], references: [id])
   assistPlayerId  String?
-  assistPlayer    Player?  @relation("EventAssistPlayer", fields: [assistPlayerId], references: [id])
+  assistPlayer    Player?          @relation("EventAssistPlayer", fields: [assistPlayerId], references: [id])
   relatedPlayerId String?
-  relatedPlayer   Player?  @relation("EventRelatedPlayer", fields: [relatedPlayerId], references: [id])
+  relatedPlayer   Player?          @relation("EventRelatedPlayer", fields: [relatedPlayerId], references: [id])
   // Nom brut (jamais résolu vers Player, voir syncMatchEvents.ts) : buteur/joueur
   // sanctionné pour la plupart des types, joueur ENTRANT pour une SUBSTITUTION.
-  detail        String?
+  detail          String?
   // Joueur SORTANT pour une SUBSTITUTION uniquement (`detail` = joueur entrant) ;
   // toujours null pour les autres types d'événement.
-  detailOut     String?
+  detailOut       String?
 
   @@index([fixtureId, minute])
 }
 
 model Standing {
-  id             String  @id @default(cuid())
-  competitionId  String
-  competition    Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
-  seasonId       String
-  season         Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
-  teamId         String
-  team           Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  groupName      String?
-  position       Int
+  id               String      @id @default(cuid())
+  competitionId    String
+  competition      Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  seasonId         String
+  season           Season      @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  teamId           String
+  team             Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  groupName        String?
+  position         Int
   /// Position au sync précédent (avant d'écraser `position` ci-dessus) — permet
   /// d'afficher une flèche montée/descente sans historique complet. Null tant
   /// qu'un seul sync a eu lieu (pas encore de "avant" à comparer).
   previousPosition Int?
-  played         Int     @default(0)
-  won            Int     @default(0)
-  drawn          Int     @default(0)
-  lost           Int     @default(0)
-  goalsFor       Int     @default(0)
-  goalsAgainst   Int     @default(0)
-  goalDifference Int     @default(0)
-  points         Int     @default(0)
+  played           Int         @default(0)
+  won              Int         @default(0)
+  drawn            Int         @default(0)
+  lost             Int         @default(0)
+  goalsFor         Int         @default(0)
+  goalsAgainst     Int         @default(0)
+  goalDifference   Int         @default(0)
+  points           Int         @default(0)
   /// Forme récente, ex. "WWDLW" (du plus ancien au plus récent).
-  form           String?
+  form             String?
 
   updatedAt DateTime @updatedAt
 
@@ -442,24 +443,24 @@ model Standing {
 }
 
 model TeamStatistics {
-  id             String  @id @default(cuid())
-  fixtureId      String
-  fixture        Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
-  teamId         String
-  team           Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  possession     Int?
-  shotsTotal     Int?
-  shotsOnTarget  Int?
-  corners        Int?
-  fouls          Int?
-  offsides       Int?
-  yellowCards    Int?
-  redCards       Int?
+  id                String  @id @default(cuid())
+  fixtureId         String
+  fixture           Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  teamId            String
+  team              Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  possession        Int?
+  shotsTotal        Int?
+  shotsOnTarget     Int?
+  corners           Int?
+  fouls             Int?
+  offsides          Int?
+  yellowCards       Int?
+  redCards          Int?
   /// "Occasions" — la statistique la plus proche de ce qu'affichent les sites
   /// comme Marca à côté du direct. Absente du plan gratuit football-data.org,
   /// disponible via Highlightly (voir apps/worker/src/jobs/syncMatchEvents.ts).
-  expectedGoals       Float?
-  bigChancesCreated   Int?
+  expectedGoals     Float?
+  bigChancesCreated Int?
 
   @@unique([fixtureId, teamId])
 }
@@ -483,24 +484,24 @@ model Lineup {
 }
 
 model PlayerStatistics {
-  id             String  @id @default(cuid())
-  fixtureId      String
-  fixture        Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
-  playerId       String
-  player         Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
-  teamId         String
-  team           Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  minutesPlayed  Int?
-  goals          Int?
-  assists        Int?
-  shots          Int?
-  shotsOnTarget  Int?
-  passes         Int?
-  passAccuracy   Int?
-  tackles        Int?
-  rating         Float?
-  yellowCards    Int?
-  redCards       Int?
+  id            String  @id @default(cuid())
+  fixtureId     String
+  fixture       Fixture @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  playerId      String
+  player        Player  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId        String
+  team          Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  minutesPlayed Int?
+  goals         Int?
+  assists       Int?
+  shots         Int?
+  shotsOnTarget Int?
+  passes        Int?
+  passAccuracy  Int?
+  tackles       Int?
+  rating        Float?
+  yellowCards   Int?
+  redCards      Int?
 
   @@unique([fixtureId, playerId])
   @@index([playerId])
@@ -579,18 +580,18 @@ model Transfer {
 // ---------------------------------------------------------------------------
 
 model NewsArticle {
-  id             String       @id @default(cuid())
-  title          String
-  slug           String       @unique
-  summary        String?
-  contentHtml    String
-  coverImageUrl  String?
-  category       NewsCategory @default(AUTRE)
-  authorId       String?
-  author         User?        @relation(fields: [authorId], references: [id])
-  sourceUrl      String?
-  status         NewsStatus   @default(DRAFT)
-  publishedAt    DateTime?
+  id            String       @id @default(cuid())
+  title         String
+  slug          String       @unique
+  summary       String?
+  contentHtml   String
+  coverImageUrl String?
+  category      NewsCategory @default(AUTRE)
+  authorId      String?
+  author        User?        @relation(fields: [authorId], references: [id])
+  sourceUrl     String?
+  status        NewsStatus   @default(DRAFT)
+  publishedAt   DateTime?
 
   /// Section 12 du plan : jamais permanent — voir getActiveBreakingNews(), qui
   /// ne considère un article "breaking" que dans les BREAKING_NEWS_WINDOW_HOURS
@@ -667,27 +668,27 @@ model Asset {
 // ---------------------------------------------------------------------------
 
 model Video {
-  id               String                 @id @default(cuid())
-  title            String
-  slug             String                 @unique
-  description      String?
-  uploaderId       String?
-  uploader         User?                  @relation(fields: [uploaderId], references: [id])
+  id          String  @id @default(cuid())
+  title       String
+  slug        String  @unique
+  description String?
+  uploaderId  String?
+  uploader    User?   @relation(fields: [uploaderId], references: [id])
 
-  providerName     String
-  providerAssetId  String?
-  playbackUrl      String?
-  thumbnailUrl     String?
-  durationSeconds  Int?
+  providerName    String
+  providerAssetId String?
+  playbackUrl     String?
+  thumbnailUrl    String?
+  durationSeconds Int?
 
-  status           VideoStatus            @default(UPLOADING)
-  moderationStatus VideoModerationStatus  @default(PENDING)
-  licenseType      VideoLicenseType       @default(ORIGINAL)
+  status           VideoStatus           @default(UPLOADING)
+  moderationStatus VideoModerationStatus @default(PENDING)
+  licenseType      VideoLicenseType      @default(ORIGINAL)
   rightsHolder     String?
 
-  publishedAt      DateTime?
-  viewCount        Int                    @default(0)
-  likeCount        Int                    @default(0)
+  publishedAt DateTime?
+  viewCount   Int       @default(0)
+  likeCount   Int       @default(0)
 
   relatedFixtureId String?
   relatedFixture   Fixture? @relation(fields: [relatedFixtureId], references: [id])
@@ -696,12 +697,14 @@ model Video {
   relatedPlayerId  String?
   relatedPlayer    Player?  @relation(fields: [relatedPlayerId], references: [id])
 
-  tags      VideoTagAssignment[]
-  views     VideoView[]
-  likes     VideoLike[]
-  favorites VideoFavorite[]
-  comments  VideoComment[]
-  reports   VideoReport[]
+  tags          VideoTagAssignment[]
+  views         VideoView[]
+  likes         VideoLike[]
+  favorites     VideoFavorite[]
+  comments      VideoComment[]
+  reports       VideoReport[]
+  /// Relation inverse de TalentProfile.videoId (un talent a au plus une vidéo).
+  talentProfile TalentProfile?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -763,36 +766,145 @@ model VideoFavorite {
 }
 
 model VideoComment {
-  id              String              @id @default(cuid())
+  id              String             @id @default(cuid())
   videoId         String
-  video           Video               @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  video           Video              @relation(fields: [videoId], references: [id], onDelete: Cascade)
   userId          String
-  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   parentCommentId String?
-  parentComment   VideoComment?       @relation("CommentReplies", fields: [parentCommentId], references: [id])
-  replies         VideoComment[]      @relation("CommentReplies")
+  parentComment   VideoComment?      @relation("CommentReplies", fields: [parentCommentId], references: [id])
+  replies         VideoComment[]     @relation("CommentReplies")
   body            String
-  status          VideoCommentStatus  @default(VISIBLE)
-  createdAt       DateTime            @default(now())
+  status          VideoCommentStatus @default(VISIBLE)
+  createdAt       DateTime           @default(now())
 
   @@index([videoId, createdAt])
 }
 
 model VideoReport {
-  id             String            @id @default(cuid())
-  videoId        String
-  video          Video             @relation(fields: [videoId], references: [id], onDelete: Cascade)
-  reportedById   String
-  reportedBy     User              @relation("VideoReportsFiled", fields: [reportedById], references: [id])
-  reason         VideoReportReason
-  details        String?
-  status         VideoReportStatus @default(OPEN)
-  createdAt      DateTime          @default(now())
-  reviewedById   String?
-  reviewedBy     User?             @relation("VideoReportsReviewed", fields: [reviewedById], references: [id])
-  reviewedAt     DateTime?
+  id           String            @id @default(cuid())
+  videoId      String
+  video        Video             @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  reportedById String
+  reportedBy   User              @relation("VideoReportsFiled", fields: [reportedById], references: [id])
+  reason       VideoReportReason
+  details      String?
+  status       VideoReportStatus @default(OPEN)
+  createdAt    DateTime          @default(now())
+  reviewedById String?
+  reviewedBy   User?             @relation("VideoReportsReviewed", fields: [reviewedById], references: [id])
+  reviewedAt   DateTime?
 
   @@index([videoId, status])
+}
+
+// ---------------------------------------------------------------------------
+// RexFoot Talents — profils de joueurs auto-soumis, découverte par des
+// recruteurs. Toujours modéré manuellement (jamais publié automatiquement),
+// voir TalentModerationStatus. Distinct de Player (synchronisé depuis un
+// fournisseur externe via provider/externalId, historique club/stats) : un
+// TalentProfile est saisi par le joueur lui-même, sans lien avec les données
+// scoutées.
+// ---------------------------------------------------------------------------
+
+/// Plus fin que PlayerPosition (GOALKEEPER/DEFENDER/MIDFIELDER/FORWARD) —
+/// section 6 du plan demande un poste précis (ex. distinguer un latéral droit
+/// d'un latéral gauche). Prévu extensible (commentaire du plan) : un nouveau
+/// poste s'ajoute par migration, sans casser les valeurs existantes.
+enum TalentPosition {
+  GOALKEEPER
+  CENTRE_BACK
+  RIGHT_BACK
+  LEFT_BACK
+  DEFENSIVE_MIDFIELDER
+  CENTRE_MIDFIELDER
+  ATTACKING_MIDFIELDER
+  RIGHT_WINGER
+  LEFT_WINGER
+  STRIKER
+}
+
+enum PreferredFoot {
+  LEFT
+  RIGHT
+  BOTH
+}
+
+enum TalentSituation {
+  FREE_AGENT
+  IN_CLUB
+  SEEKING_CLUB
+  CONTRACT_ENDING
+}
+
+/// PENDING à la soumission, jamais publié automatiquement (section 12 du
+/// plan) — HIDDEN distinct de REJECTED : un profil déjà approuvé qu'on
+/// retire temporairement (ex. demande du joueur) sans le refuser formellement.
+enum TalentModerationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  HIDDEN
+}
+
+model TalentProfile {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  firstName      String
+  lastName       String
+  dateOfBirth    DateTime
+  nationality    String
+  currentCountry String
+  city           String?
+
+  position          TalentPosition
+  secondaryPosition TalentPosition?
+  preferredFoot     PreferredFoot?
+  heightCm          Int?
+
+  situation   TalentSituation
+  currentClub String?
+
+  /// Codes ISO2 — voir apps/web/src/lib/talents/target-countries.ts. Tableau
+  /// natif Postgres plutôt qu'une table de jointure : section 8 du plan
+  /// ("pas de système compliqué"), une poignée de pays par joueur au plus.
+  targetCountries  String[]
+  openToAnyCountry Boolean  @default(false)
+
+  photoUrl String?
+  videoId  String? @unique
+  video    Video?  @relation(fields: [videoId], references: [id])
+  about    String?
+
+  /// Consentement explicite avant publication (section 23 du plan).
+  consentGiven       Boolean   @default(false)
+  consentGivenAt     DateTime?
+  /// Calculé à partir de dateOfBirth au moment de la soumission et figé ici
+  /// (section 22) : l'âge change, mais le statut "mineur au moment de l'envoi"
+  /// ne doit pas — sert de trace pour le consentement parental exigé alors.
+  isMinor            Boolean   @default(false)
+  parentConsentGiven Boolean   @default(false)
+
+  /// Numéro collecté pour l'envoi WhatsApp initial — jamais affiché
+  /// publiquement à moins que contactConsentGiven soit vrai (section 21).
+  whatsappNumber      String
+  contactConsentGiven Boolean @default(false)
+
+  status        TalentModerationStatus @default(PENDING)
+  moderatedAt   DateTime?
+  moderatedById String?
+  moderatedBy   User?                  @relation(fields: [moderatedById], references: [id])
+
+  /// Compteur simple, jamais dédupliqué (section 27 : "pas besoin d'un
+  /// système complexe") — contrairement aux vues de profil/vidéo, qui
+  /// réutilisent PageView (TrendingEntityType.TALENT_PROFILE) et
+  /// Video.viewCount, déjà dédupliqués par visiteur.
+  contactClickCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, createdAt])
 }
 
 // ---------------------------------------------------------------------------
@@ -800,30 +912,31 @@ model VideoReport {
 // ---------------------------------------------------------------------------
 
 model User {
-  id           String     @id @default(cuid())
-  email        String     @unique
-  passwordHash String?
-  displayName  String
-  avatarUrl    String?
-  role         UserRole   @default(USER)
-  status       UserStatus @default(ACTIVE)
+  id            String     @id @default(cuid())
+  email         String     @unique
+  passwordHash  String?
+  displayName   String
+  avatarUrl     String?
+  role          UserRole   @default(USER)
+  status        UserStatus @default(ACTIVE)
   /// Opt-in explicite : la page /u/[id] renvoie 404 tant que ce n'est pas activé depuis /account.
-  publicProfile Boolean   @default(false)
+  publicProfile Boolean    @default(false)
 
-  articles         NewsArticle[]
-  transfers        Transfer[]
-  videos           Video[]
-  videoViews       VideoView[]
-  videoLikes       VideoLike[]
-  videoFavorites   VideoFavorite[]
-  videoComments    VideoComment[]
-  videoReportsFiled    VideoReport[] @relation("VideoReportsFiled")
-  videoReportsReviewed VideoReport[] @relation("VideoReportsReviewed")
-  favorites        Favorite[]
-  blocksInitiated  UserBlock[]     @relation("BlockInitiator")
-  blocksReceived   UserBlock[]     @relation("BlockTarget")
-  auditLogEntries  AuditLog[]
-  notifications    Notification[]
+  articles                NewsArticle[]
+  transfers               Transfer[]
+  videos                  Video[]
+  videoViews              VideoView[]
+  videoLikes              VideoLike[]
+  videoFavorites          VideoFavorite[]
+  videoComments           VideoComment[]
+  videoReportsFiled       VideoReport[]   @relation("VideoReportsFiled")
+  videoReportsReviewed    VideoReport[]   @relation("VideoReportsReviewed")
+  favorites               Favorite[]
+  blocksInitiated         UserBlock[]     @relation("BlockInitiator")
+  blocksReceived          UserBlock[]     @relation("BlockTarget")
+  auditLogEntries         AuditLog[]
+  notifications           Notification[]
+  moderatedTalentProfiles TalentProfile[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -870,14 +983,14 @@ model UserBlock {
 
 /// Trace d'audit des actions de modération (qui a fait quoi, sur quoi).
 model AuditLog {
-  id           String   @id @default(cuid())
-  actorUserId  String
-  actor        User     @relation(fields: [actorUserId], references: [id])
-  action       String
-  targetType   String
-  targetId     String
-  metadata     Json?
-  createdAt    DateTime @default(now())
+  id          String   @id @default(cuid())
+  actorUserId String
+  actor       User     @relation(fields: [actorUserId], references: [id])
+  action      String
+  targetType  String
+  targetId    String
+  metadata    Json?
+  createdAt   DateTime @default(now())
 
   @@index([targetType, targetId])
 }
