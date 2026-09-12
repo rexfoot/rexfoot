@@ -23,7 +23,7 @@ const PUBLIC_SELECT = {
   contactConsentGiven: true,
   whatsappNumber: true,
   contactClickCount: true,
-  video: { select: { playbackUrl: true, thumbnailUrl: true, status: true } },
+  video: { select: { playbackUrl: true, thumbnailUrl: true, status: true, providerName: true, providerAssetId: true } },
 } as const;
 
 /** 404 pour tout ce qui n'est pas APPROVED — voir getNewsArticleBySlug pour le même principe. */

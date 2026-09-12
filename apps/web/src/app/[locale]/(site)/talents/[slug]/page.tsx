@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
-import { CheckCircle2, Clock, MapPin, User as UserIcon } from "lucide-react";
+import { CheckCircle2, Clock, MapPin, User as UserIcon, ExternalLink } from "lucide-react";
 import { getApprovedTalentBySlug } from "@/lib/data/talents";
 import { TrackView } from "@/components/TrackView";
 import { TalentContactButton } from "@/components/talents/TalentContactButton";
@@ -111,6 +111,21 @@ export default async function TalentProfilePage({ params }: PageProps) {
               className="aspect-video w-full border-0"
             />
           </div>
+          {/* Lien direct en plus de l'intégration — demandé par Hicham : le
+              recruteur doit pouvoir trouver l'URL de la vidéo elle-même, pas
+              seulement le lecteur intégré (utile pour ouvrir dans l'app
+              YouTube, partager, etc.). */}
+          {talent.video.providerName === "youtube" && talent.video.providerAssetId && (
+            <a
+              href={`https://www.youtube.com/watch?v=${talent.video.providerAssetId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-rf-orange hover:underline"
+            >
+              <ExternalLink size={14} />
+              {t("profile.watchOnYoutube")}
+            </a>
+          )}
         </section>
       ) : (
         <p className="flex items-center gap-2 rounded-xl border border-rf-border bg-rf-bg-elevated p-4 text-sm text-rf-fg-muted">
