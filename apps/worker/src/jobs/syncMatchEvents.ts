@@ -45,6 +45,26 @@ const MAX_LOOKUP_PER_RUN = 3;
 // toutes les LOOKUP_RETRY_COOLDOWN_MS, qu'elle ait réussi ou non.
 const LOOKUP_RETRY_COOLDOWN_MS = 30 * 60 * 1000;
 
+// Highlightly est passé au plan Pro le 2026-09-06 (7500 requêtes/jour, voir
+// scheduler.ts) — ce qui rendait une résolution anticipée impensable sous
+// l'ancien plan gratuit (100/jour, cf. commentaires ci-dessus, jamais mis à
+// jour depuis) est maintenant large. On peut donc résoudre la composition
+// avant le coup d'envoi plutôt que d'attendre que le match passe LIVE :
+// Highlightly publie en général les compositions officielles ~1h avant.
+// Fenêtre alignée là-dessus — trop large ne coûterait qu'un cycle de plus
+// avant que syncLineupsIfMissing() ne trouve enfin une réponse non vide (voir
+// son commentaire).
+const LINEUP_PREFETCH_WINDOW_MS = 60 * 60 * 1000;
+
+// Alerte WhatsApp (même canal que les buts, voir notifyWriters.ts) si un
+// match est LIVE depuis ce délai sans qu'aucune composition n'ait pu être
+// récupérée (ni en pré-match, ni depuis le coup d'envoi) — signal qu'il faut
+// vraiment un humain (Highlightly n'a pas trouvé le match, quota épuisé,
+// etc.), pas juste un cas normal de "pas encore publiée". Un seul envoi par
+// match (voir lineupMissingAlertSent), pas à chaque cycle.
+const LINEUP_MISSING_ALERT_DELAY_MS = 20 * 60 * 1000;
+const lineupMissingAlertSent = new Set<string>();
+
 // Un événement capté pendant un match LIVE peut être invalidé après coup (ex.
 // but refusé par la VAR après le direct, comme Carlos Espí lors de Betis-Real
 // Madrid du 04/09/2026 : toujours enregistré comme un vrai but chez nous,
@@ -248,7 +268,15 @@ function decodeSubstitutes(players: HighlightlyLineupPlayer[]): HighlightlyLineu
   return players.map((p) => ({ ...p, name: decodeHtmlEntities(p.name) }));
 }
 
-/** Une composition ne change jamais une fois le match commencé — jamais refetchée si déjà connue. */
+/**
+ * Une composition ne change jamais une fois le match commencé — jamais
+ * refetchée si déjà connue. Appelée aussi bien AVANT le coup d'envoi
+ * (LINEUP_PREFETCH_WINDOW_MS) qu'une fois le match LIVE : si Highlightly n'a
+ * encore rien à publier (trop tôt), les deux équipes renvoient un
+ * `initialLineup` vide — on ne persiste rien dans ce cas précis, pour qu'un
+ * cycle ultérieur retente, plutôt que de figer une composition vide que le
+ * garde-fou `already > 0` ne retenterait alors plus jamais.
+ */
 async function syncLineupsIfMissing(
   client: HighlightlyClient,
   highlightlyId: number,
@@ -263,6 +291,9 @@ async function syncLineupsIfMissing(
     [lineups.homeTeam, teams.homeTeamId],
     [lineups.awayTeam, teams.awayTeamId],
   ];
+
+  const hasAnyPlayers = sides.some(([team]) => team.initialLineup.flat().length > 0);
+  if (!hasAnyPlayers) return;
 
   for (const [team, teamId] of sides) {
     await prisma.lineup.upsert({
@@ -360,7 +391,7 @@ export async function syncMatchEvents(): Promise<boolean> {
   const now = new Date();
   const cooldownCutoff = new Date(now.getTime() - LOOKUP_RETRY_COOLDOWN_MS);
 
-  const [resolvedLiveMatches, unresolvedLiveMatches, orphanedFinishedMatches, recentlyFinishedMatches] = await Promise.all([
+  const [resolvedLiveMatches, unresolvedLiveMatches, upcomingLineupMatches, orphanedFinishedMatches, recentlyFinishedMatches] = await Promise.all([
     // Déjà résolus : toujours tous traités (jamais plafonné par
     // MAX_MATCHES_PER_RUN) — un match déjà suivi ne doit plus jamais être
     // privé de son rafraîchissement events/stats au profit d'un nouveau
@@ -385,6 +416,22 @@ export async function syncMatchEvents(): Promise<boolean> {
         OR: [{ highlightlyLookupAttemptedAt: null }, { highlightlyLookupAttemptedAt: { lt: cooldownCutoff } }],
       },
       orderBy: [{ highlightlyLookupAttemptedAt: { sort: "asc", nulls: "first" } }, { kickoffAt: "asc" }],
+      take: MAX_LOOKUP_PER_RUN,
+      select: matchSelect,
+    }),
+    // Pas encore commencés mais dans la fenêtre de pré-match (voir
+    // LINEUP_PREFETCH_WINDOW_MS) : uniquement la composition (jamais
+    // d'événements/stats, qui n'existent pas avant le coup d'envoi) — voir la
+    // branche `lineupOnly` dans la boucle plus bas. `lineups: { none: {} }`
+    // exclut ceux déjà résolus lors d'un cycle précédent.
+    prisma.fixture.findMany({
+      where: {
+        status: "SCHEDULED",
+        kickoffAt: { gte: now, lte: new Date(now.getTime() + LINEUP_PREFETCH_WINDOW_MS) },
+        lineups: { none: {} },
+        OR: [{ highlightlyLookupAttemptedAt: null }, { highlightlyLookupAttemptedAt: { lt: cooldownCutoff } }],
+      },
+      orderBy: { kickoffAt: "asc" },
       take: MAX_LOOKUP_PER_RUN,
       select: matchSelect,
     }),
@@ -428,10 +475,11 @@ export async function syncMatchEvents(): Promise<boolean> {
   const hadLiveMatches = resolvedLiveMatches.length + unresolvedLiveMatches.length > 0;
 
   const matches = [
-    ...resolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false })),
-    ...unresolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false })),
-    ...orphanedFinishedMatches.map((m) => ({ ...m, isFinalPass: true })),
-    ...recentlyFinishedMatches.map((m) => ({ ...m, isFinalPass: true })),
+    ...resolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false, lineupOnly: false })),
+    ...unresolvedLiveMatches.map((m) => ({ ...m, isFinalPass: false, lineupOnly: false })),
+    ...upcomingLineupMatches.map((m) => ({ ...m, isFinalPass: false, lineupOnly: true })),
+    ...orphanedFinishedMatches.map((m) => ({ ...m, isFinalPass: true, lineupOnly: false })),
+    ...recentlyFinishedMatches.map((m) => ({ ...m, isFinalPass: true, lineupOnly: false })),
   ];
 
   if (matches.length === 0) return hadLiveMatches;
@@ -468,6 +516,20 @@ export async function syncMatchEvents(): Promise<boolean> {
         awayTeamName: match.awayTeam.name,
       };
 
+      // Match pas encore commencé (fenêtre de pré-match, voir
+      // upcomingLineupMatches ci-dessus) : ni événements ni statistiques
+      // (inexistants avant le coup d'envoi), seulement la composition. Une
+      // fois LIVE, ce même match retombe dans resolvedLiveMatches et repasse
+      // par le chemin complet ci-dessous normalement.
+      if (match.lineupOnly) {
+        try {
+          await syncLineupsIfMissing(client, highlightlyId, match.id, teams);
+        } catch (cause) {
+          logger.warn({ fixtureId: match.id, cause }, "Échec de synchro anticipée de la composition, ignoré");
+        }
+        continue;
+      }
+
       const events = await client.getEvents(highlightlyId);
       await replaceFixtureEvents(match.id, teams, events);
       logger.info(
@@ -488,6 +550,20 @@ export async function syncMatchEvents(): Promise<boolean> {
       } catch (cause) {
         logger.warn({ fixtureId: match.id, cause }, "Échec de synchro des compositions, ignoré");
       }
+
+      if (!match.isFinalPass && !lineupMissingAlertSent.has(match.id)) {
+        const minutesSinceKickoff = (Date.now() - match.kickoffAt.getTime()) / 60_000;
+        if (minutesSinceKickoff * 60_000 > LINEUP_MISSING_ALERT_DELAY_MS) {
+          const hasLineup = (await prisma.lineup.count({ where: { fixtureId: match.id } })) > 0;
+          if (!hasLineup) {
+            lineupMissingAlertSent.add(match.id);
+            void notifyWriters(
+              `⚠️ Pas de composition ${Math.round(minutesSinceKickoff)} min après le coup d'envoi : ${teams.homeTeamName} vs ${teams.awayTeamName}`,
+            );
+          }
+        }
+      }
+
       try {
         await syncStatistics(client, highlightlyId, match.id, teams);
       } catch (cause) {

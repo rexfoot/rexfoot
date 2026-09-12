@@ -1,14 +1,17 @@
 import { prisma } from "@rexfoot/db";
 import { logger } from "../lib/logger.js";
 
-// Clé "test" publique de TheSportsDB (thesportsdb.com/free_sports_api) — pas
-// de compte requis, mais très limitée en débit (documentée autour de 30
-// requêtes/minute). football-data.org (plan gratuit) ne fournit AUCUNE photo
-// de joueur (voir photoUrl: null dans packages/football-provider/src/providers/footballDataOrg.ts) ;
-// c'est la seule source de photos réellement gratuite trouvée. Passer à une
-// vraie clé Patreon (débit plus élevé) ne demanderait que de changer ce
-// segment d'URL, rien d'autre dans ce fichier.
-const BASE_URL = "https://www.thesportsdb.com/api/v1/json/3";
+// Clé "test" publique de TheSportsDB (thesportsdb.com/free_sports_api) par
+// défaut — pas de compte requis, mais PARTAGÉE avec tout le reste d'Internet
+// utilisant la même clé "3" : le 429 constaté en prod (2026-09-06, ~49% de
+// photos manquantes) ne reflète pas notre propre débit, voir searchPlayer.
+// THESPORTSDB_API_KEY (clé Patreon payante, débit dédié) prend le relais dès
+// qu'elle est définie — aucun autre changement de code nécessaire pour
+// upgrader, seulement la variable d'environnement Railway. football-data.org
+// (plan gratuit) ne fournit AUCUNE photo de joueur (voir photoUrl: null dans
+// packages/football-provider/src/providers/footballDataOrg.ts) ; TheSportsDB
+// reste la seule source de photos trouvée, gratuite ou payante.
+const BASE_URL = `https://www.thesportsdb.com/api/v1/json/${process.env.THESPORTSDB_API_KEY ?? "3"}`;
 const MAX_PLAYERS_PER_RUN = 25;
 const DELAY_BETWEEN_REQUESTS_MS = 1_500;
 // Beaucoup de noms ne correspondent qu'à une fiche TheSportsDB sans aucune
@@ -55,7 +58,15 @@ function sameNationality(a: string, b: string): boolean {
 
 async function searchPlayer(name: string): Promise<TheSportsDbPlayer[]> {
   const response = await fetch(`${BASE_URL}/searchplayers.php?p=${encodeURIComponent(name)}`);
-  if (!response.ok) return [];
+  if (!response.ok) {
+    // Silencieux jusqu'ici : un run entier pouvait échouer en boucle sur un
+    // 429 (clé "3" partagée) sans qu'aucun log ne le distingue d'un simple
+    // "aucun résultat" — voir le commentaire de BASE_URL.
+    if (response.status === 429) {
+      logger.warn({ player: name }, "[TheSportsDB] 429 (quota dépassé) — voir THESPORTSDB_API_KEY");
+    }
+    return [];
+  }
   const body = (await response.json()) as { player: TheSportsDbPlayer[] | null };
   return (body.player ?? []).filter((p) => p.strSport === "Soccer");
 }
