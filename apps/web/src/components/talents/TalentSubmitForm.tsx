@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { AdminInput, AdminSelect, AdminButton, Banner, FieldGroup } from "@/components/admin/ui";
+import { WhatsAppAttachGuide } from "@/components/talents/WhatsAppAttachGuide";
 import { Link } from "@/i18n/navigation";
 import {
   TARGET_COUNTRIES,
@@ -155,8 +156,10 @@ export function TalentSubmitForm() {
         {/* La confusion réelle ("pas d'endroit pour la vidéo") vient de ce que
             le bouton ci-dessus ouvre juste WhatsApp avec un texte prérempli —
             joindre le fichier vidéo est une étape manuelle DANS WhatsApp,
-            jamais évidente sans cette précision explicite. */}
-        <p className="rounded-xl border border-rf-border bg-rf-bg-elevated p-3 text-sm font-medium text-rf-fg">{t("confirmation.attachHint")}</p>
+            jamais évidente sans une illustration explicite (voir
+            WhatsAppAttachGuide, ajouté après ce même retour deux fois de suite). */}
+        <p className="text-sm font-medium text-rf-fg">{t("confirmation.attachHint")}</p>
+        <WhatsAppAttachGuide />
         <p className="text-xs text-rf-fg-subtle">{t("confirmation.videoRules")}</p>
         <Link href="/talents" className="block text-sm font-semibold text-rf-orange">
           {t("confirmation.backHome")}
