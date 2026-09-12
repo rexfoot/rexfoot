@@ -226,24 +226,20 @@
       "error": "Une erreur est survenue, vérifie le formulaire et réessaie.",
       "requiredTargetCountry": "Choisis au moins un pays, ou « ouvert à toutes les opportunités ».",
       "sectionVideo": "Vidéo de présentation",
-      "videoMethodYoutube": "🎥 J'ai un lien YouTube",
-      "videoMethodWhatsapp": "📲 Je préfère l'envoyer par WhatsApp",
       "videoUrlLabel": "Lien de ta vidéo YouTube",
       "videoUrlHint": "Mets-la en « non répertoriée » sur YouTube si tu ne veux pas qu'elle soit publique ailleurs — seul RexFoot y accédera via ce lien.",
-      "videoUrlInvalid": "Ce lien ne ressemble pas à une URL YouTube valide.",
-      "videoMethodWhatsappHint": "Tu pourras l'envoyer juste après avoir validé ce formulaire."
+      "videoUrlInvalid": "Ce lien ne ressemble pas à une URL YouTube valide."
+    },
+    "youtubeGuide": {
+      "step1": "Ouvre l'app YouTube (ou youtube.com) sur ton téléphone.",
+      "step2": "Appuie sur + puis « Mettre en ligne une vidéo ».",
+      "step3": "Choisis ta vidéo, puis règle la visibilité sur « Non répertorié » (pas besoin qu'elle soit publique).",
+      "step4": "Une fois en ligne, appuie sur « Partager » pour copier le lien, et colle-le ci-dessus."
     },
     "confirmation": {
       "title": "Ton profil a bien été envoyé !",
       "videoReceivedBody": "Ta vidéo a bien été reçue ! Ton profil est maintenant en attente de validation par l'équipe RexFoot.",
-      "body": "Il ne reste qu'une étape : envoie ta vidéo de présentation sur WhatsApp pour que l'équipe RexFoot puisse valider ton profil.",
-      "attachHint": "Une fois WhatsApp ouvert : appuie sur le trombone 📎 pour joindre ton fichier vidéo à ce message, puis envoie.",
-      "attachStep1": "Appuie sur le trombone",
-      "attachStep2": "Choisis ta vidéo depuis ta galerie.",
-      "attachStep3": "Appuie sur envoyer",
-      "whatsappCta": "📲 Envoyer ma vidéo sur WhatsApp",
       "videoRules": "Vidéo maximum 5 minutes. Présente-toi simplement (nom, âge, poste…) puis montre tes meilleures actions.",
-      "whatsappMessageTemplate": "Bonjour RexFoot, je souhaite présenter mon profil dans RexFoot Talents.\n\nNom : {lastName}\nPrénom : {firstName}\nÂge : {age}\nNationalité : {nationality}\nPays actuel : {currentCountry}\nVille : {city}\nPoste : {position}\nClub : {club}\nStatut : {situation}\nPays recherchés : {targetCountries}\n\nJe joins ma vidéo.",
       "backHome": "Retour à RexFoot Talents"
     },
     "profile": {

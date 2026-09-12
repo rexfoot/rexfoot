@@ -226,24 +226,20 @@
       "error": "Something went wrong, check the form and try again.",
       "requiredTargetCountry": "Pick at least one country, or \"open to any opportunity\".",
       "sectionVideo": "Presentation video",
-      "videoMethodYoutube": "🎥 I have a YouTube link",
-      "videoMethodWhatsapp": "📲 I'd rather send it on WhatsApp",
       "videoUrlLabel": "Your YouTube video link",
       "videoUrlHint": "Set it to \"unlisted\" on YouTube if you don't want it public elsewhere — only RexFoot will access it via this link.",
-      "videoUrlInvalid": "This doesn't look like a valid YouTube URL.",
-      "videoMethodWhatsappHint": "You'll be able to send it right after submitting this form."
+      "videoUrlInvalid": "This doesn't look like a valid YouTube URL."
+    },
+    "youtubeGuide": {
+      "step1": "Open the YouTube app (or youtube.com) on your phone.",
+      "step2": "Tap + then \"Upload a video\".",
+      "step3": "Choose your video, then set visibility to \"Unlisted\" (it doesn't need to be public).",
+      "step4": "Once it's up, tap \"Share\" to copy the link, and paste it above."
     },
     "confirmation": {
       "title": "Your profile was submitted!",
       "videoReceivedBody": "Your video was received! Your profile is now pending review by the RexFoot team.",
-      "body": "One step left: send your presentation video on WhatsApp so the RexFoot team can review your profile.",
-      "attachHint": "Once WhatsApp opens: tap the paperclip 📎 to attach your video file to this message, then send.",
-      "attachStep1": "Tap the paperclip",
-      "attachStep2": "Choose your video from your gallery.",
-      "attachStep3": "Tap send",
-      "whatsappCta": "📲 Send my video on WhatsApp",
       "videoRules": "5 minutes maximum. Introduce yourself simply (name, age, position…) then show your best moments.",
-      "whatsappMessageTemplate": "Hello RexFoot, I'd like to submit my profile on RexFoot Talents.\n\nLast name: {lastName}\nFirst name: {firstName}\nAge: {age}\nNationality: {nationality}\nCurrent country: {currentCountry}\nCity: {city}\nPosition: {position}\nClub: {club}\nStatus: {situation}\nTarget countries: {targetCountries}\n\nI'm attaching my video.",
       "backHome": "Back to RexFoot Talents"
     },
     "profile": {

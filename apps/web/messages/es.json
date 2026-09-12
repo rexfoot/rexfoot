@@ -226,24 +226,20 @@
       "error": "Ha ocurrido un error, revisa el formulario e inténtalo de nuevo.",
       "requiredTargetCountry": "Elige al menos un país, o «abierto a cualquier oportunidad».",
       "sectionVideo": "Vídeo de presentación",
-      "videoMethodYoutube": "🎥 Tengo un enlace de YouTube",
-      "videoMethodWhatsapp": "📲 Prefiero enviarlo por WhatsApp",
       "videoUrlLabel": "Enlace de tu vídeo de YouTube",
       "videoUrlHint": "Ponlo como «no listado» en YouTube si no quieres que sea público en otro sitio — solo RexFoot accederá a través de este enlace.",
-      "videoUrlInvalid": "Esto no parece una URL de YouTube válida.",
-      "videoMethodWhatsappHint": "Podrás enviarlo justo después de enviar este formulario."
+      "videoUrlInvalid": "Esto no parece una URL de YouTube válida."
+    },
+    "youtubeGuide": {
+      "step1": "Abre la app de YouTube (o youtube.com) en tu teléfono.",
+      "step2": "Pulsa + y luego «Subir un vídeo».",
+      "step3": "Elige tu vídeo y pon la visibilidad en «No listado» (no hace falta que sea público).",
+      "step4": "Una vez subido, pulsa «Compartir» para copiar el enlace, y pégalo arriba."
     },
     "confirmation": {
       "title": "¡Tu perfil se ha enviado correctamente!",
       "videoReceivedBody": "¡Tu vídeo se ha recibido correctamente! Tu perfil está ahora pendiente de revisión por el equipo de RexFoot.",
-      "body": "Solo falta un paso: envía tu vídeo de presentación por WhatsApp para que el equipo de RexFoot pueda validar tu perfil.",
-      "attachHint": "Una vez abierto WhatsApp: pulsa el clip 📎 para adjuntar tu archivo de vídeo a este mensaje y envíalo.",
-      "attachStep1": "Pulsa el clip",
-      "attachStep2": "Elige tu vídeo desde tu galería.",
-      "attachStep3": "Pulsa enviar",
-      "whatsappCta": "📲 Enviar mi vídeo por WhatsApp",
       "videoRules": "Máximo 5 minutos. Preséntate brevemente (nombre, edad, posición…) y luego muestra tus mejores jugadas.",
-      "whatsappMessageTemplate": "Hola RexFoot, quiero presentar mi perfil en RexFoot Talents.\n\nApellido: {lastName}\nNombre: {firstName}\nEdad: {age}\nNacionalidad: {nationality}\nPaís actual: {currentCountry}\nCiudad: {city}\nPosición: {position}\nClub: {club}\nEstado: {situation}\nPaíses buscados: {targetCountries}\n\nAdjunto mi vídeo.",
       "backHome": "Volver a RexFoot Talents"
     },
     "profile": {

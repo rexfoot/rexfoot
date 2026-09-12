@@ -21,7 +21,7 @@ const TALENT_POSITIONS = [
 
 const TARGET_COUNTRY_CODES = TARGET_COUNTRIES.map((c) => c.code) as [string, ...string[]];
 
-/** Section 5-11 et 22-23 du plan — ni compte ni vidéo à cette étape (voir README de la route WhatsApp). */
+/** Section 5-11 et 22-23 du plan — pas de compte requis, mais la vidéo (lien YouTube) est obligatoire dès la soumission. */
 const bodySchema = z
   .object({
     firstName: z.string().trim().min(1, "Le prénom est obligatoire."),
@@ -42,11 +42,13 @@ const bodySchema = z
     contactConsentGiven: z.boolean().default(false),
     consentGiven: z.boolean(),
     parentConsentGiven: z.boolean().default(false),
-    // Optionnel : si absent, le joueur passe par le repli WhatsApp existant
-    // (vidéo attachée manuellement dans la conversation, admin la reprend
-    // ensuite via /admin/talents). Demandé par Hicham (2026-09-12) pour éviter
-    // à l'admin de devoir télécharger puis ré-uploader chaque vidéo reçue.
-    videoUrl: z.string().trim().optional(),
+    // Obligatoire depuis le 2026-09-12 : le repli WhatsApp (vidéo attachée
+    // manuellement dans la conversation, admin la re-uploadait via
+    // /admin/talents) a été retiré à la demande explicite de Hicham — trop de
+    // messages WhatsApp à traiter à la main à l'échelle. Le joueur héberge
+    // désormais lui-même sa vidéo (YouTube en non répertorié fonctionne) et
+    // colle le lien ici.
+    videoUrl: z.string().trim().min(1, "Le lien de ta vidéo YouTube est obligatoire."),
   })
   .refine((data) => data.targetCountries.length > 0 || data.openToAnyCountry, {
     message: "Choisis au moins un pays, ou « ouvert à toutes les opportunités ».",
@@ -84,12 +86,9 @@ export async function POST(request: Request) {
     return apiError(400, "Le consentement du parent ou représentant légal est obligatoire pour un mineur.");
   }
 
-  let youtubeVideoId: string | null = null;
-  if (data.videoUrl) {
-    youtubeVideoId = parseYoutubeVideoId(data.videoUrl);
-    if (!youtubeVideoId) {
-      return apiError(400, "Le lien YouTube n'est pas valide. Vérifie que tu as bien copié l'URL complète de ta vidéo.");
-    }
+  const youtubeVideoId = parseYoutubeVideoId(data.videoUrl);
+  if (!youtubeVideoId) {
+    return apiError(400, "Le lien YouTube n'est pas valide. Vérifie que tu as bien copié l'URL complète de ta vidéo.");
   }
 
   const slug = await generateUniqueTalentSlug(data.firstName, data.lastName);
@@ -98,24 +97,22 @@ export async function POST(request: Request) {
   // approuvée automatiquement (moderationStatus PENDING) : c'est le contenu
   // le plus important à vérifier avant publication, un lien YouTube valide ne
   // garantit rien sur ce qu'il contient réellement.
-  const video = youtubeVideoId
-    ? await prisma.video.create({
-        data: {
-          title: `${data.firstName} ${data.lastName} — RexFoot Talents`,
-          slug: `talent-${slug}`,
-          providerName: "youtube",
-          providerAssetId: youtubeVideoId,
-          playbackUrl: youtubeEmbedUrl(youtubeVideoId),
-          status: "READY",
-          moderationStatus: "PENDING",
-        },
-      })
-    : null;
+  const video = await prisma.video.create({
+    data: {
+      title: `${data.firstName} ${data.lastName} — RexFoot Talents`,
+      slug: `talent-${slug}`,
+      providerName: "youtube",
+      providerAssetId: youtubeVideoId,
+      playbackUrl: youtubeEmbedUrl(youtubeVideoId),
+      status: "READY",
+      moderationStatus: "PENDING",
+    },
+  });
 
   const profile = await prisma.talentProfile.create({
     data: {
       slug,
-      videoId: video?.id,
+      videoId: video.id,
       firstName: data.firstName,
       lastName: data.lastName,
       dateOfBirth: data.dateOfBirth,
@@ -140,5 +137,5 @@ export async function POST(request: Request) {
     },
   });
 
-  return NextResponse.json({ ok: true, id: profile.id, hasVideo: Boolean(video) });
+  return NextResponse.json({ ok: true, id: profile.id });
 }

@@ -5,7 +5,7 @@ import { useTranslations, useLocale } from "next-intl";
 import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { AdminInput, AdminSelect, AdminButton, Banner, FieldGroup } from "@/components/admin/ui";
-import { WhatsAppAttachGuide } from "@/components/talents/WhatsAppAttachGuide";
+import { YoutubeUploadGuide } from "@/components/talents/YoutubeUploadGuide";
 import { Link } from "@/i18n/navigation";
 import {
   TARGET_COUNTRIES,
@@ -30,8 +30,6 @@ const TALENT_POSITIONS = [
 
 const SITUATIONS = ["FREE_AGENT", "IN_CLUB", "SEEKING_CLUB", "CONTRACT_ENDING"] as const;
 
-// wa.me attend des chiffres seuls, sans "+" (section 10 du plan : +34 615 355 769).
-const WHATSAPP_NUMBER = "34615355769";
 const MINOR_AGE_THRESHOLD = 18;
 
 function computeAge(dateOfBirth: string): number | null {
@@ -54,12 +52,7 @@ export function TalentSubmitForm() {
   const [openToAnyCountry, setOpenToAnyCountry] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [whatsappUrl, setWhatsappUrl] = useState<string | null>(null);
   const [videoSubmitted, setVideoSubmitted] = useState(false);
-  // YouTube par défaut (demandé par Hicham le 2026-09-12 : télécharger puis
-  // ré-uploader chaque vidéo WhatsApp ne tient pas à l'échelle) — WhatsApp
-  // reste un repli pour qui n'a pas de compte YouTube.
-  const [videoMethod, setVideoMethod] = useState<"youtube" | "whatsapp">("youtube");
   const [videoUrl, setVideoUrl] = useState("");
 
   const age = useMemo(() => computeAge(dateOfBirth), [dateOfBirth]);
@@ -91,7 +84,7 @@ export function TalentSubmitForm() {
       setError(t("form.requiredTargetCountry"));
       return;
     }
-    if (videoMethod === "youtube" && !parseYoutubeVideoId(videoUrl)) {
+    if (!parseYoutubeVideoId(videoUrl)) {
       setError(t("form.videoUrlInvalid"));
       return;
     }
@@ -115,7 +108,7 @@ export function TalentSubmitForm() {
       contactConsentGiven: formData.get("contactConsentGiven") === "on",
       consentGiven,
       parentConsentGiven,
-      videoUrl: videoMethod === "youtube" ? videoUrl.trim() : undefined,
+      videoUrl: videoUrl.trim(),
     };
 
     setSubmitting(true);
@@ -131,32 +124,7 @@ export function TalentSubmitForm() {
       return;
     }
 
-    const body = (await response.json().catch(() => null)) as { hasVideo?: boolean } | null;
-    if (body?.hasVideo) {
-      // Lien YouTube déjà attaché à la création : plus besoin de WhatsApp,
-      // le profil part directement en modération avec sa vidéo.
-      setVideoSubmitted(true);
-      setSubmitting(false);
-      return;
-    }
-
-    const message = t("confirmation.whatsappMessageTemplate", {
-      lastName: payload.lastName,
-      firstName: payload.firstName,
-      age: age ?? "",
-      nationality: payload.nationality,
-      currentCountry: payload.currentCountry,
-      city: payload.city ?? "",
-      position: t(`position.${payload.position}`),
-      club: payload.currentClub ?? "",
-      situation: t(`situation.${payload.situation}`),
-      targetCountries: openToAnyCountry
-        ? t("openToAny")
-        : Array.from(targetCountries)
-            .map((code) => targetCountryName(code, locale))
-            .join(", "),
-    });
-    setWhatsappUrl(`https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`);
+    setVideoSubmitted(true);
     setSubmitting(false);
   }
 
@@ -166,35 +134,6 @@ export function TalentSubmitForm() {
         <CheckCircle2 size={40} className="mx-auto text-rf-success" />
         <h1 className="font-display text-2xl font-bold text-rf-fg">{t("confirmation.title")}</h1>
         <p className="text-base text-rf-fg-muted">{t("confirmation.videoReceivedBody")}</p>
-        <Link href="/talents" className="block text-sm font-semibold text-rf-orange">
-          {t("confirmation.backHome")}
-        </Link>
-      </div>
-    );
-  }
-
-  if (whatsappUrl) {
-    return (
-      <div className="mx-auto max-w-lg space-y-5 px-4 py-10 text-center">
-        <CheckCircle2 size={40} className="mx-auto text-rf-success" />
-        <h1 className="font-display text-2xl font-bold text-rf-fg">{t("confirmation.title")}</h1>
-        <p className="text-base text-rf-fg-muted">{t("confirmation.body")}</p>
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-rf-success px-6 py-3.5 text-base font-bold text-rf-bg transition-opacity hover:opacity-90"
-        >
-          {t("confirmation.whatsappCta")}
-        </a>
-        {/* La confusion réelle ("pas d'endroit pour la vidéo") vient de ce que
-            le bouton ci-dessus ouvre juste WhatsApp avec un texte prérempli —
-            joindre le fichier vidéo est une étape manuelle DANS WhatsApp,
-            jamais évidente sans une illustration explicite (voir
-            WhatsAppAttachGuide, ajouté après ce même retour deux fois de suite). */}
-        <p className="text-sm font-medium text-rf-fg">{t("confirmation.attachHint")}</p>
-        <WhatsAppAttachGuide />
-        <p className="text-xs text-rf-fg-subtle">{t("confirmation.videoRules")}</p>
         <Link href="/talents" className="block text-sm font-semibold text-rf-orange">
           {t("confirmation.backHome")}
         </Link>
@@ -342,56 +281,25 @@ export function TalentSubmitForm() {
         </label>
       </section>
 
+      {/* Vidéo : uniquement via un lien YouTube depuis le 2026-09-12 (WhatsApp
+          retiré à la demande de Hicham — trop de messages à traiter à la main
+          à l'échelle). Le guide couvre même un joueur qui n'a jamais uploadé
+          sur YouTube, voir YoutubeUploadGuide. */}
       <section className="space-y-3">
         <h2 className="text-sm font-bold uppercase tracking-wide text-rf-fg-subtle">{t("form.sectionVideo")}</h2>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <label
-            className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-sm font-medium transition-colors ${
-              videoMethod === "youtube" ? "border-rf-orange bg-rf-orange/10 text-rf-fg" : "border-rf-border text-rf-fg-muted"
-            }`}
-          >
-            <input
-              type="radio"
-              name="videoMethod"
-              value="youtube"
-              checked={videoMethod === "youtube"}
-              onChange={() => setVideoMethod("youtube")}
-              className="h-4 w-4 accent-rf-orange"
-            />
-            {t("form.videoMethodYoutube")}
-          </label>
-          <label
-            className={`flex cursor-pointer items-center gap-2 rounded-xl border p-3 text-sm font-medium transition-colors ${
-              videoMethod === "whatsapp" ? "border-rf-orange bg-rf-orange/10 text-rf-fg" : "border-rf-border text-rf-fg-muted"
-            }`}
-          >
-            <input
-              type="radio"
-              name="videoMethod"
-              value="whatsapp"
-              checked={videoMethod === "whatsapp"}
-              onChange={() => setVideoMethod("whatsapp")}
-              className="h-4 w-4 accent-rf-orange"
-            />
-            {t("form.videoMethodWhatsapp")}
-          </label>
-        </div>
-
-        {videoMethod === "youtube" ? (
-          <FieldGroup label={t("form.videoUrlLabel")} htmlFor="videoUrl" hint={t("form.videoUrlHint")}>
-            <AdminInput
-              id="videoUrl"
-              name="videoUrl"
-              type="url"
-              placeholder="https://youtube.com/watch?v=..."
-              value={videoUrl}
-              onChange={(e) => setVideoUrl(e.target.value)}
-              required
-            />
-          </FieldGroup>
-        ) : (
-          <p className="text-sm text-rf-fg-muted">{t("form.videoMethodWhatsappHint")}</p>
-        )}
+        <FieldGroup label={t("form.videoUrlLabel")} htmlFor="videoUrl" hint={t("confirmation.videoRules")}>
+          <AdminInput
+            id="videoUrl"
+            name="videoUrl"
+            type="url"
+            placeholder="https://youtube.com/watch?v=..."
+            value={videoUrl}
+            onChange={(e) => setVideoUrl(e.target.value)}
+            required
+          />
+        </FieldGroup>
+        <p className="text-xs text-rf-fg-subtle">{t("form.videoUrlHint")}</p>
+        <YoutubeUploadGuide />
       </section>
 
       <section className="space-y-4">
