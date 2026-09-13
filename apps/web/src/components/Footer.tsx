@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { SITE_NAME } from "@rexfoot/config";
+import { AddToHomeScreenButton } from "@/components/AddToHomeScreenButton";
 
 export async function Footer() {
   const t = await getTranslations("footer");
@@ -12,7 +13,8 @@ export async function Footer() {
         <span>
           © {year} {SITE_NAME}. {t("rights")}
         </span>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <AddToHomeScreenButton />
           <Link href="/mentions-legales" className="underline hover:text-rf-fg">
             {t("legalLink")}
           </Link>

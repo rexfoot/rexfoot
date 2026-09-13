@@ -430,6 +430,14 @@
     "privacyLink": "Privacy policy",
     "rights": "All rights reserved."
   },
+  "addToHomeScreen": {
+    "button": "Add to Home Screen",
+    "title": "Add RexFoot to your Home Screen",
+    "step1": "Tap the Share icon in the Safari toolbar.",
+    "step2": "Scroll down and tap \"Add to Home Screen\".",
+    "step3": "Tap \"Add\" in the top right corner.",
+    "close": "Close"
+  },
   "privacy": {
     "title": "Privacy Policy",
     "metaDescription": "RexFoot privacy policy: data collected, cookies, and your rights.",

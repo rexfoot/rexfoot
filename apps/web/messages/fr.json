@@ -430,6 +430,14 @@
     "privacyLink": "Politique de confidentialité",
     "rights": "Tous droits réservés."
   },
+  "addToHomeScreen": {
+    "button": "Ajouter à l'écran d'accueil",
+    "title": "Ajouter RexFoot à l'écran d'accueil",
+    "step1": "Appuyez sur l'icône Partager dans la barre de Safari.",
+    "step2": "Faites défiler puis appuyez sur « Sur l'écran d'accueil ».",
+    "step3": "Appuyez sur « Ajouter » en haut à droite.",
+    "close": "Fermer"
+  },
   "privacy": {
     "title": "Politique de confidentialité",
     "metaDescription": "Politique de confidentialité de RexFoot : données collectées, cookies et vos droits.",
