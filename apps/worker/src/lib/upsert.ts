@@ -26,19 +26,33 @@ export async function upsertCompetition(
 ): Promise<Competition> {
   const slug = slugOverride ?? slugify(dto.name);
   const provider = providerOverride ?? PROVIDER_NAME;
-  return prisma.competition.upsert({
-    where: { provider_externalId: { provider, externalId: dto.externalId } },
-    create: {
+
+  // Recherche par slug (clé unique seule) plutôt que par provider+externalId :
+  // quand le provider change (ex. football-data.org → api-football), la clé
+  // composée ne trouve pas l'ancien enregistrement et tente un CREATE qui
+  // violerait la contrainte unique sur slug. En cherchant par slug d'abord,
+  // on met toujours à jour l'enregistrement existant, quel que soit son
+  // provider/externalId actuel.
+  const existing = await prisma.competition.findUnique({ where: { slug } });
+  if (existing) {
+    return prisma.competition.update({
+      where: { id: existing.id },
+      data: {
+        provider,
+        externalId: dto.externalId,
+        name: dto.name,
+        type: dto.type,
+        logoUrl: dto.logoUrl,
+        countryName: dto.countryName,
+        countryCode: dto.countryCode,
+      },
+    });
+  }
+
+  return prisma.competition.create({
+    data: {
       provider,
       externalId: dto.externalId,
-      name: dto.name,
-      slug,
-      type: dto.type,
-      logoUrl: dto.logoUrl,
-      countryName: dto.countryName,
-      countryCode: dto.countryCode,
-    },
-    update: {
       name: dto.name,
       slug,
       type: dto.type,
