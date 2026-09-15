@@ -18,6 +18,7 @@ export const FEATURED_COMPETITION_SLUGS = [
   "copa-del-rey",
   "coppa-italia",
   "dfb-pokal",
+  "coupe-de-france",
 ] as const;
 
 export type FeaturedCompetitionSlug = (typeof FEATURED_COMPETITION_SLUGS)[number];

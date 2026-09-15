@@ -13,6 +13,10 @@ import { logger } from "./logger.js";
  * championnat comme "Premier League" ou "Serie A" existe dans plusieurs pays
  * — matcher par nom seul risque de résoudre la mauvaise compétition sans
  * erreur visible.
+ *
+ * `coupe-de-france` est volontairement absente : pas disponible sur
+ * football-data.org. Elle est résolue via le provider secondaire
+ * (API-Football) dans la map ci-dessous.
  */
 const FOOTBALL_DATA_ORG_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug, string>> = {
   "premier-league": "2021",
@@ -30,6 +34,19 @@ const FOOTBALL_DATA_ORG_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug,
   "copa-del-rey": "2079",
   "coppa-italia": "2122",
   "dfb-pokal": "2011",
+};
+
+/**
+ * IDs API-Football pour les compétitions non couvertes par football-data.org.
+ * Réservé au provider secondaire (API-Football) — utilisé uniquement quand le
+ * provider composite est actif (les deux clés configurées).
+ *
+ * TODO: Vérifier/confirmé ces IDs une fois le compte API-Football réactivé.
+ * L'ID Coupe de France (165) provient de la documentation tierce
+ * (apifootball.com) — à valider via GET /leagues?search=coupe+de+france.
+ */
+const API_FOOTBALL_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug, string>> = {
+  "coupe-de-france": "165",
 };
 
 /**
@@ -58,13 +75,18 @@ const COMPETITION_FALLBACK_META: Record<
   "copa-del-rey": { name: "Copa del Rey", type: "CUP", countryName: "Spain", countryCode: "ES", tier: 13 },
   "coppa-italia": { name: "Coppa Italia", type: "CUP", countryName: "Italy", countryCode: "IT", tier: 14 },
   "dfb-pokal": { name: "DFB-Pokal", type: "CUP", countryName: "Germany", countryCode: "DE", tier: 15 },
+  "coupe-de-france": { name: "Coupe de France", type: "CUP", countryName: "France", countryCode: "FR", tier: 16 },
 };
 
 /**
- * Résout chaque compétition vedette directement par son ID externe connu.
- * Upsert celles trouvées via l'API ; pour celles échouées (plan gratuit,
- * erreur réseau), crée un enregistrement minimal via les métadonnées de
- * repli pour que l'onglet reste visible dans l'UI.
+ * Résout chaque compétition vedette en essayant le provider principal
+ * (football-data.org) d'abord. Quand le provider composite est actif, les
+ * compétitions non couvertes par football-data.org (ex. Coupe de France)
+ * sont automatiquement résolues via le provider secondaire (API-Football)
+ * — le routage est géré en interne par le composite.
+ *
+ * Crée un enregistrement minimal en DB si aucun fournisseur ne renvoie de
+ * données (compétition non couverte, erreur réseau, etc.).
  */
 export async function resolveFeaturedCompetitions(
   provider: FootballDataProvider,
@@ -72,18 +94,25 @@ export async function resolveFeaturedCompetitions(
   const resolved: Array<{ competition: Competition; externalId: string }> = [];
 
   for (const slug of FEATURED_COMPETITION_SLUGS) {
-    const id = FOOTBALL_DATA_ORG_COMPETITION_IDS[slug];
-    if (!id) {
-      // Aucun ID connu : crée un enregistrement minimal pour que l'onglet
-      // apparaisse dans l'UI (compétition non couverte par le fournisseur).
+    const fdoId = FOOTBALL_DATA_ORG_COMPETITION_IDS[slug];
+    const apiId = API_FOOTBALL_COMPETITION_IDS[slug];
+
+    // Détermine l'ID à tester : football-data.org en priorité, sinon API-Football.
+    const tryId = fdoId ?? apiId;
+    if (!tryId) {
+      // Aucun ID connu : enregistrement minimal.
       const competition = await upsertMinimalCompetition(slug);
       resolved.push({ competition, externalId: "" });
       continue;
     }
+
     try {
-      const [dto] = await provider.getCompetitions({ id });
+      // Le provider (composite ou non) gère le routage interne :
+      // - Si c'est un CompositeFootballProvider, il essaie primary puis secondary.
+      // - Sinon, il utilise le provider unique.
+      const [dto] = await provider.getCompetitions({ id: tryId });
       if (!dto) {
-        logger.warn({ slug, id }, "Compétition vedette introuvable chez le fournisseur — enregistrement minimal créé");
+        logger.warn({ slug, id: tryId }, "Compétition introuvable chez tous les fournisseurs — enregistrement minimal créé");
         const competition = await upsertMinimalCompetition(slug);
         resolved.push({ competition, externalId: "" });
         continue;
@@ -91,9 +120,7 @@ export async function resolveFeaturedCompetitions(
       const competition = await upsertCompetition(dto, slug);
       resolved.push({ competition, externalId: dto.externalId });
     } catch (err) {
-      // Compétition en échec (pas sur ce plan, erreur réseau, etc.) :
-      // crée un enregistrement minimal pour que l'onglet reste visible.
-      logger.error({ slug, id, err }, "Échec de résolution — enregistrement minimal créé");
+      logger.error({ slug, id: tryId, err }, "Échec de résolution — enregistrement minimal créé");
       const competition = await upsertMinimalCompetition(slug);
       resolved.push({ competition, externalId: "" });
     }
