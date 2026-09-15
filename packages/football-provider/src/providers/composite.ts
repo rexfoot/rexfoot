@@ -29,12 +29,17 @@ export class CompositeFootballProvider implements FootballDataProvider {
   }
 
   async getCompetitions(params?: GetCompetitionsParams): Promise<CompetitionDTO[]> {
-    // Recherche par ID exact : essaie primary d'abord, secondary si pas trouvé.
+    // Recherche par ID exact : essaie primary d'abord, secondary si pas trouvé
+    // ou si le primary lance une erreur (403, 404, réseau, etc.).
     if (params?.id) {
-      const results = await this.primary.getCompetitions(params);
-      if (results.length > 0) {
-        this.providerByExternalId.set(params.id, this.primary);
-        return results;
+      try {
+        const results = await this.primary.getCompetitions(params);
+        if (results.length > 0) {
+          this.providerByExternalId.set(params.id, this.primary);
+          return results;
+        }
+      } catch {
+        // Primary a échoué (403, 404, etc.) — on continue vers le secondary.
       }
       const secondaryResults = await this.secondary.getCompetitions(params);
       if (secondaryResults.length > 0) {

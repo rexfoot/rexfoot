@@ -37,16 +37,23 @@ const FOOTBALL_DATA_ORG_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug,
 };
 
 /**
- * IDs API-Football pour les compétitions non couvertes par football-data.org.
- * Réservé au provider secondaire (API-Football) — utilisé uniquement quand le
- * provider composite est actif (les deux clés configurées).
+ * IDs API-Football v3 pour les compétitions non couvertes par football-data.org
+ * (ou dont le plan gratuit renvoie 403). Réservé au provider secondaire
+ * (API-Football) — utilisé uniquement quand le provider composite est actif
+ * (les deux clés configurées).
  *
- * TODO: Vérifier/confirmé ces IDs une fois le compte API-Football réactivé.
- * L'ID Coupe de France (165) provient de la documentation tierce
- * (apifootball.com) — à valider via GET /leagues?search=coupe+de+france.
+ * IDs vérifiés via la documentation API-Football et sources communautaires.
+ * Les IDs v3 sont stables entre saisons (contrairement aux IDs v2).
  */
 const API_FOOTBALL_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug, string>> = {
-  "coupe-de-france": "165",
+  "europa-league": "3",
+  "europa-conference-league": "4",
+  "fa-cup": "45",
+  "league-cup": "147",
+  "copa-del-rey": "143",
+  "coppa-italia": "137",
+  "dfb-pokal": "81",
+  "coupe-de-france": "66",
 };
 
 /**
@@ -97,30 +104,36 @@ export async function resolveFeaturedCompetitions(
     const fdoId = FOOTBALL_DATA_ORG_COMPETITION_IDS[slug];
     const apiId = API_FOOTBALL_COMPETITION_IDS[slug];
 
-    // Détermine l'ID à tester : football-data.org en priorité, sinon API-Football.
-    const tryId = fdoId ?? apiId;
-    if (!tryId) {
+    // Liste des IDs à essayer : football-data.org en priorité, puis API-Football.
+    const idsToTry = [fdoId, apiId].filter((id): id is string => Boolean(id));
+
+    if (idsToTry.length === 0) {
       // Aucun ID connu : enregistrement minimal.
       const competition = await upsertMinimalCompetition(slug);
       resolved.push({ competition, externalId: "" });
       continue;
     }
 
-    try {
-      // Le provider (composite ou non) gère le routage interne :
-      // - Si c'est un CompositeFootballProvider, il essaie primary puis secondary.
-      // - Sinon, il utilise le provider unique.
-      const [dto] = await provider.getCompetitions({ id: tryId });
-      if (!dto) {
-        logger.warn({ slug, id: tryId }, "Compétition introuvable chez tous les fournisseurs — enregistrement minimal créé");
-        const competition = await upsertMinimalCompetition(slug);
-        resolved.push({ competition, externalId: "" });
-        continue;
+    let resolved_ = false;
+    for (const tryId of idsToTry) {
+      try {
+        // Le provider (composite ou non) gère le routage interne :
+        // - Si c'est un CompositeFootballProvider, il essaie primary puis secondary.
+        // - Sinon, il utilise le provider unique.
+        const [dto] = await provider.getCompetitions({ id: tryId });
+        if (dto) {
+          const competition = await upsertCompetition(dto, slug);
+          resolved.push({ competition, externalId: dto.externalId });
+          resolved_ = true;
+          break;
+        }
+      } catch (err) {
+        logger.error({ slug, id: tryId, err }, "Échec de résolution, essai suivant...");
       }
-      const competition = await upsertCompetition(dto, slug);
-      resolved.push({ competition, externalId: dto.externalId });
-    } catch (err) {
-      logger.error({ slug, id: tryId, err }, "Échec de résolution — enregistrement minimal créé");
+    }
+
+    if (!resolved_) {
+      logger.warn({ slug }, "Aucun fournisseur n'a résolu cette compétition — enregistrement minimal créé");
       const competition = await upsertMinimalCompetition(slug);
       resolved.push({ competition, externalId: "" });
     }
