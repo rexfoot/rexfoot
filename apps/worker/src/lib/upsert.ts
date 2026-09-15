@@ -14,13 +14,22 @@ const PROVIDER_NAME = getActiveProviderName();
  * plutôt que de le dériver du nom. Inclus dans `update` aussi, pas seulement
  * `create` : une compétition déjà mal sluggée (créée avant ce fix) se corrige
  * au prochain sync plutôt que de rester cassée indéfiniment.
+ *
+ * `providerOverride` : le provider qui a réellement résolu la compétition
+ * (ex. "api-football" quand le composite provider utilise API-Football en
+ * repli). Sans override, utilise le provider actif par défaut.
  */
-export async function upsertCompetition(dto: CompetitionDTO, slugOverride?: string): Promise<Competition> {
+export async function upsertCompetition(
+  dto: CompetitionDTO,
+  slugOverride?: string,
+  providerOverride?: string,
+): Promise<Competition> {
   const slug = slugOverride ?? slugify(dto.name);
+  const provider = providerOverride ?? PROVIDER_NAME;
   return prisma.competition.upsert({
-    where: { provider_externalId: { provider: PROVIDER_NAME, externalId: dto.externalId } },
+    where: { provider_externalId: { provider, externalId: dto.externalId } },
     create: {
-      provider: PROVIDER_NAME,
+      provider,
       externalId: dto.externalId,
       name: dto.name,
       slug,

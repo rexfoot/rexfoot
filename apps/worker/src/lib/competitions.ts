@@ -122,7 +122,10 @@ export async function resolveFeaturedCompetitions(
       try {
         const [dto] = await provider.getCompetitions({ id: tryId });
         if (dto) {
-          const competition = await upsertCompetition(dto, slug);
+          // Détermine le provider réellement utilisé pour cette résolution.
+          const isApiFootball = apiId != null && tryId === apiId;
+          const providerName = isApiFootball ? "api-football" : "football-data-org";
+          const competition = await upsertCompetition(dto, slug, providerName);
           resolved.push({ competition, externalId: dto.externalId });
           resolved_ = true;
           break;
