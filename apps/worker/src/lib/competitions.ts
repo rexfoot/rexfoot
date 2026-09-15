@@ -5,6 +5,9 @@ import type { Competition } from "@rexfoot/db";
 import { upsertCompetition } from "./upsert.js";
 import { logger } from "./logger.js";
 
+/** Pause entre deux appels API-Football pour respecter la limite de débit (100 req/jour, ~10/min). */
+const API_FOOTBALL_THROTTLE_MS = 1_000;
+
 /**
  * IDs de compétition football-data.org (stables, documentés publiquement)
  * pour chaque compétition vedette. On résout par ID plutôt que par nom
@@ -117,9 +120,6 @@ export async function resolveFeaturedCompetitions(
     let resolved_ = false;
     for (const tryId of idsToTry) {
       try {
-        // Le provider (composite ou non) gère le routage interne :
-        // - Si c'est un CompositeFootballProvider, il essaie primary puis secondary.
-        // - Sinon, il utilise le provider unique.
         const [dto] = await provider.getCompetitions({ id: tryId });
         if (dto) {
           const competition = await upsertCompetition(dto, slug);
@@ -129,6 +129,10 @@ export async function resolveFeaturedCompetitions(
         }
       } catch (err) {
         logger.error({ slug, id: tryId, err }, "Échec de résolution, essai suivant...");
+      }
+      // Petit délai entre les appels API-Football pour éviter les 429.
+      if (idsToTry.length > 1) {
+        await new Promise((r) => setTimeout(r, API_FOOTBALL_THROTTLE_MS));
       }
     }
 
@@ -144,33 +148,41 @@ export async function resolveFeaturedCompetitions(
 
 /**
  * Crée ou met à jour un enregistrement Competition minimal à partir des
- * métadonnées de repli, sans appeler l'API. Le slug est toujours fixé via
- * slugOverride pour garantir la cohérence avec FEATURED_COMPETITION_SLUGS.
+ * métadonnées de repli, sans appeler l'API. Recherche d'abord par slug
+ * (unique) pour éviter les conflits quand la compétition existe déjà avec
+ * un provider/externalId différent (ex. football-data.org → fallback).
  */
 async function upsertMinimalCompetition(slug: FeaturedCompetitionSlug): Promise<Competition> {
   const meta = COMPETITION_FALLBACK_META[slug];
   if (!meta) {
     throw new Error(`Aucune métadonnée de repli pour la compétition "${slug}"`);
   }
-  return prisma.competition.upsert({
-    where: {
-      provider_externalId: { provider: "fallback", externalId: slug },
-    },
-    create: {
+
+  // Recherche par slug (unique) : si la compétition existe déjà (créée par
+  // football-data.org ou un previous sync), on la met à jour plutôt que de
+  // créer un doublon qui violerait la contrainte unique sur slug.
+  const existing = await prisma.competition.findUnique({ where: { slug } });
+  if (existing) {
+    return prisma.competition.update({
+      where: { id: existing.id },
+      data: {
+        name: meta.name,
+        type: meta.type,
+        countryName: meta.countryName,
+        countryCode: meta.countryCode,
+        tier: meta.tier,
+      },
+    });
+  }
+
+  return prisma.competition.create({
+    data: {
       provider: "fallback",
       externalId: slug,
       name: meta.name,
       slug,
       type: meta.type,
       logoUrl: null,
-      countryName: meta.countryName,
-      countryCode: meta.countryCode,
-      tier: meta.tier,
-    },
-    update: {
-      name: meta.name,
-      slug,
-      type: meta.type,
       countryName: meta.countryName,
       countryCode: meta.countryCode,
       tier: meta.tier,
