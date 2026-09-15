@@ -13,11 +13,10 @@ import { logger } from "./logger.js";
  * — matcher par nom seul risque de résoudre la mauvaise compétition sans
  * erreur visible.
  *
- * `europa-league` est volontairement absente : pas disponible sur le plan
- * gratuit football-data.org (confirmé — absente de la liste des 13
- * compétitions renvoyées par /v4/competitions). resolveFeaturedCompetitions
- * la logue et l'ignore plutôt que d'appeler le fournisseur avec un ID
- * inexistant.
+ * Les compétitions européennes (europa-league, europa-conference-league)
+ * ne sont pas disponibles sur le plan gratuit football-data.org —
+ * resolveFeaturedCompetitions les logue et les ignore si le fournisseur
+ * ne les renvoie pas.
  */
 const FOOTBALL_DATA_ORG_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug, string>> = {
   "premier-league": "2021",
@@ -26,8 +25,15 @@ const FOOTBALL_DATA_ORG_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug,
   "serie-a": "2019",
   bundesliga: "2002",
   "champions-league": "2001",
+  "europa-league": "2146",
+  "europa-conference-league": "2154",
   "european-championship": "2018",
   "world-cup": "2000",
+  "fa-cup": "2055",
+  "league-cup": "2139",
+  "copa-del-rey": "2079",
+  "coppa-italia": "2122",
+  "dfb-pokal": "2011",
 };
 
 /**

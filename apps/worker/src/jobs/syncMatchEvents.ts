@@ -103,6 +103,7 @@ function highlightlyCountryName(countryName: string | null): string | undefined 
 const HIGHLIGHTLY_LEAGUE_ID_BY_SLUG: Record<string, number> = {
   "champions-league": 2486,
   "europa-league": 3337,
+  "europa-conference-league": 722432,
   "european-championship": 4188,
   "world-cup": 1635,
 };

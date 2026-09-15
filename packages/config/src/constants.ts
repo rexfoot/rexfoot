@@ -10,8 +10,14 @@ export const FEATURED_COMPETITION_SLUGS = [
   "bundesliga",
   "champions-league",
   "europa-league",
+  "europa-conference-league",
   "european-championship",
   "world-cup",
+  "fa-cup",
+  "league-cup",
+  "copa-del-rey",
+  "coppa-italia",
+  "dfb-pokal",
 ] as const;
 
 export type FeaturedCompetitionSlug = (typeof FEATURED_COMPETITION_SLUGS)[number];
