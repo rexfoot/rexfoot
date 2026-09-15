@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   const customerSubdomain = match[1];
-  const newPlaybackUrl = `https://customer-${customerSubdomain}.cloudflarestream.com/${video.providerAssetId}`;
+  const newPlaybackUrl = `https://customer-${customerSubdomain}.cloudflarestream.com/${video.providerAssetId}/iframe`;
 
   await prisma.video.update({
     where: { id: videoId },

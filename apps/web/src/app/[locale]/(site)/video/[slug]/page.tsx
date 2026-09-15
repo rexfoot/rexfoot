@@ -14,7 +14,7 @@ function resolvePlaybackUrl(playbackUrl: string | null, thumbnailUrl: string | n
   if (playbackUrl && !playbackUrl.includes("iframe.videodelivery.net")) return playbackUrl;
   if (thumbnailUrl && providerAssetId) {
     const match = thumbnailUrl.match(/https:\/\/customer-([^.]+)\.cloudflarestream\.com\//);
-    if (match) return `https://customer-${match[1]}.cloudflarestream.com/${providerAssetId}`;
+    if (match) return `https://customer-${match[1]}.cloudflarestream.com/${providerAssetId}/iframe`;
   }
   return playbackUrl;
 }

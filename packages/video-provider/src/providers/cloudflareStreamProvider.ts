@@ -90,7 +90,7 @@ export class CloudflareStreamProvider implements VideoProvider {
       if (hlsUrl) {
         const match = hlsUrl.match(/https:\/\/customer-([^.]+)\.cloudflarestream\.com\//);
         if (match) {
-          playbackUrl = `https://customer-${match[1]}.cloudflarestream.com/${providerAssetId}`;
+          playbackUrl = `https://customer-${match[1]}.cloudflarestream.com/${providerAssetId}/iframe`;
         }
       }
       if (!playbackUrl) {
