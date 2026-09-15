@@ -7,15 +7,7 @@ let queue: Queue | undefined;
 function createBullMqConnection(): Redis {
   const url = getEnv().REDIS_URL;
   console.log(`[article-video-queue] Création connexion Redis BullMQ (url=${url.substring(0, 20)}...)`);
-  const conn = new Redis(url, {
-    maxRetriesPerRequest: null,
-    enableReadyCheck: false,
-    lazyConnect: true,
-  });
-  conn.on("error", (err) => {
-    console.error("[article-video-queue] Erreur connexion Redis BullMQ:", err.message);
-  });
-  return conn;
+  return new Redis(url, { maxRetriesPerRequest: null });
 }
 
 function getQueue(): Queue {
