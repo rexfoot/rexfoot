@@ -12,8 +12,8 @@ function createBullMqConnection(): Redis {
 
 function getQueue(): Queue {
   if (!queue) {
-    console.log("[article-video-queue] Création de la file BullMQ 'rexfoot-sync'");
-    queue = new Queue("rexfoot-sync", { connection: createBullMqConnection() });
+    console.log("[article-video-queue] Création de la file BullMQ 'rexfoot-article-video'");
+    queue = new Queue("rexfoot-article-video", { connection: createBullMqConnection() });
   }
   return queue;
 }

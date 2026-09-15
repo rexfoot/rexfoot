@@ -5,6 +5,7 @@ import { createBullMqConnection } from "./lib/redis.js";
 import { logger } from "./lib/logger.js";
 import {
   SYNC_QUEUE_NAME,
+  VIDEO_QUEUE_NAME,
   JobName,
   createSyncQueue,
   registerScheduledJobs,
@@ -67,22 +68,6 @@ async function main(): Promise<void> {
           return syncYoutubeVideos();
         case JobName.weeklyRecap:
           return generateWeeklyRecap();
-        case JobName.generateArticleVideo: {
-          const articleId = job.data.articleId as string;
-          if (!articleId) {
-            logger.error("generate-article-video : articleId manquant dans les données du job");
-            return null;
-          }
-          logger.info({ articleId, jobId: job.id }, "generate-article-video : début du traitement");
-          try {
-            const result = await generateArticleVideo(articleId);
-            logger.info({ articleId, jobId: job.id, result }, "generate-article-video : traité avec succès");
-            return result;
-          } catch (err) {
-            logger.error({ articleId, jobId: job.id, err }, "generate-article-video : échec du traitement");
-            throw err;
-          }
-        }
         case JobName.syncMatchEvents: {
           // Même principe de résilience que syncLiveScores ci-dessous : un
           // échec transitoire (quota Highlightly épuisé, requête en timeout)
@@ -127,11 +112,43 @@ async function main(): Promise<void> {
   worker.on("completed", (job) => logger.debug({ job: job.name }, "Job terminé"));
   worker.on("failed", (job, err) => logger.error({ job: job?.name, err }, "Job en échec"));
 
+  const videoWorker = new Worker(
+    VIDEO_QUEUE_NAME,
+    async (job: Job) => {
+      switch (job.name) {
+        case JobName.generateArticleVideo: {
+          const articleId = job.data.articleId as string;
+          if (!articleId) {
+            logger.error("generate-article-video : articleId manquant dans les données du job");
+            return null;
+          }
+          logger.info({ articleId, jobId: job.id }, "generate-article-video : début du traitement");
+          try {
+            const result = await generateArticleVideo(articleId);
+            logger.info({ articleId, jobId: job.id, result }, "generate-article-video : traité avec succès");
+            return result;
+          } catch (err) {
+            logger.error({ articleId, jobId: job.id, err }, "generate-article-video : échec du traitement");
+            throw err;
+          }
+        }
+        default:
+          logger.warn({ job: job.name }, "Video worker: job inconnu, ignoré");
+          return undefined;
+      }
+    },
+    { connection: createBullMqConnection(), concurrency: 1 },
+  );
+
+  videoWorker.on("completed", (job) => logger.debug({ job: job.name }, "Video job terminé"));
+  videoWorker.on("failed", (job, err) => logger.error({ job: job?.name, err }, "Video job en échec"));
+
   await registerScheduledJobs(queue);
   logger.info("RexFoot worker démarré, jobs planifiés");
 
   const shutdown = async () => {
     logger.info("Arrêt du worker…");
+    await videoWorker.close();
     await worker.close();
     await queue.close();
     process.exit(0);

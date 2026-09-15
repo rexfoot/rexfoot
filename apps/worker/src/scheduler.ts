@@ -6,6 +6,7 @@ import { createBullMqConnection } from "./lib/redis.js";
 const PROVIDER_NAME = getActiveProviderName();
 
 export const SYNC_QUEUE_NAME = "rexfoot-sync";
+export const VIDEO_QUEUE_NAME = "rexfoot-article-video";
 
 export const JobName = {
   syncFixtures: "sync-fixtures",

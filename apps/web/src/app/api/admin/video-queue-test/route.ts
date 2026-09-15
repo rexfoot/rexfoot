@@ -22,8 +22,8 @@ export async function GET(request: Request) {
     // Test ping
     const ping = await conn.ping();
 
-    // Test queue connectivity
-    const queue = new Queue("rexfoot-sync", { connection: conn });
+    // Test video queue connectivity
+    const queue = new Queue("rexfoot-article-video", { connection: conn });
     const [waiting, active, completed, failed] = await Promise.all([
       queue.getWaitingCount(),
       queue.getActiveCount(),
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       ok: true,
       ping,
-      queue: "rexfoot-sync",
+      queue: "rexfoot-article-video",
       counts: { waiting, active, completed, failed },
       redisUrl: maskedUrl,
     });
