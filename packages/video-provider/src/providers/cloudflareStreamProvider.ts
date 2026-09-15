@@ -28,6 +28,7 @@ interface StreamVideoApiResult {
   thumbnail: string | null;
   duration: number | null;
   status: { state: string };
+  playback: { hls: string | null; dash: string | null } | null;
 }
 
 const API_BASE = "https://api.cloudflare.com/client/v4";
@@ -80,11 +81,25 @@ export class CloudflareStreamProvider implements VideoProvider {
   async getDetails(providerAssetId: string): Promise<VideoDetails> {
     const result = await this.request<StreamVideoApiResult>(`/stream/${providerAssetId}`);
     const status = mapState(result.status.state);
+    let playbackUrl: string | null = null;
+    if (status === "READY") {
+      // Extraire le sous-domaine client depuis l'URL HLS renvoyée par l'API
+      // pour construire l'URL d'embed correcte (customer-{subdomain}.cloudflarestream.com)
+      // au lieu du domaine legacy iframe.videodelivery.net qui ne charge pas correctement.
+      const hlsUrl = result.playback?.hls;
+      if (hlsUrl) {
+        const match = hlsUrl.match(/https:\/\/customer-([^.]+)\.cloudflarestream\.com\//);
+        if (match) {
+          playbackUrl = `https://customer-${match[1]}.cloudflarestream.com/${providerAssetId}`;
+        }
+      }
+      if (!playbackUrl) {
+        playbackUrl = `https://iframe.videodelivery.net/${providerAssetId}`;
+      }
+    }
     return {
       status,
-      // Player intégré Cloudflare (compatible tous navigateurs) plutôt que le
-      // manifest HLS brut, qu'un <video> natif ne sait pas lire hors Safari.
-      playbackUrl: status === "READY" ? `https://iframe.videodelivery.net/${providerAssetId}` : null,
+      playbackUrl,
       thumbnailUrl: result.thumbnail ?? null,
       durationSeconds: result.duration !== null ? Math.round(result.duration) : null,
     };

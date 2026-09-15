@@ -9,6 +9,16 @@ import { TrackView } from "@/components/TrackView";
 import { ShareButtons } from "@/components/ShareButtons";
 import { buildAlternates } from "@/lib/seo/alternates";
 
+/** Convertit l'URL legacy iframe.videodelivery.net en customer-domain si thumbnailUrl contient le sous-domaine. */
+function resolvePlaybackUrl(playbackUrl: string | null, thumbnailUrl: string | null, providerAssetId: string | null): string | null {
+  if (playbackUrl && !playbackUrl.includes("iframe.videodelivery.net")) return playbackUrl;
+  if (thumbnailUrl && providerAssetId) {
+    const match = thumbnailUrl.match(/https:\/\/customer-([^.]+)\.cloudflarestream\.com\//);
+    if (match) return `https://customer-${match[1]}.cloudflarestream.com/${providerAssetId}`;
+  }
+  return playbackUrl;
+}
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }
@@ -32,16 +42,15 @@ export default async function VideoDetailPage({ params }: PageProps) {
   if (!video) notFound();
 
   const related = await getRelatedVideos(video.id);
+  const resolvedUrl = resolvePlaybackUrl(video.playbackUrl, video.thumbnailUrl, video.providerAssetId);
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
       <TrackView entityType="VIDEO" entityId={video.id} />
       <div className="overflow-hidden rounded-2xl bg-rf-bg-card">
-        {(video.playbackUrl ?? (video.providerName === "cloudflare-stream" && video.providerAssetId
-          ? `https://iframe.videodelivery.net/${video.providerAssetId}`
-          : null)) ? (
+        {resolvedUrl ? (
           <iframe
-            src={video.playbackUrl ?? `https://iframe.videodelivery.net/${video.providerAssetId}`}
+            src={resolvedUrl}
             title={video.title}
             allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
