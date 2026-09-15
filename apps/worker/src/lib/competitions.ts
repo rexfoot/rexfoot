@@ -6,7 +6,7 @@ import { upsertCompetition } from "./upsert.js";
 import { logger } from "./logger.js";
 
 /** Pause entre deux appels API-Football pour respecter la limite de débit (100 req/jour, ~10/min). */
-const API_FOOTBALL_THROTTLE_MS = 1_000;
+const API_FOOTBALL_THROTTLE_MS = 3_000;
 
 /**
  * IDs de compétition football-data.org (stables, documentés publiquement)

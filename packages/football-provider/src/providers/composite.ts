@@ -53,11 +53,32 @@ export class CompositeFootballProvider implements FootballDataProvider {
   }
 
   async getSeasons(competitionExternalId: string): Promise<SeasonDTO[]> {
-    return this.resolveProvider(competitionExternalId).getSeasons(competitionExternalId);
+    // Le cache providerByExternalId peut ne pas contenir cet externalId
+    // (compétition résolue via un autre chemin, ou cache réinitialisé). On
+    // essaie le provider résolu, puis fallback sur l'autre en cas d'erreur.
+    const resolved = this.resolveProvider(competitionExternalId);
+    const fallback = resolved === this.primary ? this.secondary : this.primary;
+    try {
+      const results = await resolved.getSeasons(competitionExternalId);
+      if (results.length > 0) return results;
+      // Résultat vide : on tente le fallback (le provider résolu ne couvre
+      // peut-être pas cette compétition).
+      return await fallback.getSeasons(competitionExternalId);
+    } catch {
+      return await fallback.getSeasons(competitionExternalId);
+    }
   }
 
   async getTeams(params: GetTeamsParams): Promise<TeamDTO[]> {
-    return this.resolveProvider(params.competitionExternalId).getTeams(params);
+    const resolved = this.resolveProvider(params.competitionExternalId);
+    const fallback = resolved === this.primary ? this.secondary : this.primary;
+    try {
+      const results = await resolved.getTeams(params);
+      if (results.length > 0) return results;
+      return await fallback.getTeams(params);
+    } catch {
+      return await fallback.getTeams(params);
+    }
   }
 
   async getPlayers(params: GetPlayersParams): Promise<PlayerDTO[]> {
@@ -69,7 +90,15 @@ export class CompositeFootballProvider implements FootballDataProvider {
 
   async getFixtures(params: GetFixturesParams): Promise<FixtureDTO[]> {
     if (params.competitionExternalId) {
-      return this.resolveProvider(params.competitionExternalId).getFixtures(params);
+      const resolved = this.resolveProvider(params.competitionExternalId);
+      const fallback = resolved === this.primary ? this.secondary : this.primary;
+      try {
+        const results = await resolved.getFixtures(params);
+        if (results.length > 0) return results;
+        return await fallback.getFixtures(params);
+      } catch {
+        return await fallback.getFixtures(params);
+      }
     }
     return this.primary.getFixtures(params);
   }
@@ -88,11 +117,27 @@ export class CompositeFootballProvider implements FootballDataProvider {
   }
 
   async getStandings(params: GetStandingsParams): Promise<StandingDTO[]> {
-    return this.resolveProvider(params.competitionExternalId).getStandings(params);
+    const resolved = this.resolveProvider(params.competitionExternalId);
+    const fallback = resolved === this.primary ? this.secondary : this.primary;
+    try {
+      const results = await resolved.getStandings(params);
+      if (results.length > 0) return results;
+      return await fallback.getStandings(params);
+    } catch {
+      return await fallback.getStandings(params);
+    }
   }
 
   async getTeamStatistics(params: GetTeamStatisticsParams): Promise<TeamStatisticsDTO | null> {
-    return this.resolveProvider(params.competitionExternalId).getTeamStatistics(params);
+    const resolved = this.resolveProvider(params.competitionExternalId);
+    const fallback = resolved === this.primary ? this.secondary : this.primary;
+    try {
+      const result = await resolved.getTeamStatistics(params);
+      if (result) return result;
+      return await fallback.getTeamStatistics(params);
+    } catch {
+      return await fallback.getTeamStatistics(params);
+    }
   }
 
   async getPlayerStatistics(params: GetPlayerStatisticsParams): Promise<PlayerStatisticsDTO[]> {
