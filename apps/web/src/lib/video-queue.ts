@@ -5,11 +5,22 @@ import { getEnv } from "@rexfoot/config";
 let queue: Queue | undefined;
 
 function createBullMqConnection(): Redis {
-  return new Redis(getEnv().REDIS_URL, { maxRetriesPerRequest: null });
+  const url = getEnv().REDIS_URL;
+  console.log(`[article-video-queue] Création connexion Redis BullMQ (url=${url.substring(0, 20)}...)`);
+  const conn = new Redis(url, {
+    maxRetriesPerRequest: null,
+    enableReadyCheck: false,
+    lazyConnect: true,
+  });
+  conn.on("error", (err) => {
+    console.error("[article-video-queue] Erreur connexion Redis BullMQ:", err.message);
+  });
+  return conn;
 }
 
 function getQueue(): Queue {
   if (!queue) {
+    console.log("[article-video-queue] Création de la file BullMQ 'rexfoot-sync'");
     queue = new Queue("rexfoot-sync", { connection: createBullMqConnection() });
   }
   return queue;
@@ -21,13 +32,22 @@ function getQueue(): Queue {
  */
 export async function enqueueArticleVideoGeneration(articleId: string): Promise<void> {
   const q = getQueue();
-  await q.add(
-    "generate-article-video",
-    { articleId },
-    {
-      jobId: `article-video-${articleId}-${Date.now()}`,
-      removeOnComplete: { count: 10 },
-      removeOnFail: { count: 10 },
-    },
-  );
+  const jobId = `article-video-${articleId}-${Date.now()}`;
+  console.log(`[article-video-queue] Ajout du job ${jobId} pour article ${articleId}`);
+
+  try {
+    await q.add(
+      "generate-article-video",
+      { articleId },
+      {
+        jobId,
+        removeOnComplete: { count: 10 },
+        removeOnFail: { count: 10 },
+      },
+    );
+    console.log(`[article-video-queue] Job ${jobId} ajouté avec succès`);
+  } catch (err) {
+    console.error(`[article-video-queue] Échec de l'ajout du job ${jobId}:`, err);
+    throw err;
+  }
 }

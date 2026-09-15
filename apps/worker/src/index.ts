@@ -70,10 +70,18 @@ async function main(): Promise<void> {
         case JobName.generateArticleVideo: {
           const articleId = job.data.articleId as string;
           if (!articleId) {
-            logger.error("generateArticleVideo : articleId manquant dans les données du job");
+            logger.error("generate-article-video : articleId manquant dans les données du job");
             return null;
           }
-          return generateArticleVideo(articleId);
+          logger.info({ articleId, jobId: job.id }, "generate-article-video : début du traitement");
+          try {
+            const result = await generateArticleVideo(articleId);
+            logger.info({ articleId, jobId: job.id, result }, "generate-article-video : traité avec succès");
+            return result;
+          } catch (err) {
+            logger.error({ articleId, jobId: job.id, err }, "generate-article-video : échec du traitement");
+            throw err;
+          }
         }
         case JobName.syncMatchEvents: {
           // Même principe de résilience que syncLiveScores ci-dessous : un
