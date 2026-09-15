@@ -6,6 +6,7 @@ import { getAllNewsForAdmin } from "@/lib/data/news-admin";
 import { NEWS_CATEGORY_LABELS } from "@/lib/news-categories";
 import { AdminButton, Banner } from "@/components/admin/ui";
 import { DeleteButton } from "@/components/admin/DeleteButton";
+import { GenerateVideoButton } from "@/components/admin/GenerateVideoButton";
 import { EmptyState } from "@/components/EmptyState";
 import { isCurrentlyBreaking } from "@/lib/breaking";
 import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
@@ -13,20 +14,6 @@ import { can } from "@/lib/auth/permissions";
 import { cn } from "@/lib/cn";
 
 export const dynamic = "force-dynamic";
-
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rexfoot.com";
-/**
- * Studio vidéo — application SÉPARÉE (jamais déployée avec rexfoot.com, pas
- * de clé API ici). Ce lien se contente de passer l'URL publique de
- * l'article ; toute la génération (IA, voix, rendu) vit dans le studio.
- * URL par défaut = dev local tant que studio.rexfoot.com n'est pas déployé.
- */
-const VIDEO_STUDIO_URL = process.env.NEXT_PUBLIC_VIDEO_STUDIO_URL ?? "http://localhost:3100";
-
-function videoStudioLink(slug: string): string {
-  const articleUrl = `${SITE_URL}/news/${slug}`;
-  return `${VIDEO_STUDIO_URL}/?articleUrl=${encodeURIComponent(articleUrl)}`;
-}
 
 const STATUS_LABELS: Record<NewsStatus, string> = {
   DRAFT: "Brouillon",
@@ -124,15 +111,7 @@ export default async function AdminNewsListPage({ searchParams }: PageProps) {
 
               <div className="flex shrink-0 items-center gap-2">
                 {canManage && (
-                  <a
-                    href={videoStudioLink(article.slug)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-lg border border-rf-border px-3 py-2 text-sm font-medium text-rf-fg transition-colors hover:border-rf-gold/40"
-                    title="Ouvre le studio vidéo (application séparée) avec cet article déjà sélectionné"
-                  >
-                    🎬 Générer une vidéo
-                  </a>
+                  <GenerateVideoButton articleId={article.id} articleStatus={article.status} />
                 )}
                 {canManage && (
                   <Link
