@@ -1,3 +1,4 @@
+import { prisma } from "@rexfoot/db";
 import { FEATURED_COMPETITION_SLUGS, type FeaturedCompetitionSlug } from "@rexfoot/config";
 import type { FootballDataProvider } from "@rexfoot/football-provider";
 import type { Competition } from "@rexfoot/db";
@@ -12,11 +13,6 @@ import { logger } from "./logger.js";
  * championnat comme "Premier League" ou "Serie A" existe dans plusieurs pays
  * — matcher par nom seul risque de résoudre la mauvaise compétition sans
  * erreur visible.
- *
- * Les compétitions européennes (europa-league, europa-conference-league)
- * ne sont pas disponibles sur le plan gratuit football-data.org —
- * resolveFeaturedCompetitions les logue et les ignore si le fournisseur
- * ne les renvoie pas.
  */
 const FOOTBALL_DATA_ORG_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug, string>> = {
   "premier-league": "2021",
@@ -37,9 +33,38 @@ const FOOTBALL_DATA_ORG_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug,
 };
 
 /**
+ * Métadonnées de repli pour les compétitions que l'API ne renvoie pas
+ * (plan gratuit, erreur temporaire, etc.). Permet de créer un enregistrement
+ * minimal en DB pour que l'onglet apareîsse dans l'UI — les données réelles
+ * (saisons, équipes, matchs) seront remplies quand le fournisseur les
+ * fournira.
+ */
+const COMPETITION_FALLBACK_META: Record<
+  FeaturedCompetitionSlug,
+  { name: string; type: "LEAGUE" | "CUP" | "INTERNATIONAL"; countryName: string | null; countryCode: string | null; tier: number }
+> = {
+  "premier-league": { name: "Premier League", type: "LEAGUE", countryName: "England", countryCode: "GB", tier: 1 },
+  "la-liga": { name: "La Liga", type: "LEAGUE", countryName: "Spain", countryCode: "ES", tier: 2 },
+  "ligue-1": { name: "Ligue 1", type: "LEAGUE", countryName: "France", countryCode: "FR", tier: 3 },
+  "serie-a": { name: "Serie A", type: "LEAGUE", countryName: "Italy", countryCode: "IT", tier: 4 },
+  bundesliga: { name: "Bundesliga", type: "LEAGUE", countryName: "Germany", countryCode: "DE", tier: 5 },
+  "champions-league": { name: "UEFA Champions League", type: "INTERNATIONAL", countryName: null, countryCode: null, tier: 6 },
+  "europa-league": { name: "UEFA Europa League", type: "INTERNATIONAL", countryName: null, countryCode: null, tier: 7 },
+  "europa-conference-league": { name: "UEFA Europa Conference League", type: "INTERNATIONAL", countryName: null, countryCode: null, tier: 8 },
+  "european-championship": { name: "European Championship", type: "INTERNATIONAL", countryName: null, countryCode: null, tier: 9 },
+  "world-cup": { name: "FIFA World Cup", type: "INTERNATIONAL", countryName: null, countryCode: null, tier: 10 },
+  "fa-cup": { name: "FA Cup", type: "CUP", countryName: "England", countryCode: "GB", tier: 11 },
+  "league-cup": { name: "EFL Cup", type: "CUP", countryName: "England", countryCode: "GB", tier: 12 },
+  "copa-del-rey": { name: "Copa del Rey", type: "CUP", countryName: "Spain", countryCode: "ES", tier: 13 },
+  "coppa-italia": { name: "Coppa Italia", type: "CUP", countryName: "Italy", countryCode: "IT", tier: 14 },
+  "dfb-pokal": { name: "DFB-Pokal", type: "CUP", countryName: "Germany", countryCode: "DE", tier: 15 },
+};
+
+/**
  * Résout chaque compétition vedette directement par son ID externe connu.
- * Upsert celles trouvées ; les autres (introuvables ou non disponibles sur
- * ce plan) sont juste loguées (ne bloque pas la sync des autres compétitions).
+ * Upsert celles trouvées via l'API ; pour celles échouées (plan gratuit,
+ * erreur réseau), crée un enregistrement minimal via les métadonnées de
+ * repli pour que l'onglet reste visible dans l'UI.
  */
 export async function resolveFeaturedCompetitions(
   provider: FootballDataProvider,
@@ -49,23 +74,66 @@ export async function resolveFeaturedCompetitions(
   for (const slug of FEATURED_COMPETITION_SLUGS) {
     const id = FOOTBALL_DATA_ORG_COMPETITION_IDS[slug];
     if (!id) {
-      logger.info({ slug }, "Compétition vedette non disponible chez ce fournisseur, ignorée");
+      // Aucun ID connu : crée un enregistrement minimal pour que l'onglet
+      // apparaisse dans l'UI (compétition non couverte par le fournisseur).
+      const competition = await upsertMinimalCompetition(slug);
+      resolved.push({ competition, externalId: "" });
       continue;
     }
     try {
       const [dto] = await provider.getCompetitions({ id });
       if (!dto) {
-        logger.warn({ slug, id }, "Compétition vedette introuvable chez le fournisseur");
+        logger.warn({ slug, id }, "Compétition vedette introuvable chez le fournisseur — enregistrement minimal créé");
+        const competition = await upsertMinimalCompetition(slug);
+        resolved.push({ competition, externalId: "" });
         continue;
       }
       const competition = await upsertCompetition(dto, slug);
       resolved.push({ competition, externalId: dto.externalId });
     } catch (err) {
-      // Une compétition en échec (quota, erreur réseau, etc.) ne doit pas
-      // empêcher la synchronisation des 6 autres.
-      logger.error({ slug, id, err }, "Échec de résolution d'une compétition vedette");
+      // Compétition en échec (pas sur ce plan, erreur réseau, etc.) :
+      // crée un enregistrement minimal pour que l'onglet reste visible.
+      logger.error({ slug, id, err }, "Échec de résolution — enregistrement minimal créé");
+      const competition = await upsertMinimalCompetition(slug);
+      resolved.push({ competition, externalId: "" });
     }
   }
 
   return resolved;
+}
+
+/**
+ * Crée ou met à jour un enregistrement Competition minimal à partir des
+ * métadonnées de repli, sans appeler l'API. Le slug est toujours fixé via
+ * slugOverride pour garantir la cohérence avec FEATURED_COMPETITION_SLUGS.
+ */
+async function upsertMinimalCompetition(slug: FeaturedCompetitionSlug): Promise<Competition> {
+  const meta = COMPETITION_FALLBACK_META[slug];
+  if (!meta) {
+    throw new Error(`Aucune métadonnée de repli pour la compétition "${slug}"`);
+  }
+  return prisma.competition.upsert({
+    where: {
+      provider_externalId: { provider: "fallback", externalId: slug },
+    },
+    create: {
+      provider: "fallback",
+      externalId: slug,
+      name: meta.name,
+      slug,
+      type: meta.type,
+      logoUrl: null,
+      countryName: meta.countryName,
+      countryCode: meta.countryCode,
+      tier: meta.tier,
+    },
+    update: {
+      name: meta.name,
+      slug,
+      type: meta.type,
+      countryName: meta.countryName,
+      countryCode: meta.countryCode,
+      tier: meta.tier,
+    },
+  });
 }
