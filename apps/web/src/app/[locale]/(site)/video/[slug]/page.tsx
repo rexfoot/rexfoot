@@ -37,11 +37,13 @@ export default async function VideoDetailPage({ params }: PageProps) {
     <div className="mx-auto max-w-5xl space-y-8 px-4 py-6">
       <TrackView entityType="VIDEO" entityId={video.id} />
       <div className="overflow-hidden rounded-2xl bg-rf-bg-card">
-        {video.playbackUrl ? (
+        {(video.playbackUrl ?? (video.providerName === "cloudflare-stream" && video.providerAssetId
+          ? `https://iframe.videodelivery.net/${video.providerAssetId}`
+          : null)) ? (
           <iframe
-            src={video.playbackUrl}
+            src={video.playbackUrl ?? `https://iframe.videodelivery.net/${video.providerAssetId}`}
             title={video.title}
-            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture;"
+            allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"
             allowFullScreen
             className="aspect-video w-full border-0"
           />
