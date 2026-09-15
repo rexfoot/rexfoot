@@ -19,6 +19,7 @@ export const JobName = {
   syncYoutubeVideos: "sync-youtube-videos",
   weeklyRecap: "weekly-recap",
   syncMatchEvents: "sync-match-events",
+  generateArticleVideo: "generate-article-video",
 } as const;
 
 // Le fournisseur actif est football-data.org, plan "Free w/ Livescores"

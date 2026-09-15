@@ -3,6 +3,7 @@ import { Sparkles, ExternalLink, Film, ImageIcon } from "lucide-react";
 import { getNewsArticleByIdForAdmin } from "@/lib/data/news-admin";
 import { htmlToText } from "@/lib/text-to-html";
 import { NewsForm } from "@/components/admin/NewsForm";
+import { GenerateVideoButton } from "@/components/admin/GenerateVideoButton";
 import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
 
 export const dynamic = "force-dynamic";
@@ -99,6 +100,8 @@ export default async function AdminNewsEditPage({ params }: PageProps) {
           breakingPriority: article.breakingPriority,
         }}
       />
+
+      <GenerateVideoButton articleId={article.id} articleStatus={article.status} />
     </div>
   );
 }

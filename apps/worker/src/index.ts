@@ -22,6 +22,7 @@ import { syncMatchEvents } from "./jobs/syncMatchEvents.js";
 import { runEditorialDigest } from "./jobs/editorial/runEditorialDigest.js";
 import { extractTransfersFromArticles } from "./jobs/editorial/extractTransfers.js";
 import { syncPlayerPhotos } from "./jobs/syncPlayerPhotos.js";
+import { generateArticleVideo } from "./jobs/generateArticleVideo.js";
 import { startRealtimeServer } from "./lib/realtime.js";
 
 async function main(): Promise<void> {
@@ -66,6 +67,14 @@ async function main(): Promise<void> {
           return syncYoutubeVideos();
         case JobName.weeklyRecap:
           return generateWeeklyRecap();
+        case JobName.generateArticleVideo: {
+          const articleId = job.data.articleId as string;
+          if (!articleId) {
+            logger.error("generateArticleVideo : articleId manquant dans les données du job");
+            return null;
+          }
+          return generateArticleVideo(articleId);
+        }
         case JobName.syncMatchEvents: {
           // Même principe de résilience que syncLiveScores ci-dessous : un
           // échec transitoire (quota Highlightly épuisé, requête en timeout)
