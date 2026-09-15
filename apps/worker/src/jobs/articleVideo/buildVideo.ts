@@ -120,13 +120,13 @@ async function buildWithCrossfade(
   if (n === 2) {
     // Simple case: one crossfade between two slides
     const offset = cumulativeDuration - CROSSFADE_DURATION_S;
-    filterParts.push(`[0:v][1:v]xfade=transition=fade:duration=${CROSSFADE_DURATION_S}:offset=${offset}[outv]`);
+    filterParts.push(`[0:v][1:v]xfade=transition=fade:duration=${CROSSFADE_DURATION_S}:offset=${offset}[vout]`);
   } else {
     // Chain xfade filters
     let prevLabel = "0:v";
     for (let i = 1; i < n; i++) {
       const offset = cumulativeDuration - CROSSFADE_DURATION_S;
-      const outLabel = i === n - 1 ? "outv" : `v${i}`;
+      const outLabel = i === n - 1 ? "vout" : `v${i}`;
       filterParts.push(
         `[${prevLabel}][${i}:v]xfade=transition=fade:duration=${CROSSFADE_DURATION_S}:offset=${offset.toFixed(2)}[${outLabel}]`,
       );
@@ -135,6 +135,9 @@ async function buildWithCrossfade(
     }
   }
 
+  // fps + format dans le même filter_complex (jamais en -vf séparé, çaconflit)
+  filterParts.push(`[vout]fps=30,format=yuv420p[outv]`);
+
   const filterComplex = filterParts.join(";");
 
   const args = [
@@ -142,7 +145,6 @@ async function buildWithCrossfade(
     ...inputArgs,
     "-filter_complex", filterComplex,
     "-map", "[outv]",
-    "-vf", "fps=30,format=yuv420p",
     "-c:v", "libx264",
     "-threads", FFMPEG_THREADS,
     "-movflags", "+faststart",
@@ -165,5 +167,6 @@ async function buildWithCrossfade(
 
   args.push(outputPath);
 
+  logger.info({ n, filterComplex, totalDuration: totalDuration.toFixed(1) }, "Article vidéo : ffmpeg xfade filter");
   await runFfmpeg(args);
 }
