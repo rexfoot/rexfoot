@@ -83,6 +83,42 @@ enum BreakingPriority {
   URGENT
 }
 
+enum ArticleLocale {
+  EN
+  ES
+}
+
+/// Type d'entité métier ciblée par une tâche du ledger AgentTask — volontairement
+/// une simple référence (entityId) et non une relation Prisma : AgentTask est
+/// polymorphe par construction (une tâche peut viser un Fixture, un NewsArticle,
+/// un Transfer ou un Player), ce que Prisma ne modélise pas nativement en relation
+/// typée sans dupliquer une colonne de clé étrangère par type de cible.
+enum AgentEntityType {
+  FIXTURE
+  NEWS_ARTICLE
+  TRANSFER
+  PLAYER
+}
+
+enum AgentTaskStatus {
+  PENDING
+  RUNNING
+  DONE
+  FAILED
+}
+
+enum InjuryEventType {
+  INJURY
+  SUSPENSION
+}
+
+enum InjuryStatus {
+  OUT
+  DOUBTFUL
+  SUSPENDED
+  AVAILABLE
+}
+
 enum TrendingEntityType {
   ARTICLE
   VIDEO
@@ -172,6 +208,17 @@ model Competition {
   tier        Int             @default(100)
   isActive    Boolean         @default(true)
 
+  /// Id de la même compétition côté API-Football — nécessaire car
+  /// Competition.externalId est celui du fournisseur ACTIF (football-data.org),
+  /// pas forcément le même nombre chez API-Football (même principe que
+  /// Fixture.highlightlyId). Résolu une fois par nom+pays (voir syncInjuries.ts),
+  /// puis mis en cache ici pour ne plus jamais refaire cette recherche.
+  apiFootballId                Int?      @unique
+  /// Dernière tentative de résolution (réussie ou non) — même garde-fou que
+  /// Fixture.highlightlyLookupAttemptedAt : sans lui, une compétition qu'API-
+  /// Football ne référence pas serait re-recherchée à chaque cycle pour rien.
+  apiFootballLookupAttemptedAt DateTime?
+
   seasons                Season[]
   teamCompetitionSeasons TeamCompetitionSeason[]
   fixtures               Fixture[]
@@ -222,6 +269,11 @@ model Team {
   venueCity   String?
   countryCode String?
 
+  /// Id de cette même équipe côté API-Football — voir Competition.apiFootballId
+  /// pour le même problème de correspondance d'ID entre fournisseurs. Résolu
+  /// par nom (sameTeamName) une seule fois par compétition dans syncInjuries.ts.
+  apiFootballId Int? @unique
+
   competitionSeasons TeamCompetitionSeason[]
   playerMemberships  PlayerTeamMembership[]
   homeFixtures       Fixture[]               @relation("HomeTeam")
@@ -233,6 +285,7 @@ model Team {
   relatedNews        NewsArticle[]
   relatedVideos      Video[]
   fixtureEvents      FixtureEvent[]
+  injuryStatuses     PlayerInjuryStatus[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -264,6 +317,12 @@ model Player {
   /// code qui lit la nationalité d'un joueur doit préférer ce champ à `nationality`.
   nationalityOverride String?
 
+  /// Id de ce même joueur côté API-Football — résolu par nom au sein de son
+  /// équipe (déjà résolue via Team.apiFootballId) la première fois qu'une
+  /// blessure/suspension le concerne (voir syncInjuries.ts), puis mis en
+  /// cache pour toujours matcher par ID ensuite plutôt que par nom.
+  apiFootballId Int? @unique
+
   teamMemberships PlayerTeamMembership[]
   statistics      PlayerStatistics[]
   fixtureEvents   FixtureEvent[]         @relation("EventPlayer")
@@ -271,6 +330,7 @@ model Player {
   relatedEvents   FixtureEvent[]         @relation("EventRelatedPlayer")
   relatedNews     NewsArticle[]
   relatedVideos   Video[]
+  injuryStatuses  PlayerInjuryStatus[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -614,16 +674,40 @@ model NewsArticle {
   /// admin, sources pour les liens consultés, suggestedVideoUrl pour un clip
   /// officiel proposé et suggestedCoverImageUrl pour une image glanée dans le
   /// flux RSS source (jamais auto-intégrés) que l'admin peut reprendre à la main.
-  isAiDraft              Boolean         @default(false)
+  isAiDraft              Boolean              @default(false)
   suggestedVideoUrl      String?
   suggestedCoverImageUrl String?
   sources                ArticleSource[]
+  translations           ArticleTranslation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([status, publishedAt])
   @@index([isBreaking, breakingSince])
+}
+
+/// Traduction EN/ES d'un NewsArticle FR déjà publié — jamais générée pour un
+/// article encore en DRAFT (voir apps/worker/src/jobs/editorial/translateArticle.ts).
+/// Table additive en parallèle de NewsArticle : le contenu FR canonique n'est
+/// jamais dupliqué ni réécrit ici, seulement traduit à partir de sa version
+/// publiée. `status` suit le même principe de revue humaine minimale que le
+/// reste de l'agent éditorial : DRAFT tant que personne n'a validé la traduction.
+model ArticleTranslation {
+  id           String        @id @default(cuid())
+  articleId    String
+  article      NewsArticle   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  locale       ArticleLocale
+  title        String
+  summary      String?
+  contentHtml  String
+  status       NewsStatus    @default(DRAFT)
+  translatedAt DateTime      @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([articleId, locale])
 }
 
 /// Sources RSS consultées par l'agent éditorial pour un article donné —
@@ -1004,4 +1088,66 @@ model LiveAudioStream {
   id        String   @id @default("singleton")
   isLive    Boolean  @default(false)
   updatedAt DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Newsroom multi-agents — ledger et blessures/suspensions
+// ---------------------------------------------------------------------------
+
+/// Ledger persistant des tâches d'agents par événement — ce que BullMQ seul ne
+/// garde pas (il oublie l'historique une fois un job terminé). Chaque job qui
+/// enrichit une entité existante (traduction, sync blessure, vérification de
+/// sources...) passe par apps/worker/src/lib/agentTask.ts, qui upsert une ligne
+/// ici plutôt que de créer un doublon à chaque tentative — c'est cette table que
+/// lit l'agent de supervision Claude planifié (voir tools/supervisor-mcp).
+/// entityId référence l'entité visée SANS relation Prisma typée (voir
+/// AgentEntityType) : pas de contrainte d'intégrité référentielle, à la charge
+/// du code appelant — acceptable pour un ledger d'audit/retry, pas pour une
+/// donnée métier.
+model AgentTask {
+  id         String          @id @default(cuid())
+  entityType AgentEntityType
+  entityId   String
+  taskType   String
+  status     AgentTaskStatus @default(PENDING)
+  attempts   Int             @default(0)
+  lastError  String?
+  startedAt  DateTime?
+  finishedAt DateTime?
+  nextRunAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([entityType, entityId, taskType])
+  @@index([status, nextRunAt])
+}
+
+/// Statut de blessure/suspension d'un joueur — entité persistante mise à jour
+/// dans le temps (même principe que Fixture.finalScoreConfirmedAt), jamais
+/// dupliquée : un nouveau statut pour le même joueur+source+externalId met à
+/// jour la ligne existante plutôt que d'en créer une nouvelle. Alimentée par
+/// apps/worker/src/jobs/syncInjuries.ts — désactivée proprement si le plan
+/// API-Football souscrit n'inclut pas /injuries (voir ce fichier).
+model PlayerInjuryStatus {
+  id                 String          @id @default(cuid())
+  playerId           String
+  player             Player          @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  teamId             String?
+  team               Team?           @relation(fields: [teamId], references: [id])
+  type               InjuryEventType
+  reason             String?
+  status             InjuryStatus    @default(OUT)
+  startDate          DateTime?
+  expectedReturnDate DateTime?
+  source             String
+  externalId         String?
+  reportedAt         DateTime        @default(now())
+  resolvedAt         DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([playerId, source, externalId])
+  @@index([status, playerId])
 }

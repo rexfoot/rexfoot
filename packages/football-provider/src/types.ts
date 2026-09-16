@@ -136,6 +136,23 @@ export interface PlayerStatisticsDTO {
   redCards: number | null;
 }
 
+/**
+ * Spécifique à API-Football (`/injuries`) — pas dans FootballDataProvider
+ * commun : ni football-data.org (plan actuel) ni ESPN n'exposent cette donnée,
+ * et Highlightly a son propre modèle. Consommé directement via
+ * ApiFootballProvider.getInjuries(), voir syncInjuries.ts.
+ */
+export interface InjuryDTO {
+  playerExternalId: string;
+  /** Nécessaire pour résoudre le joueur la première fois (avant que Player.apiFootballId soit mis en cache) — voir syncInjuries.ts. */
+  playerName: string;
+  teamExternalId: string;
+  /** Ex. "Missing Fixture" (suspension) vs blessure réelle — voir mapInjuryType(). */
+  type: "INJURY" | "SUSPENSION";
+  reason: string | null;
+  fixtureExternalId: string | null;
+}
+
 export class FootballProviderError extends Error {
   constructor(
     message: string,

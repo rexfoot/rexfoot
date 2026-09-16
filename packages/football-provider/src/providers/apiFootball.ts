@@ -15,6 +15,7 @@ import {
   type FixtureDTO,
   type FixtureEventDTO,
   type FixtureStatusDTO,
+  type InjuryDTO,
   type PlayerDTO,
   type PlayerStatisticsDTO,
   type SeasonDTO,
@@ -22,6 +23,13 @@ import {
   type TeamDTO,
   type TeamStatisticsDTO,
 } from "../types";
+
+export interface GetInjuriesParams {
+  /** API-Football exige au moins league+season OU team OU fixture — voir getInjuries(). */
+  leagueExternalId?: string;
+  seasonExternalId?: string;
+  teamExternalId?: string;
+}
 
 const BASE_URL = "https://v3.football.api-sports.io";
 
@@ -221,6 +229,24 @@ export class ApiFootballProvider implements FootballDataProvider {
     if (!entry) return [];
     return (entry.statistics ?? []).map((stat) => mapPlayerStatistics(stat, params.playerExternalId));
   }
+
+  /**
+   * `/injuries` — endpoint séparé du reste (pas dans FootballDataProvider
+   * commun, voir InjuryDTO). Peut ne pas être inclus sur tous les plans
+   * API-Football : comme le reste de ce fichier (voir hasErrors dans
+   * request()), un plan qui n'y donne pas accès répond 200 avec `errors` non
+   * vide plutôt qu'un 403 franc — l'appelant (syncInjuries.ts) doit désactiver
+   * la fonctionnalité proprement sur cette erreur plutôt que de la traiter
+   * comme un échec transitoire à retenter indéfiniment.
+   */
+  async getInjuries(params: GetInjuriesParams): Promise<InjuryDTO[]> {
+    const raw = await this.request<ApiFootballInjuryEnvelope[]>("/injuries", {
+      league: params.leagueExternalId,
+      season: params.seasonExternalId,
+      team: params.teamExternalId,
+    });
+    return raw.map(mapInjury);
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -314,6 +340,17 @@ interface ApiFootballTeamStatsEnvelope {
     yellow: Record<string, { total: number | null }>;
     red: Record<string, { total: number | null }>;
   };
+}
+
+/**
+ * Forme brute documentée publiquement pour `/injuries` — à vérifier/ajuster
+ * contre la doc live une fois un vrai appel effectué (même remarque que pour
+ * ApiFootballFixtureEnvelope plus haut : jamais testé contre une réponse réelle).
+ */
+interface ApiFootballInjuryEnvelope {
+  player: { id: number; name: string; type: string | null; reason: string | null };
+  team: { id: number };
+  fixture: { id: number | null };
 }
 
 // ---------------------------------------------------------------------------
@@ -484,6 +521,28 @@ function mapPlayerStatistics(
     rating: stat.games.rating ? Number.parseFloat(stat.games.rating) : null,
     yellowCards: stat.cards.yellow,
     redCards: stat.cards.red,
+  };
+}
+
+/**
+ * `player.reason` porte souvent la mention "Suspended"/"Red Card"/"Card
+ * Accumulation" pour une suspension disciplinaire — tout le reste est traité
+ * comme une blessure. À affiner si la doc live révèle un champ plus fiable.
+ */
+function mapInjuryType(reason: string | null): InjuryDTO["type"] {
+  const lower = reason?.toLowerCase() ?? "";
+  if (lower.includes("suspend") || lower.includes("card")) return "SUSPENSION";
+  return "INJURY";
+}
+
+function mapInjury(raw: ApiFootballInjuryEnvelope): InjuryDTO {
+  return {
+    playerExternalId: String(raw.player.id),
+    playerName: raw.player.name,
+    teamExternalId: String(raw.team.id),
+    type: mapInjuryType(raw.player.reason),
+    reason: raw.player.reason,
+    fixtureExternalId: raw.fixture.id !== null ? String(raw.fixture.id) : null,
   };
 }
 

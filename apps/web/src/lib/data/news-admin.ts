@@ -24,7 +24,10 @@ export async function getAllNewsForAdmin() {
 export async function getNewsArticleByIdForAdmin(id: string) {
   return prisma.newsArticle.findUnique({
     where: { id },
-    include: { sources: { orderBy: { retrievedAt: "asc" } } },
+    include: {
+      sources: { orderBy: { retrievedAt: "asc" } },
+      translations: { orderBy: { locale: "asc" } },
+    },
   });
 }
 

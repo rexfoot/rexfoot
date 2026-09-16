@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
-import { Sparkles, ExternalLink, Film, ImageIcon } from "lucide-react";
+import { Sparkles, ExternalLink, Film, ImageIcon, ShieldCheck } from "lucide-react";
 import { getNewsArticleByIdForAdmin } from "@/lib/data/news-admin";
 import { htmlToText } from "@/lib/text-to-html";
 import { NewsForm } from "@/components/admin/NewsForm";
 import { GenerateVideoButton } from "@/components/admin/GenerateVideoButton";
+import { TranslationsPanel } from "@/components/admin/TranslationsPanel";
 import { requireAdminPagePermission } from "@/lib/auth/admin-guard";
 
 export const dynamic = "force-dynamic";
@@ -31,8 +32,21 @@ export default async function AdminNewsEditPage({ params }: PageProps) {
 
           {article.sources.length > 0 && (
             <div>
-              <p className="mb-1.5 text-xs font-semibold tracking-wide text-rf-fg-subtle uppercase">
+              <p className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold tracking-wide text-rf-fg-subtle uppercase">
                 Sources consultées
+                {(() => {
+                  const distinctSources = new Set(article.sources.map((s) => s.publisherName)).size;
+                  return distinctSources >= 2 ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold tracking-normal text-emerald-600 normal-case">
+                      <ShieldCheck size={11} />
+                      {distinctSources} sources indépendantes
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-semibold tracking-normal text-amber-600 normal-case">
+                      Source unique — à vérifier
+                    </span>
+                  );
+                })()}
               </p>
               <ul className="space-y-1">
                 {article.sources.map((source) => (
@@ -102,6 +116,7 @@ export default async function AdminNewsEditPage({ params }: PageProps) {
       />
 
       <GenerateVideoButton articleId={article.id} articleStatus={article.status} />
+      <TranslationsPanel articleId={article.id} translations={article.translations} />
     </div>
   );
 }

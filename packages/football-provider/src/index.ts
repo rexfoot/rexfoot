@@ -38,6 +38,24 @@ export function createHighlightlyClientIfConfigured(): HighlightlyClient | null 
   return cachedHighlightlyClient;
 }
 
+let cachedApiFootballProvider: ApiFootballProvider | undefined | null;
+
+/**
+ * null si RAPIDAPI_KEY n'est pas configurée. Séparé de createFootballProvider()
+ * car getInjuries() n'est pas dans FootballDataProvider commun (voir ce fichier
+ * et InjuryDTO) — syncInjuries.ts a besoin de l'instance API-Football
+ * spécifiquement, que ce fournisseur soit ou non le primary/secondary actif
+ * de la cascade composite.
+ */
+export function createApiFootballProviderIfConfigured(): ApiFootballProvider | null {
+  if (cachedApiFootballProvider !== undefined) return cachedApiFootballProvider;
+  const env = getEnv();
+  cachedApiFootballProvider = hasFootballApiKey(env)
+    ? new ApiFootballProvider({ apiKey: env.RAPIDAPI_KEY, apiHost: env.RAPIDAPI_HOST })
+    : null;
+  return cachedApiFootballProvider;
+}
+
 /**
  * Identifiant `provider` à stocker sur Team/Player/Season/Fixture/Competition
  * — une seule source de vérité utilisée par apps/worker, pour éviter la

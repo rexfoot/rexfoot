@@ -21,6 +21,8 @@ export const JobName = {
   weeklyRecap: "weekly-recap",
   syncMatchEvents: "sync-match-events",
   generateArticleVideo: "generate-article-video",
+  translateArticles: "translate-articles",
+  syncInjuries: "sync-injuries",
 } as const;
 
 // Le fournisseur actif est football-data.org, plan "Free w/ Livescores"
@@ -153,6 +155,24 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     JobName.extractTransfers,
     {},
     { repeat: { every: 2 * 60 * 60 * 1000 }, jobId: JobName.extractTransfers, ...DEFAULT_JOB_OPTS },
+  );
+  // Traduit en EN/ES les articles déjà publiés (jamais un DRAFT) — voir
+  // translateArticle.ts. Cadence alignée sur extractTransfers : pas besoin
+  // d'une fraîcheur à la minute, juste rattraper vite un article publié entre
+  // deux runs sans consommer le quota IA (partagé avec l'agent éditorial) en continu.
+  await queue.add(
+    JobName.translateArticles,
+    {},
+    { repeat: { every: 30 * 60 * 1000 }, jobId: JobName.translateArticles, ...DEFAULT_JOB_OPTS },
+  );
+  // Blessures/suspensions — voir syncInjuries.ts. Cadence large (6h, comme
+  // syncRosters/syncPlayerStats) : un statut de blessure ne change pas à la
+  // seconde, et chaque cycle ne coûte qu'un appel /injuries par compétition
+  // déjà résolue (résolution ID elle-même mise en cache, voir ce fichier).
+  await queue.add(
+    JobName.syncInjuries,
+    {},
+    { repeat: { every: 6 * 60 * 60 * 1000 }, jobId: JobName.syncInjuries, ...DEFAULT_JOB_OPTS },
   );
   // football-data.org (gratuit) ne fournit aucune photo de joueur — comble ce
   // manque via TheSportsDB, par petits lots (voir MAX_PLAYERS_PER_RUN dans

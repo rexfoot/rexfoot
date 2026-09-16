@@ -18,7 +18,8 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const [article, locale] = await Promise.all([getNewsArticleBySlug(slug), getLocale()]);
+  const locale = await getLocale();
+  const article = await getNewsArticleBySlug(slug, locale);
   if (!article) return {};
   return {
     title: article.title,
@@ -30,11 +31,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function NewsArticlePage({ params }: PageProps) {
   const { slug } = await params;
-  const [article, locale, t] = await Promise.all([
-    getNewsArticleBySlug(slug),
-    getLocale(),
-    getTranslations("news"),
-  ]);
+  const [locale, t] = await Promise.all([getLocale(), getTranslations("news")]);
+  const article = await getNewsArticleBySlug(slug, locale);
   if (!article) notFound();
 
   const articleUrl = localizedUrl(locale, `/news/${slug}`);

@@ -62,11 +62,35 @@ export async function getPortraitArticles(limit = PAGE_SIZE_DEFAULT) {
   });
 }
 
-export async function getNewsArticleBySlug(slug: string) {
-  return prisma.newsArticle.findFirst({
+/**
+ * `locale` optionnel : en `en`/`es`, superpose la traduction publiée (voir
+ * apps/worker/src/jobs/editorial/translateArticle.ts et ArticleTranslation)
+ * sur le contenu FR canonique — jamais l'inverse. Sans traduction publiée
+ * pour cette langue (pas encore traduit, ou traduction encore en DRAFT en
+ * attente de revue dans /admin/news), on sert simplement le FR : mieux qu'une
+ * page vide, jamais pire que le comportement actuel.
+ */
+export async function getNewsArticleBySlug(slug: string, locale?: string) {
+  const article = await prisma.newsArticle.findFirst({
     where: { slug, status: "PUBLISHED" },
-    include: { author: { select: { displayName: true } }, relatedCompetition: true, relatedTeam: true, relatedPlayer: true },
+    include: {
+      author: { select: { displayName: true } },
+      relatedCompetition: true,
+      relatedTeam: true,
+      relatedPlayer: true,
+      translations: true,
+    },
   });
+  if (!article) return null;
+
+  const upperLocale = locale?.toUpperCase();
+  const translation =
+    upperLocale === "EN" || upperLocale === "ES"
+      ? article.translations.find((t) => t.locale === upperLocale && t.status === "PUBLISHED")
+      : undefined;
+
+  if (!translation) return article;
+  return { ...article, title: translation.title, summary: translation.summary, contentHtml: translation.contentHtml };
 }
 
 /** Alertes actives (section 12 du plan) — jamais périmées, voir BREAKING_NEWS_WINDOW_HOURS. */
