@@ -20,6 +20,53 @@ export async function getPublishedNews(limit = PAGE_SIZE_DEFAULT) {
   });
 }
 
+export interface MixedFeedArticleItem {
+  kind: "article";
+  sortDate: Date;
+  article: Awaited<ReturnType<typeof getPublishedNews>>[number];
+}
+export interface MixedFeedHeadlineItem {
+  kind: "headline";
+  sortDate: Date;
+  headline: { id: string; title: string; sources: { id: string; publisherName: string; title: string; url: string; thumbnailUrl: string | null }[] };
+}
+export type MixedFeedItem = MixedFeedArticleItem | MixedFeedHeadlineItem;
+
+/**
+ * "Actualidad" = articles originaux RexFoot ET titres du kiosque (agrégateur
+ * multi-médias) mélangés dans un seul flux trié par date — demande explicite
+ * de Hicham (2026-09-17) : pas de page séparée "cachée", tout doit être visible
+ * au même endroit. Ne supprime rien côté kiosque (AggregatedHeadline reste la
+ * source de vérité, /admin/aggregator reste le garde-fou a posteriori) — ceci
+ * change uniquement OÙ le contenu déjà publié est montré publiquement.
+ * `firstSeenAt` sert de date de tri pour une headline (pas de `publishedAt`
+ * sur ce modèle, la publication et la détection sont désormais le même instant).
+ */
+export async function getMixedNewsFeed(limit = PAGE_SIZE_DEFAULT): Promise<MixedFeedItem[]> {
+  const [articles, headlines] = await Promise.all([
+    getPublishedNews(limit),
+    prisma.aggregatedHeadline.findMany({
+      where: { status: "PUBLISHED" },
+      orderBy: { firstSeenAt: "desc" },
+      take: limit,
+      select: {
+        id: true,
+        title: true,
+        firstSeenAt: true,
+        sources: { select: { id: true, publisherName: true, title: true, url: true, thumbnailUrl: true } },
+      },
+    }),
+  ]);
+
+  const merged: MixedFeedItem[] = [
+    ...articles.map((article): MixedFeedArticleItem => ({ kind: "article", sortDate: article.publishedAt!, article })),
+    ...headlines.map((headline): MixedFeedHeadlineItem => ({ kind: "headline", sortDate: headline.firstSeenAt, headline })),
+  ];
+  merged.sort((a, b) => b.sortDate.getTime() - a.sortDate.getTime());
+
+  return merged.slice(0, limit);
+}
+
 /** RexFoot Analysis — sous-section éditoriale de l'actualité, filtrée sur NewsCategory.ANALYSES. */
 export async function getAnalysisArticles(limit = PAGE_SIZE_DEFAULT) {
   return prisma.newsArticle.findMany({

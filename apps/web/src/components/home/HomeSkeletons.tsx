@@ -36,28 +36,6 @@ export function NewsSectionSkeleton() {
   );
 }
 
-function HeadlineCardSkeleton() {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-rf-border bg-rf-bg-card">
-      <Skeleton className="aspect-video w-full rounded-none" />
-      <div className="space-y-2 p-3">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-5 w-1/2 rounded-full" />
-      </div>
-    </div>
-  );
-}
-
-export function WireSectionSkeleton() {
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {Array.from({ length: 6 }).map((_, i) => (
-        <HeadlineCardSkeleton key={i} />
-      ))}
-    </div>
-  );
-}
-
 export function VideoRailSkeleton() {
   return (
     <div className="-mx-4 flex gap-3 overflow-x-hidden px-4 pb-1 sm:mx-0 sm:px-0">

@@ -5,13 +5,11 @@ import { Link } from "@/i18n/navigation";
 import { SectionHeader } from "@/components/SectionHeader";
 import { NewsSection } from "@/components/home/NewsSection";
 import { MatchesHeroSection } from "@/components/home/MatchesHeroSection";
-import { WireSection } from "@/components/home/WireSection";
 import { VideoSection } from "@/components/home/VideoSection";
 import { TrendingSection } from "@/components/home/TrendingSection";
 import {
   NewsSectionSkeleton,
   MatchesHeroSkeleton,
-  WireSectionSkeleton,
   VideoRailSkeleton,
   TrendingSkeleton,
 } from "@/components/home/HomeSkeletons";
@@ -55,13 +53,6 @@ export default function HomePage() {
         <SectionHeader title={t("newsTitle")} href="/news" accent="news" />
         <Suspense fallback={<NewsSectionSkeleton />}>
           <NewsSection />
-        </Suspense>
-      </section>
-
-      <section>
-        <SectionHeader title={t("wireTitle")} href="/wire" accent="news" />
-        <Suspense fallback={<WireSectionSkeleton />}>
-          <WireSection />
         </Suspense>
       </section>
 

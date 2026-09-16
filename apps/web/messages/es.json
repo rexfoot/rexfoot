@@ -110,10 +110,6 @@
     "writtenBy": "Escrito por"
   },
   "wire": {
-    "title": "Revista de prensa",
-    "metaDescription": "Los titulares del fútbol europeo vistos por varios medios: Marca, AS, BBC Sport, L'Équipe y otros.",
-    "noHeadlines": "Todavía no hay titulares",
-    "sourcesLabel": "{count, plural, one {1 medio} other {# medios}}",
     "readOn": "Leer en {source}"
   },
   "analysis": {
@@ -382,7 +378,6 @@
     "video": "Vídeo",
     "news": "Actualidad",
     "talents": "Talentos",
-    "wire": "Kiosco",
     "login": "Iniciar sesión",
     "account": "Mi cuenta"
   },
@@ -400,7 +395,6 @@
   "home": {
     "featured": "Destacado",
     "newsTitle": "Actualidad",
-    "wireTitle": "Kiosco de prensa",
     "videoTitle": "RexFoot Video",
     "matchesTitle": "Partidos de hoy",
     "trendingTitle": "Tendencias",

@@ -110,10 +110,6 @@
     "writtenBy": "Écrit par"
   },
   "wire": {
-    "title": "Vitrine de presse",
-    "metaDescription": "Les titres du football européen vus par plusieurs médias — Marca, AS, BBC Sport, L'Équipe et d'autres.",
-    "noHeadlines": "Aucun titre pour l'instant",
-    "sourcesLabel": "{count, plural, one {1 média} other {# médias}}",
     "readOn": "Lire sur {source}"
   },
   "analysis": {
@@ -382,7 +378,6 @@
     "video": "Vidéo",
     "news": "Actus",
     "talents": "Talents",
-    "wire": "Kiosque",
     "login": "Se connecter",
     "account": "Mon compte"
   },
@@ -400,7 +395,6 @@
   "home": {
     "featured": "À la une",
     "newsTitle": "Actualités",
-    "wireTitle": "Kiosque de presse",
     "videoTitle": "RexFoot Video",
     "matchesTitle": "Matchs du jour",
     "trendingTitle": "Tendances",

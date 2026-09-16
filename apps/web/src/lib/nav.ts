@@ -1,6 +1,6 @@
 export interface NavItem {
   href: string;
-  icon: "home" | "matches" | "standings" | "portraits" | "video" | "news" | "talents" | "wire" | "more";
+  icon: "home" | "matches" | "standings" | "portraits" | "video" | "news" | "talents" | "more";
   /**
    * Masqué dans BottomNav (mobile) uniquement — utilisé pour Talents,
    * qui a déjà son propre raccourci dans MobileHeader (icône étoile, en
@@ -30,10 +30,4 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/video", icon: "video" },
   { href: "/news", icon: "news" },
   { href: "/talents", icon: "talents", hideInBottomNav: true },
-  // Kiosque multi-médias (agrégateur RSS, voir AggregatedHeadline) — même
-  // traitement que Talents : un raccourci propre plutôt qu'une 7e icône dans
-  // une BottomNav déjà chargée (voir le commentaire de hideInBottomNav).
-  // Demandé par Hicham (2026-09-17) : le rendre plus visible qu'un simple
-  // lien discret depuis /news, sans pour autant l'imposer sur mobile.
-  { href: "/wire", icon: "wire", hideInBottomNav: true },
 ];

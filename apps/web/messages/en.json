@@ -110,10 +110,6 @@
     "writtenBy": "Written by"
   },
   "wire": {
-    "title": "Press Wire",
-    "metaDescription": "European football headlines as covered by multiple outlets -- Marca, AS, BBC Sport, L'Equipe and others.",
-    "noHeadlines": "No headlines yet",
-    "sourcesLabel": "{count, plural, one {1 outlet} other {# outlets}}",
     "readOn": "Read on {source}"
   },
   "analysis": {
@@ -382,7 +378,6 @@
     "video": "Video",
     "news": "News",
     "talents": "Talents",
-    "wire": "Wire",
     "login": "Log in",
     "account": "My account"
   },
@@ -400,7 +395,6 @@
   "home": {
     "featured": "Featured",
     "newsTitle": "News",
-    "wireTitle": "Press Wire",
     "videoTitle": "RexFoot Video",
     "matchesTitle": "Today's matches",
     "trendingTitle": "Trending",

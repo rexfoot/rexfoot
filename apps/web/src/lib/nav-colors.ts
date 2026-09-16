@@ -9,6 +9,5 @@ export const NAV_ACCENT: Record<NavItem["icon"], { text: string; bg: string }> =
   video: { text: "text-rf-video", bg: "bg-rf-video/15" },
   news: { text: "text-rf-news", bg: "bg-rf-news/15" },
   talents: { text: "text-rf-orange", bg: "bg-rf-orange/15" },
-  wire: { text: "text-rf-news", bg: "bg-rf-news/15" },
   more: { text: "text-rf-gold", bg: "bg-rf-gold/15" },
 };
