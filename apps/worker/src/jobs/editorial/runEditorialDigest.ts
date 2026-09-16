@@ -25,40 +25,53 @@ async function recordCoveredTopic(topic: TopicCandidate, articleId: string): Pro
 }
 
 /**
- * Marque un brouillon fraîchement créé comme CANDIDAT breaking (jamais publié
- * automatiquement, voir classifySeverity.ts) : pose isBreaking + breakingPriority
- * mais laisse breakingSince à null — le chrono de 8h (BREAKING_NEWS_WINDOW_HOURS)
- * ne démarre qu'à l'approbation humaine (voir /api/admin/news/[id]/breaking-decision),
- * jamais dès la détection. Notifie immédiatement via WhatsApp (notifyWriters,
- * déjà utilisé pour les buts) avec un lien direct vers la fiche d'approbation —
- * le but est un délai humain de quelques secondes, pas un round-trip par email.
+ * Publie automatiquement un brouillon classé breaking (voir classifySeverity.ts)
+ * — décision explicite de Hicham (2026-09-16) de retirer l'étape d'approbation
+ * humaine ici, gardée uniquement comme garde-fou a posteriori (voir isBreaking
+ * éditable à tout moment dans /admin/news, kill-switch pour retirer une
+ * publication erronée). `breakingSince` démarre au moment réel de la
+ * publication, pas à la détection.
+ *
+ * Le worker ne peut pas déclencher la publication Facebook / l'indexation SEO
+ * (code côté apps/web, autre process — voir /api/admin/news/[id]/route.ts) :
+ * un article auto-publié comme breaking n'est donc PAS relayé sur Facebook ni
+ * ré-indexé automatiquement, contrairement à une publication manuelle depuis
+ * /admin/news. Écart connu, pas un oubli — construire un appel authentifié
+ * worker -> web pour ça n'a pas été demandé, à revisiter si Hicham le souhaite.
+ *
+ * La notification WhatsApp (notifyWriters, déjà utilisée pour les buts) reste
+ * essentielle : c'est elle qui rend le garde-fou exploitable en pratique — sans
+ * elle, Hicham ne saurait pas qu'un breaking vient de partir tout seul.
  */
-async function flagBreakingCandidateIfNeeded(topic: TopicCandidate, articleId: string, title: string): Promise<void> {
+async function publishIfBreaking(topic: TopicCandidate, articleId: string, title: string): Promise<void> {
   const severity = classifyBreakingSeverity(topic);
   if (!severity) return;
 
+  const now = new Date();
   await prisma.newsArticle.update({
     where: { id: articleId },
-    data: { isBreaking: true, breakingPriority: severity },
+    data: { status: "PUBLISHED", publishedAt: now, isBreaking: true, breakingPriority: severity, breakingSince: now },
   });
 
   const siteUrl = getEnv().NEXT_PUBLIC_SITE_URL;
   void notifyWriters(
-    `🚨 Candidat breaking (${severity}) : "${title}" — approuver ou rejeter : ${siteUrl}/admin/news/${articleId}/edit`,
+    `🚨 Breaking publié automatiquement (${severity}) : "${title}" — vérifier/retirer si besoin : ${siteUrl}/admin/news/${articleId}/edit`,
   );
-  logger.info({ articleId, severity }, "Agent éditorial : candidat breaking signalé, approbation humaine requise");
+  logger.info({ articleId, severity }, "Agent éditorial : candidat breaking publié automatiquement");
 }
 
 /**
  * RECHERCHE (flux RSS) → VÉRIFICATION (regroupement multi-source, dédoublonnage)
  * → RÉDACTION (IA, article original) → file de CONTRÔLE humain.
  *
- * Ne publie JAMAIS : chaque article créé reste en `status: "DRAFT"` avec
- * `isAiDraft: true` — l'APPROBATION et la PUBLICATION restent un geste humain
- * volontaire dans /admin/news, strictement inchangé par cet agent. Un sujet
- * classé breaking (voir classifySeverity.ts) n'est JAMAIS publié plus vite que
- * les autres : seule une notification immédiate accélère la REVUE humaine,
- * jamais la publication elle-même (demande explicite de Hicham).
+ * Chaque article créé reste en `status: "DRAFT"` avec `isAiDraft: true` —
+ * l'approbation reste un geste humain volontaire dans /admin/news, SAUF pour
+ * un sujet classé breaking (voir classifySeverity.ts et publishIfBreaking
+ * ci-dessus) : celui-ci est publié automatiquement dès la détection, décision
+ * explicite de Hicham (2026-09-16) qui remplace l'approbation rapide en un
+ * clic mise en place plus tôt — le seuil de sources par sévérité (voir
+ * classifySeverity.ts) et la notification WhatsApp immédiate restent le seul
+ * filet avant publication, la revue humaine devient a posteriori.
  */
 export async function runEditorialDigest(): Promise<void> {
   if (!hasAiProviderConfigured()) {
@@ -113,7 +126,7 @@ export async function runEditorialDigest(): Promise<void> {
     created += 1;
     logger.info({ title: article.title, sources: topic.items.length }, "Agent éditorial : brouillon créé");
 
-    await flagBreakingCandidateIfNeeded(topic, article.id, article.title);
+    await publishIfBreaking(topic, article.id, article.title);
   }
 
   logger.info({ topicsConsidered: candidates.length, draftsCreated: created }, "Agent éditorial : run terminé");

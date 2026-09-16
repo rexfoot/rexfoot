@@ -2,8 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Plus, Newspaper, AlertTriangle, Sparkles } from "lucide-react";
 import type { NewsStatus } from "@rexfoot/db";
-import { getAllNewsForAdmin, getPendingBreakingCandidates } from "@/lib/data/news-admin";
-import { BreakingCandidateCard } from "@/components/admin/BreakingCandidateCard";
+import { getAllNewsForAdmin } from "@/lib/data/news-admin";
 import { NEWS_CATEGORY_LABELS } from "@/lib/news-categories";
 import { AdminButton, Banner } from "@/components/admin/ui";
 import { DeleteButton } from "@/components/admin/DeleteButton";
@@ -31,7 +30,7 @@ export default async function AdminNewsListPage({ searchParams }: PageProps) {
   const canManage = can(admin.role, "manageNews");
   const canDelete = can(admin.role, "deleteNews");
   const { saved, deleted } = await searchParams;
-  const [articles, breakingCandidates] = await Promise.all([getAllNewsForAdmin(), getPendingBreakingCandidates()]);
+  const articles = await getAllNewsForAdmin();
 
   return (
     <div className="space-y-6">
@@ -49,26 +48,6 @@ export default async function AdminNewsListPage({ searchParams }: PageProps) {
 
       {saved && <Banner kind="success">Article enregistré avec succès.</Banner>}
       {deleted && <Banner kind="success">Article supprimé.</Banner>}
-
-      {canManage && breakingCandidates.length > 0 && (
-        <div className="space-y-2">
-          <h2 className="flex items-center gap-1.5 text-sm font-bold uppercase tracking-wide text-rf-live">
-            <AlertTriangle size={14} />
-            Approbation rapide requise
-          </h2>
-          <div className="space-y-2">
-            {breakingCandidates.map((candidate) => (
-              <BreakingCandidateCard
-                key={candidate.id}
-                id={candidate.id}
-                title={candidate.title}
-                breakingPriority={candidate.breakingPriority}
-                sourcesCount={candidate.sourcesCount}
-              />
-            ))}
-          </div>
-        </div>
-      )}
 
       {articles.length === 0 ? (
         <EmptyState

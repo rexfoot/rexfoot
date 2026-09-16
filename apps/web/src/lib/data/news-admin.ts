@@ -21,27 +21,6 @@ export async function getAllNewsForAdmin() {
   });
 }
 
-/** Candidats breaking en attente d'approbation rapide (voir classifySeverity.ts) — jamais publiés automatiquement. */
-export async function getPendingBreakingCandidates() {
-  const candidates = await prisma.newsArticle.findMany({
-    where: { status: "DRAFT", isBreaking: true, breakingSince: null },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      title: true,
-      breakingPriority: true,
-      sources: { select: { publisherName: true } },
-    },
-  });
-
-  return candidates.map((c) => ({
-    id: c.id,
-    title: c.title,
-    breakingPriority: c.breakingPriority,
-    sourcesCount: new Set(c.sources.map((s) => s.publisherName)).size,
-  }));
-}
-
 export async function getNewsArticleByIdForAdmin(id: string) {
   return prisma.newsArticle.findUnique({
     where: { id },

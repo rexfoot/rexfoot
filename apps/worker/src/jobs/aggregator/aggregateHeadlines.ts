@@ -45,13 +45,16 @@ async function resolveThumbnail(item: FeedItem): Promise<string | null> {
 /**
  * Vitrine de presse multi-médias — jamais le texte complet d'un article,
  * seulement titre/court extrait/vignette/lien direct (voir AggregatedHeadline
- * dans schema.prisma). Revue humaine (DRAFT -> PUBLISHED) via /admin/aggregator
- * tant que la fiabilité du clustering automatique n'est pas établie.
- * Réutilise le même clustering que l'agent éditorial (clusterFeedItems) et les
- * mêmes flux RSS (EDITORIAL_SOURCE_FEEDS) — les deux features consomment les
- * mêmes items sans se coordonner entre elles (une même actu peut apparaître à
- * la fois comme carte agrégateur ET comme article original RexFoot, ce n'est
- * pas un doublon à éviter, ce sont deux choses différentes).
+ * dans schema.prisma). Publication automatique (décision explicite de Hicham,
+ * 2026-09-16 : la revue manuelle initiale a servi à valider la fiabilité du
+ * clustering, plus nécessaire) — /admin/aggregator reste disponible comme
+ * garde-fou a posteriori (REJECTED retire une carte déjà publiée), jamais
+ * comme étape bloquante avant publication. Réutilise le même clustering que
+ * l'agent éditorial (clusterFeedItems) et les mêmes flux RSS
+ * (EDITORIAL_SOURCE_FEEDS) — les deux features consomment les mêmes items
+ * sans se coordonner entre elles (une même actu peut apparaître à la fois
+ * comme carte agrégateur ET comme article original RexFoot, ce n'est pas un
+ * doublon à éviter, ce sont deux choses différentes).
  */
 export async function aggregateHeadlines(): Promise<void> {
   const items = await fetchAllFeeds();
@@ -132,7 +135,7 @@ function dedupeByUrl(items: TopicCandidate["items"]): TopicCandidate["items"] {
 
 async function createHeadline(cluster: TopicCandidate) {
   const headline = await prisma.aggregatedHeadline.create({
-    data: { topicKey: cluster.topicKey, title: cluster.title },
+    data: { topicKey: cluster.topicKey, title: cluster.title, status: "PUBLISHED" },
   });
 
   for (const item of dedupeByUrl(cluster.items)) {
