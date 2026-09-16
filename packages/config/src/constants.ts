@@ -106,6 +106,16 @@ export const EDITORIAL_SOURCE_FEEDS = [
   { publisherName: "Transfermarkt", url: "https://www.transfermarkt.de/rss/news" },
   { publisherName: "AS", url: "https://as.com/rss/futbol/portada.xml" },
   { publisherName: "ESPN FC", url: "https://www.espn.com/espn/rss/soccer/news" },
+  // Deuxième vague (2026-09-17), médias spécialisés 100% football uniquement
+  // (par opposition aux généralistes sport de la première vague ci-dessus).
+  // Même règle de robots.txt appliquée : aucun des quatre ne cible les
+  // crawlers IA (vérifié indépendamment, pas seulement via la recherche) —
+  // fotomac.com.tr déclare même explicitement `Content-Signal: ai-input=yes,
+  // ai-train=no`, exactement notre usage (jamais d'entraînement de modèle).
+  { publisherName: "VoetbalPrimeur", url: "https://www.voetbalprimeur.nl/rss/nieuws.xml" },
+  { publisherName: "Voetbalkrant", url: "https://www.voetbalkrant.com/rss" },
+  { publisherName: "Maisfutebol", url: "https://maisfutebol.iol.pt/rss" },
+  { publisherName: "Fotomac", url: "https://www.fotomac.com.tr/rss/anasayfa.xml" },
 ] as const;
 
 /**
