@@ -65,8 +65,13 @@ export const LIVE_AUDIO_POLL_INTERVAL_MS = 20_000;
  * effectivement traité comme urgent (bandeau, badge) après sa publication —
  * passé ce délai, il redevient un article normal même si le flag n'a pas été
  * désactivé à la main (section 12 du plan : jamais d'alerte périmée).
+ *
+ * Ramené de 24h à 8h (2026-09-16, Chantier B) : demande explicite d'Hicham
+ * pour les candidats breaking générés par classifySeverity.ts — un décès ou
+ * un fichage officiel n'a plus rien d'"urgent" après une demi-journée, la
+ * barre urgente doit rester réservée à ce qui vient vraiment de se passer.
  */
-export const BREAKING_NEWS_WINDOW_HOURS = 24;
+export const BREAKING_NEWS_WINDOW_HOURS = 8;
 
 /**
  * Flux RSS publics surveillés par l'agent éditorial (apps/worker/src/jobs/editorial)
