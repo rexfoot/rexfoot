@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "rexfoot-supervisor": {
+      "command": "npx",
+      "args": ["dotenv-cli", "-e", ".env", "--", "npx", "tsx", "packages/supervisor-mcp/src/index.ts"]
+    }
+  }
+}

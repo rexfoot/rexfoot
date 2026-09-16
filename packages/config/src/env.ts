@@ -59,6 +59,13 @@ const envSchema = z.object({
   // Hicham modifie cette variable dans Railway avec une virgule en trop —
   // le parsing tolérant vit dans notifyWriters.ts.
   WHATSAPP_WRITER_NOTIFY_TARGETS: z.string().optional().default(""),
+
+  // Jeton porteur pour /api/internal/pipeline-health — lu uniquement par
+  // l'agent de supervision Claude planifié (cloud, hors de ce réseau), voir
+  // ce fichier de route. Volontairement séparé de tout accès direct à
+  // DATABASE_URL : en cas de fuite, seul ce résumé en lecture seule est
+  // exposé, jamais la base elle-même. Endpoint désactivé (404) tant que vide.
+  SUPERVISOR_API_TOKEN: z.string().optional().default(""),
 });
 
 export type Env = z.infer<typeof envSchema>;
