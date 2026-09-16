@@ -1,6 +1,7 @@
 import { prisma } from "@rexfoot/db";
 import { FEATURED_COMPETITION_SLUGS, type FeaturedCompetitionSlug } from "@rexfoot/config";
 import type { FootballDataProvider } from "@rexfoot/football-provider";
+import { COMPETITION_TO_ESPN_SLUG } from "@rexfoot/football-provider";
 import type { Competition } from "@rexfoot/db";
 import { upsertCompetition } from "./upsert.js";
 import { logger } from "./logger.js";
@@ -89,11 +90,16 @@ const COMPETITION_FALLBACK_META: Record<
 };
 
 /**
- * Résout chaque compétition vedette en essayant le provider principal
- * (football-data.org) d'abord. Quand le provider composite est actif, les
- * compétitions non couvertes par football-data.org (ex. Coupe de France)
- * sont automatiquement résolues via le provider secondaire (API-Football)
- * — le routage est géré en interne par le composite.
+ * Résout chaque compétition vedette en essayant les providers dans l'ordre :
+ *   1. football-data.org (par ID)
+ *   2. ESPN (par slug — gratuit, sans clé, 8 coupes)
+ *   3. API-Football (par ID — nécessite une clé valide)
+ *
+ * Le routage est géré en interne par le composite provider : quand un
+ * provider ne couvre pas une compétition, le suivant est automatiquement
+ * essayé. ESPN est intercalé entre FDO et API-Football car il est gratuit
+ * et ne nécessite pas de clé — API-Football n'est consulté qu'en dernier
+ * recours (compte souvent suspendu, plan gratuit limité aux saisons 2022-2024).
  *
  * Crée un enregistrement minimal en DB si aucun fournisseur ne renvoie de
  * données (compétition non couverte, erreur réseau, etc.).
@@ -105,36 +111,36 @@ export async function resolveFeaturedCompetitions(
 
   for (const slug of FEATURED_COMPETITION_SLUGS) {
     const fdoId = FOOTBALL_DATA_ORG_COMPETITION_IDS[slug];
+    const espnSlug = COMPETITION_TO_ESPN_SLUG[slug];
     const apiId = API_FOOTBALL_COMPETITION_IDS[slug];
 
-    // Liste des IDs à essayer : football-data.org en priorité, puis API-Football.
-    const idsToTry = [fdoId, apiId].filter((id): id is string => Boolean(id));
+    // IDs à essayer : FDO en priorité, ESPN (gratuit), puis API-Football.
+    const idsToTry: Array<{ id: string; provider: string }> = [];
+    if (fdoId) idsToTry.push({ id: fdoId, provider: "football-data-org" });
+    if (espnSlug) idsToTry.push({ id: espnSlug, provider: "espn" });
+    if (apiId) idsToTry.push({ id: apiId, provider: "api-football" });
 
     if (idsToTry.length === 0) {
-      // Aucun ID connu : enregistrement minimal.
       const competition = await upsertMinimalCompetition(slug);
       resolved.push({ competition, externalId: "" });
       continue;
     }
 
     let resolved_ = false;
-    for (const tryId of idsToTry) {
+    for (const { id: tryId, provider: tryProvider } of idsToTry) {
       try {
         const [dto] = await provider.getCompetitions({ id: tryId });
         if (dto) {
-          // Détermine le provider réellement utilisé pour cette résolution.
-          const isApiFootball = apiId != null && tryId === apiId;
-          const providerName = isApiFootball ? "api-football" : "football-data-org";
-          const competition = await upsertCompetition(dto, slug, providerName);
+          const competition = await upsertCompetition(dto, slug, tryProvider);
           resolved.push({ competition, externalId: dto.externalId });
           resolved_ = true;
           break;
         }
       } catch (err) {
-        logger.error({ slug, id: tryId, err }, "Échec de résolution, essai suivant...");
+        logger.error({ slug, id: tryId, provider: tryProvider, err }, "Échec de résolution, essai suivant...");
       }
-      // Petit délai entre les appels API-Football pour éviter les 429.
-      if (idsToTry.length > 1) {
+      // Délai uniquement entre les appels API-Football (quota limité).
+      if (tryProvider === "api-football" && idsToTry.length > 1) {
         await new Promise((r) => setTimeout(r, API_FOOTBALL_THROTTLE_MS));
       }
     }
