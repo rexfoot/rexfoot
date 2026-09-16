@@ -382,6 +382,7 @@
     "video": "Video",
     "news": "News",
     "talents": "Talents",
+    "wire": "Wire",
     "login": "Log in",
     "account": "My account"
   },
@@ -399,6 +400,7 @@
   "home": {
     "featured": "Featured",
     "newsTitle": "News",
+    "wireTitle": "Press Wire",
     "videoTitle": "RexFoot Video",
     "matchesTitle": "Today's matches",
     "trendingTitle": "Trending",

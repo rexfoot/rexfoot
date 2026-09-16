@@ -82,18 +82,18 @@ export const BREAKING_NEWS_WINDOW_HOURS = 8;
  * à réessayer plus tard si le site republie un flux valide.
  *
  * Élargissement Europe (2026-09-17, demandé par Hicham) : recherche + validation
- * réelle (curl + robots.txt) de candidats pour ES/EN/IT/DE/PT/NL. Résultat net
- * volontairement modeste — la plupart des grands médias sportifs européens
- * bloquent désormais explicitement les crawlers IA (ClaudeBot/anthropic-ai) dans
- * leur robots.txt (Guardian, Kicker, Gazzetta dello Sport, NOS Sport,
- * Sportschau, Mirror, talkSPORT confirmés) — jamais contourné en changeant de
- * user-agent, l'intention du média prime sur la lettre de la règle. Rejetés
- * aussi : Mundo Deportivo/Sport (bloqués), The Athletic (pas de RSS public,
- * payant), Corriere dello Sport (générateur RSS vide), Bild/A Bola/O Jogo
- * (aucune URL RSS fonctionnelle trouvée). Record.pt validé techniquement mais
- * volontairement exclu : encodage ISO-8859-1 non géré par fetchOneFeed
- * (corromprait les accents portugais) et flux sport généraliste, pas
- * spécifiquement football — à revisiter si Hicham le souhaite explicitement.
+ * réelle (curl + robots.txt) de candidats pour ES/EN/IT/DE/PT/NL/TR. La plupart
+ * des grands médias sportifs européens bloquent désormais explicitement les
+ * crawlers IA (ClaudeBot/anthropic-ai) dans leur robots.txt (Guardian, Kicker,
+ * Gazzetta dello Sport, NOS Sport, Sportschau, Mirror, talkSPORT, Football
+ * League World confirmés) — jamais contourné en changeant de user-agent,
+ * l'intention du média prime sur la lettre de la règle.
+ *
+ * Restriction linguistique explicite (2026-09-17, demandé par Hicham juste
+ * après) : seuls le français, l'arabe, l'espagnol et l'anglais sont voulus —
+ * tout le reste retiré, y compris des flux par ailleurs valides et non
+ * bloqués (néerlandais, allemand, portugais, turc). Ne PAS en rajouter sans
+ * validation explicite de la langue par Hicham d'abord.
  */
 export const EDITORIAL_SOURCE_FEEDS = [
   { publisherName: "L'Équipe", url: "https://dwh.lequipe.fr/api/edito/rss?path=/Football" },
@@ -101,21 +101,9 @@ export const EDITORIAL_SOURCE_FEEDS = [
   { publisherName: "BBC Sport", url: "https://feeds.bbci.co.uk/sport/football/rss.xml" },
   { publisherName: "Sky Sports", url: "https://www.skysports.com/rss/12040" },
   { publisherName: "Marca", url: "https://www.marca.com/rss/futbol.xml" },
-  { publisherName: "Voetbal International", url: "https://www.vi.nl/feed/news.xml" },
   { publisherName: "Football Italia", url: "https://football-italia.net/feed/" },
-  { publisherName: "Transfermarkt", url: "https://www.transfermarkt.de/rss/news" },
   { publisherName: "AS", url: "https://as.com/rss/futbol/portada.xml" },
   { publisherName: "ESPN FC", url: "https://www.espn.com/espn/rss/soccer/news" },
-  // Deuxième vague (2026-09-17), médias spécialisés 100% football uniquement
-  // (par opposition aux généralistes sport de la première vague ci-dessus).
-  // Même règle de robots.txt appliquée : aucun des quatre ne cible les
-  // crawlers IA (vérifié indépendamment, pas seulement via la recherche) —
-  // fotomac.com.tr déclare même explicitement `Content-Signal: ai-input=yes,
-  // ai-train=no`, exactement notre usage (jamais d'entraînement de modèle).
-  { publisherName: "VoetbalPrimeur", url: "https://www.voetbalprimeur.nl/rss/nieuws.xml" },
-  { publisherName: "Voetbalkrant", url: "https://www.voetbalkrant.com/rss" },
-  { publisherName: "Maisfutebol", url: "https://maisfutebol.iol.pt/rss" },
-  { publisherName: "Fotomac", url: "https://www.fotomac.com.tr/rss/anasayfa.xml" },
 ] as const;
 
 /**

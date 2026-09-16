@@ -1,4 +1,4 @@
-import { Home, CalendarDays, ListOrdered, Award, PlayCircle, Newspaper, Star } from "lucide-react";
+import { Home, CalendarDays, ListOrdered, Award, PlayCircle, Newspaper, Star, Rss } from "lucide-react";
 import type { NavItem } from "@/lib/nav";
 
 /** Icônes partagées entre Sidebar (desktop) et BottomNav (mobile) — source unique pour rester cohérent. */
@@ -10,5 +10,6 @@ export const NAV_ICONS: Record<NavItem["icon"], typeof Home> = {
   video: PlayCircle,
   news: Newspaper,
   talents: Star,
+  wire: Rss,
   more: Home,
 };

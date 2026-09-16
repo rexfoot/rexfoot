@@ -382,6 +382,7 @@
     "video": "Vidéo",
     "news": "Actus",
     "talents": "Talents",
+    "wire": "Kiosque",
     "login": "Se connecter",
     "account": "Mon compte"
   },
@@ -399,6 +400,7 @@
   "home": {
     "featured": "À la une",
     "newsTitle": "Actualités",
+    "wireTitle": "Kiosque de presse",
     "videoTitle": "RexFoot Video",
     "matchesTitle": "Matchs du jour",
     "trendingTitle": "Tendances",
