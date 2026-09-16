@@ -119,6 +119,12 @@ enum InjuryStatus {
   AVAILABLE
 }
 
+enum HeadlineStatus {
+  DRAFT
+  PUBLISHED
+  REJECTED
+}
+
 enum TrendingEntityType {
   ARTICLE
   VIDEO
@@ -1150,4 +1156,51 @@ model PlayerInjuryStatus {
 
   @@unique([playerId, source, externalId])
   @@index([status, playerId])
+}
+
+// ---------------------------------------------------------------------------
+// Vitrine de presse — agrégateur multi-médias (jamais le texte complet d'un
+// article, voir apps/worker/src/jobs/aggregator/aggregateHeadlines.ts)
+// ---------------------------------------------------------------------------
+
+/// Un "sujet" détecté dans plusieurs flux RSS (même principe de clustering que
+/// CoveredTopic pour l'agent éditorial, mais persistant et enrichi au fil des
+/// cycles au lieu d'être une simple mémoire anti-doublon : quand un nouveau
+/// média reprend un sujet déjà vu, sa source s'ajoute ici plutôt que de créer
+/// une carte en double. `title` est celui du premier média à l'avoir couvert
+/// (repère d'affichage, pas une vérité éditoriale). Revue humaine (DRAFT ->
+/// PUBLISHED) tant que la confiance dans le clustering automatique n'est pas
+/// établie — voir /admin/aggregator.
+model AggregatedHeadline {
+  id          String         @id @default(cuid())
+  topicKey    String
+  title       String
+  status      HeadlineStatus @default(DRAFT)
+  firstSeenAt DateTime       @default(now())
+
+  sources AggregatedHeadlineSource[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status, firstSeenAt])
+}
+
+/// Un média source pour un AggregatedHeadline — jamais le corps de l'article,
+/// seulement ce que le flux RSS expose déjà publiquement (titre, court extrait,
+/// vignette). `thumbnailUrl` pointe vers l'image officielle du média (RSS ou
+/// og:image), jamais rehébergée en haute résolution — seul un lien direct.
+model AggregatedHeadlineSource {
+  id            String             @id @default(cuid())
+  headlineId    String
+  headline      AggregatedHeadline @relation(fields: [headlineId], references: [id], onDelete: Cascade)
+  publisherName String
+  title         String
+  url           String
+  excerpt       String?
+  thumbnailUrl  String?
+  publishedAt   DateTime?
+  retrievedAt   DateTime           @default(now())
+
+  @@unique([headlineId, url])
 }

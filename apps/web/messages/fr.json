@@ -109,6 +109,13 @@
     "noArticles": "Pas encore d'actualités publiées",
     "writtenBy": "Écrit par"
   },
+  "wire": {
+    "title": "Vitrine de presse",
+    "metaDescription": "Les titres du football européen vus par plusieurs médias — Marca, AS, BBC Sport, L'Équipe et d'autres.",
+    "noHeadlines": "Aucun titre pour l'instant",
+    "sourcesLabel": "{count, plural, one {1 média} other {# médias}}",
+    "readOn": "Lire sur {source}"
+  },
   "analysis": {
     "title": "RexFoot Analysis",
     "subtitle": "Décryptages tactiques et analyses de fond, au-delà de l'actualité brute.",

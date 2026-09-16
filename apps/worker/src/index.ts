@@ -25,6 +25,7 @@ import { extractTransfersFromArticles } from "./jobs/editorial/extractTransfers.
 import { translateArticles } from "./jobs/editorial/translateArticle.js";
 import { syncPlayerPhotos } from "./jobs/syncPlayerPhotos.js";
 import { syncInjuries } from "./jobs/syncInjuries.js";
+import { aggregateHeadlines } from "./jobs/aggregator/aggregateHeadlines.js";
 import { generateArticleVideo } from "./jobs/generateArticleVideo.js";
 import { startRealtimeServer } from "./lib/realtime.js";
 
@@ -68,6 +69,8 @@ async function main(): Promise<void> {
           return translateArticles();
         case JobName.syncInjuries:
           return syncInjuries();
+        case JobName.aggregateHeadlines:
+          return aggregateHeadlines();
         case JobName.syncPlayerPhotos:
           return syncPlayerPhotos();
         case JobName.syncYoutubeVideos:

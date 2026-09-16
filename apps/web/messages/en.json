@@ -109,6 +109,13 @@
     "noArticles": "No articles published yet",
     "writtenBy": "Written by"
   },
+  "wire": {
+    "title": "Press Wire",
+    "metaDescription": "European football headlines as covered by multiple outlets -- Marca, AS, BBC Sport, L'Equipe and others.",
+    "noHeadlines": "No headlines yet",
+    "sourcesLabel": "{count, plural, one {1 outlet} other {# outlets}}",
+    "readOn": "Read on {source}"
+  },
   "analysis": {
     "title": "RexFoot Analysis",
     "subtitle": "Tactical breakdowns and in-depth analysis, beyond the raw news.",

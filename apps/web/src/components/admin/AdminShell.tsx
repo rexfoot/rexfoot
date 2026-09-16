@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Newspaper, ArrowLeftRight, Film, Users, UserCog, Radio, Star } from "lucide-react";
+import { LayoutDashboard, Newspaper, ArrowLeftRight, Film, Users, UserCog, Radio, Star, Rss } from "lucide-react";
 import type { UserRole } from "@rexfoot/db";
 import { can } from "@/lib/auth/permissions";
 import { LogoutButton } from "./LogoutButton";
@@ -14,12 +14,20 @@ interface NavEntry {
   href: string;
   icon: typeof LayoutDashboard;
   /** Omis = visible pour tous les rôles admin. */
-  requires?: "viewNews" | "viewTransfers" | "viewVideos" | "viewTalents" | "manageUsers" | "manageLiveAudio";
+  requires?:
+    | "viewNews"
+    | "viewTransfers"
+    | "viewVideos"
+    | "viewTalents"
+    | "viewAggregator"
+    | "manageUsers"
+    | "manageLiveAudio";
 }
 
 const NAV_ITEMS: NavEntry[] = [
   { label: "Tableau de bord", href: "/admin", icon: LayoutDashboard },
   { label: "Actualités", href: "/admin/news", icon: Newspaper, requires: "viewNews" },
+  { label: "Vitrine de presse", href: "/admin/aggregator", icon: Rss, requires: "viewAggregator" },
   { label: "Mercato", href: "/admin/transfers", icon: ArrowLeftRight, requires: "viewTransfers" },
   { label: "Vidéos", href: "/admin/videos", icon: Film, requires: "viewVideos" },
   { label: "Talents", href: "/admin/talents", icon: Star, requires: "viewTalents" },

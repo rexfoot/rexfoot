@@ -23,6 +23,7 @@ export const JobName = {
   generateArticleVideo: "generate-article-video",
   translateArticles: "translate-articles",
   syncInjuries: "sync-injuries",
+  aggregateHeadlines: "aggregate-headlines",
 } as const;
 
 // Le fournisseur actif est football-data.org, plan "Free w/ Livescores"
@@ -173,6 +174,14 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
     JobName.syncInjuries,
     {},
     { repeat: { every: 6 * 60 * 60 * 1000 }, jobId: JobName.syncInjuries, ...DEFAULT_JOB_OPTS },
+  );
+  // Vitrine de presse (agrégateur multi-médias) — voir aggregateHeadlines.ts.
+  // 20 min : assez réactif pour une vitrine de titres, sans redemander les
+  // mêmes flux RSS déjà interrogés par editorialDigest à un rythme absurde.
+  await queue.add(
+    JobName.aggregateHeadlines,
+    {},
+    { repeat: { every: 20 * 60 * 1000 }, jobId: JobName.aggregateHeadlines, ...DEFAULT_JOB_OPTS },
   );
   // football-data.org (gratuit) ne fournit aucune photo de joueur — comble ce
   // manque via TheSportsDB, par petits lots (voir MAX_PLAYERS_PER_RUN dans

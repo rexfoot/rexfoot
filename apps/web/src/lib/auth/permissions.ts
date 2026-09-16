@@ -37,6 +37,8 @@ export const PERMISSIONS = {
   manageLiveAudio: ["ADMIN"],
   manageTalents: ["ADMIN", "EDITOR", "MODERATOR"],
   viewTalents: ["ADMIN", "EDITOR", "MODERATOR", "ANALYST"],
+  manageAggregator: ["ADMIN", "EDITOR", "JOURNALIST"],
+  viewAggregator: ["ADMIN", "EDITOR", "JOURNALIST", "ANALYST"],
 } satisfies Record<string, UserRole[]>;
 
 export type Permission = keyof typeof PERMISSIONS;
