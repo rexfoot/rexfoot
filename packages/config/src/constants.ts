@@ -80,6 +80,20 @@ export const BREAKING_NEWS_WINDOW_HOURS = 8;
  * Mercato (demandé par l'utilisateur) n'a pas de flux RSS public exploitable au
  * moment de l'écriture (toutes les URLs testées redirigent vers une page d'erreur) —
  * à réessayer plus tard si le site republie un flux valide.
+ *
+ * Élargissement Europe (2026-09-17, demandé par Hicham) : recherche + validation
+ * réelle (curl + robots.txt) de candidats pour ES/EN/IT/DE/PT/NL. Résultat net
+ * volontairement modeste — la plupart des grands médias sportifs européens
+ * bloquent désormais explicitement les crawlers IA (ClaudeBot/anthropic-ai) dans
+ * leur robots.txt (Guardian, Kicker, Gazzetta dello Sport, NOS Sport,
+ * Sportschau, Mirror, talkSPORT confirmés) — jamais contourné en changeant de
+ * user-agent, l'intention du média prime sur la lettre de la règle. Rejetés
+ * aussi : Mundo Deportivo/Sport (bloqués), The Athletic (pas de RSS public,
+ * payant), Corriere dello Sport (générateur RSS vide), Bild/A Bola/O Jogo
+ * (aucune URL RSS fonctionnelle trouvée). Record.pt validé techniquement mais
+ * volontairement exclu : encodage ISO-8859-1 non géré par fetchOneFeed
+ * (corromprait les accents portugais) et flux sport généraliste, pas
+ * spécifiquement football — à revisiter si Hicham le souhaite explicitement.
  */
 export const EDITORIAL_SOURCE_FEEDS = [
   { publisherName: "L'Équipe", url: "https://dwh.lequipe.fr/api/edito/rss?path=/Football" },
@@ -87,6 +101,9 @@ export const EDITORIAL_SOURCE_FEEDS = [
   { publisherName: "BBC Sport", url: "https://feeds.bbci.co.uk/sport/football/rss.xml" },
   { publisherName: "Sky Sports", url: "https://www.skysports.com/rss/12040" },
   { publisherName: "Marca", url: "https://www.marca.com/rss/futbol.xml" },
+  { publisherName: "Voetbal International", url: "https://www.vi.nl/feed/news.xml" },
+  { publisherName: "Football Italia", url: "https://football-italia.net/feed/" },
+  { publisherName: "Transfermarkt", url: "https://www.transfermarkt.de/rss/news" },
   { publisherName: "AS", url: "https://as.com/rss/futbol/portada.xml" },
   { publisherName: "ESPN FC", url: "https://www.espn.com/espn/rss/soccer/news" },
 ] as const;

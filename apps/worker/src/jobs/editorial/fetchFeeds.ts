@@ -12,10 +12,34 @@ export interface FeedItem {
 }
 
 const FETCH_TIMEOUT_MS = 15_000;
-const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_", trimValues: true });
+// htmlEntities décode les entités numériques (&#8216; -> ') et les 5 entités
+// XML de base + &nbsp; — jamais les entités nommées latin-1 (&auml;, &eacute;...),
+// non couvertes par fast-xml-parser. Repéré en élargissant EDITORIAL_SOURCE_FEEDS
+// (2026-09-17) : Football Italia (guillemets typographiques en &#82xx;) et
+// Transfermarkt (accents allemands en &auml;/&uuml;/&ouml;) en dépendent tous
+// les deux — sans ça, les titres publiés afficheraient les codes bruts.
+const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_", trimValues: true, htmlEntities: true });
+
+// Entités HTML nommées latin-1 usuelles, non couvertes par htmlEntities
+// ci-dessus — liste bornée aux caractères accentués d'Europe de l'Ouest
+// (allemand/français/espagnol/portugais), pas une table HTML5 complète.
+const NAMED_ENTITIES: Record<string, string> = {
+  auml: "ä", ouml: "ö", uuml: "ü", Auml: "Ä", Ouml: "Ö", Uuml: "Ü", szlig: "ß",
+  eacute: "é", egrave: "è", ecirc: "ê", euml: "ë",
+  agrave: "à", acirc: "â", aacute: "á",
+  iacute: "í", icirc: "î", iuml: "ï",
+  oacute: "ó", ocirc: "ô",
+  uacute: "ú", ucirc: "û",
+  ccedil: "ç", ntilde: "ñ", Ntilde: "Ñ",
+  atilde: "ã", otilde: "õ",
+};
+
+function decodeNamedEntities(text: string): string {
+  return text.replace(/&([a-zA-Z]+);/g, (match, name: string) => NAMED_ENTITIES[name] ?? match);
+}
 
 function stripHtml(text: string): string {
-  return text.replace(/<[^>]*>/g, "").trim();
+  return decodeNamedEntities(text.replace(/<[^>]*>/g, "")).trim();
 }
 
 function toArray<T>(value: T | T[] | undefined): T[] {
