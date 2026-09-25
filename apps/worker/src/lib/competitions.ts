@@ -21,6 +21,11 @@ const API_FOOTBALL_THROTTLE_MS = 3_000;
  * `coupe-de-france` est volontairement absente : pas disponible sur
  * football-data.org. Elle est résolue via le provider secondaire
  * (API-Football) dans la map ci-dessous.
+ *
+ * `nations-league` est aussi volontairement absente : présente chez
+ * football-data.org mais réservée aux plans payants (confirmé sur leur
+ * page /coverage le 2026-09-25 — absente du "Free Tier"). Résolue via ESPN
+ * (gratuit, pas de quota) — voir COMPETITION_TO_ESPN_SLUG.
  */
 const FOOTBALL_DATA_ORG_COMPETITION_IDS: Partial<Record<FeaturedCompetitionSlug, string>> = {
   "premier-league": "2021",
@@ -87,6 +92,7 @@ const COMPETITION_FALLBACK_META: Record<
   "coppa-italia": { name: "Coppa Italia", type: "CUP", countryName: "Italy", countryCode: "IT", tier: 14 },
   "dfb-pokal": { name: "DFB-Pokal", type: "CUP", countryName: "Germany", countryCode: "DE", tier: 15 },
   "coupe-de-france": { name: "Coupe de France", type: "CUP", countryName: "France", countryCode: "FR", tier: 16 },
+  "nations-league": { name: "UEFA Nations League", type: "INTERNATIONAL", countryName: null, countryCode: null, tier: 17 },
 };
 
 /**

@@ -13,6 +13,7 @@ export const FEATURED_COMPETITION_SLUGS = [
   "europa-conference-league",
   "european-championship",
   "world-cup",
+  "nations-league",
   "fa-cup",
   "league-cup",
   "copa-del-rey",
@@ -99,7 +100,10 @@ export const EDITORIAL_SOURCE_FEEDS = [
   { publisherName: "L'Équipe", url: "https://dwh.lequipe.fr/api/edito/rss?path=/Football" },
   { publisherName: "RMC Sport", url: "https://rmcsport.bfmtv.com/rss/football/" },
   { publisherName: "BBC Sport", url: "https://feeds.bbci.co.uk/sport/football/rss.xml" },
-  { publisherName: "Sky Sports", url: "https://www.skysports.com/rss/12040" },
+  // 11095 = le flux "Football News" dédié (vérifié : <category>Football</category>,
+  // que du foot dans les items) — 12040 est le flux général "SkySports | News"
+  // (golf, F1, darts, rugby, NFL...), utilisé par erreur jusqu'au 2026-09-17.
+  { publisherName: "Sky Sports", url: "https://www.skysports.com/rss/11095" },
   { publisherName: "Marca", url: "https://www.marca.com/rss/futbol.xml" },
   { publisherName: "Football Italia", url: "https://football-italia.net/feed/" },
   { publisherName: "AS", url: "https://as.com/rss/futbol/portada.xml" },

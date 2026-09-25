@@ -225,6 +225,7 @@ export const ESPN_SLUGS = [
   "ita.coppa_italia",
   "ger.dfb_pokal",
   "fra.coupe_de_france",
+  "uefa.nations",
 ] as const;
 
 /** Map notre FeaturedCompetitionSlug → slug ESPN. */
@@ -237,6 +238,10 @@ export const COMPETITION_TO_ESPN_SLUG: Record<string, string> = {
   "coppa-italia": "ita.coppa_italia",
   "dfb-pokal": "ger.dfb_pokal",
   "coupe-de-france": "fra.coupe_de_france",
+  // Absente de football-data.org en plan gratuit (confirmé sur leur page
+  // /coverage, réservée aux plans payants) — slug ESPN public documenté :
+  // https://github.com/pseudo-r/Public-ESPN-API/blob/main/docs/sports/soccer.md
+  "nations-league": "uefa.nations",
 };
 
 // ── ESPN types (partiels) ────────────────────────────────────────────────
