@@ -225,8 +225,8 @@ export const ESPN_LEAGUE_SLUGS = [
   "uefa.champions",
 ] as const;
 
-// ── Slugs ESPN pour les 8 coupes ─────────────────────────────────────────
-
+// ── Slugs ESPN hors championnats (coupes + sélections) ───────────────────
+// Tous sont aussi dans ESPN_ALL_SLUGS, interrogés pour le direct.
 export const ESPN_SLUGS = [
   "uefa.europa",
   "uefa.europa.conf",
@@ -237,6 +237,7 @@ export const ESPN_SLUGS = [
   "ger.dfb_pokal",
   "fra.coupe_de_france",
   "uefa.nations",
+  "fifa.friendly",
 ] as const;
 
 /** Tous les slugs interrogés pour le direct et la recherche de match. */
@@ -262,6 +263,9 @@ export const COMPETITION_TO_ESPN_SLUG: Record<string, string> = {
   // /coverage, réservée aux plans payants) — slug ESPN public documenté :
   // https://github.com/pseudo-r/Public-ESPN-API/blob/main/docs/sports/soccer.md
   "nations-league": "uefa.nations",
+  // Amicaux internationaux — vérifié 2026-10-05 : saison en cours, ~190
+  // sélections, matchs pendant les trêves (dont du LIVE).
+  "international-friendlies": "fifa.friendly",
 };
 
 // ── ESPN types (partiels) ────────────────────────────────────────────────

@@ -93,12 +93,16 @@ const COMPETITION_FALLBACK_META: Record<
   "dfb-pokal": { name: "DFB-Pokal", type: "CUP", countryName: "Germany", countryCode: "DE", tier: 15 },
   "coupe-de-france": { name: "Coupe de France", type: "CUP", countryName: "France", countryCode: "FR", tier: 16 },
   "nations-league": { name: "UEFA Nations League", type: "INTERNATIONAL", countryName: null, countryCode: null, tier: 17 },
+  // Amicaux internationaux (sélections) via ESPN "fifa.friendly" — gratuit,
+  // sans clé. Ajouté 2026-10-05 : pendant les trêves, ce sont souvent les
+  // seuls matchs du jour avec la Nations League.
+  "international-friendlies": { name: "International Friendlies", type: "INTERNATIONAL", countryName: null, countryCode: null, tier: 18 },
 };
 
 /**
  * Résout chaque compétition vedette en essayant les providers dans l'ordre :
  *   1. football-data.org (par ID)
- *   2. ESPN (par slug — gratuit, sans clé, 8 coupes)
+ *   2. ESPN (par slug — gratuit, sans clé : coupes + sélections)
  *   3. API-Football (par ID — nécessite une clé valide)
  *
  * Le routage est géré en interne par le composite provider : quand un
