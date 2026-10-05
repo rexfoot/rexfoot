@@ -5,6 +5,21 @@ import { slugify } from "./slugify.js";
 const PROVIDER_NAME = getActiveProviderName();
 
 /**
+ * Provider RÉEL d'un externalId, dérivé de son préfixe ("espn:445" →
+ * "espn"). Les DTO qui traversent le composite/prefixed portent toujours
+ * leur namespace, alors que PROVIDER_NAME n'est que le provider ACTIF
+ * ("football-data-org" en prod) — chercher/créer avec PROVIDER_NAME un DTO
+ * ESPN ne le trouve jamais puis tente un CREATE qui viole la contrainte
+ * unique sur slug (constaté 2026-10-05 : toutes les sélections de la Nations
+ * League rejetées, compétition vide malgré 8 matchs chez ESPN). Sans préfixe,
+ * on retombe sur le provider actif (IDs FDO/API-Football non préfixés).
+ */
+export function providerForExternalId(externalId: string): string {
+  const sep = externalId.indexOf(":");
+  return sep > 0 ? externalId.slice(0, sep) : PROVIDER_NAME;
+}
+
+/**
  * `slugOverride` : le nom renvoyé par le fournisseur ne correspond pas
  * toujours au slug attendu par le reste du site (ex. football-data.org
  * nomme La Liga "Primera Division" → slugify donnerait "primera-division",
@@ -64,10 +79,11 @@ export async function upsertCompetition(
 }
 
 export async function upsertSeason(dto: SeasonDTO, competitionId: string): Promise<Season> {
+  const provider = providerForExternalId(dto.externalId);
   return prisma.season.upsert({
-    where: { provider_externalId: { provider: PROVIDER_NAME, externalId: dto.externalId } },
+    where: { provider_externalId: { provider, externalId: dto.externalId } },
     create: {
-      provider: PROVIDER_NAME,
+      provider,
       externalId: dto.externalId,
       year: dto.year,
       startDate: dto.startDate ? new Date(dto.startDate) : null,
@@ -85,23 +101,55 @@ export async function upsertSeason(dto: SeasonDTO, competitionId: string): Promi
 }
 
 export async function upsertTeam(dto: TeamDTO): Promise<Team> {
-  return prisma.team.upsert({
-    where: { provider_externalId: { provider: PROVIDER_NAME, externalId: dto.externalId } },
-    create: {
-      provider: PROVIDER_NAME,
+  const provider = providerForExternalId(dto.externalId);
+  const existing = await prisma.team.findUnique({
+    where: { provider_externalId: { provider, externalId: dto.externalId } },
+  });
+  if (existing) {
+    return prisma.team.update({
+      where: { id: existing.id },
+      data: {
+        name: dto.name,
+        shortName: dto.shortName,
+        crestUrl: dto.crestUrl,
+        foundedYear: dto.foundedYear,
+        venueName: dto.venueName,
+        venueCity: dto.venueCity,
+        countryCode: dto.countryCode,
+      },
+    });
+  }
+
+  // Repli par slug (même nom = même équipe) : une fiche créée jadis sous un
+  // autre provider/externalId (ex. "albania" via football-data.org, ID 1065)
+  // est réutilisée plutôt que de violer la contrainte unique sur slug.
+  // On ne touche JAMAIS à l'identité existante (provider/externalId/slug) :
+  // pas de ping-pong entre providers au fil des syncs, pas de fusion
+  // destructive — juste les champs descriptifs.
+  const slug = slugify(dto.name);
+  const sameName = await prisma.team.findUnique({ where: { slug } });
+  if (sameName) {
+    return prisma.team.update({
+      where: { id: sameName.id },
+      data: {
+        name: dto.name,
+        shortName: dto.shortName,
+        crestUrl: dto.crestUrl ?? sameName.crestUrl,
+        foundedYear: dto.foundedYear ?? sameName.foundedYear,
+        venueName: dto.venueName ?? sameName.venueName,
+        venueCity: dto.venueCity ?? sameName.venueCity,
+        countryCode: dto.countryCode ?? sameName.countryCode,
+      },
+    });
+  }
+
+  return prisma.team.create({
+    data: {
+      provider,
       externalId: dto.externalId,
       name: dto.name,
       shortName: dto.shortName,
-      slug: slugify(dto.name),
-      crestUrl: dto.crestUrl,
-      foundedYear: dto.foundedYear,
-      venueName: dto.venueName,
-      venueCity: dto.venueCity,
-      countryCode: dto.countryCode,
-    },
-    update: {
-      name: dto.name,
-      shortName: dto.shortName,
+      slug,
       crestUrl: dto.crestUrl,
       foundedYear: dto.foundedYear,
       venueName: dto.venueName,
@@ -120,10 +168,14 @@ export async function upsertTeam(dto: TeamDTO): Promise<Team> {
  * événements de match écrasés par syncLiveScores.ts.
  */
 export async function upsertPlayer(dto: PlayerDTO): Promise<Player> {
+  // Slugs joueurs = displayName + externalId (uniques par construction) : pas
+  // de repli par slug nécessaire ici, juste le provider réel (voir
+  // providerForExternalId) pour ne pas dupliquer une fiche à chaque provider.
+  const provider = providerForExternalId(dto.externalId);
   return prisma.player.upsert({
-    where: { provider_externalId: { provider: PROVIDER_NAME, externalId: dto.externalId } },
+    where: { provider_externalId: { provider, externalId: dto.externalId } },
     create: {
-      provider: PROVIDER_NAME,
+      provider,
       externalId: dto.externalId,
       firstName: dto.firstName,
       lastName: dto.lastName,
@@ -152,24 +204,24 @@ export async function upsertPlayer(dto: PlayerDTO): Promise<Player> {
 
 export async function findCompetitionByExternalId(externalId: string) {
   return prisma.competition.findUnique({
-    where: { provider_externalId: { provider: PROVIDER_NAME, externalId } },
+    where: { provider_externalId: { provider: providerForExternalId(externalId), externalId } },
   });
 }
 
 export async function findSeasonByExternalId(externalId: string) {
   return prisma.season.findUnique({
-    where: { provider_externalId: { provider: PROVIDER_NAME, externalId } },
+    where: { provider_externalId: { provider: providerForExternalId(externalId), externalId } },
   });
 }
 
 export async function findTeamByExternalId(externalId: string) {
   return prisma.team.findUnique({
-    where: { provider_externalId: { provider: PROVIDER_NAME, externalId } },
+    where: { provider_externalId: { provider: providerForExternalId(externalId), externalId } },
   });
 }
 
 export async function findPlayerByExternalId(externalId: string) {
   return prisma.player.findUnique({
-    where: { provider_externalId: { provider: PROVIDER_NAME, externalId } },
+    where: { provider_externalId: { provider: providerForExternalId(externalId), externalId } },
   });
 }
