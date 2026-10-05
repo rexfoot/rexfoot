@@ -1,5 +1,5 @@
 import webpush from "web-push";
-import { prisma } from "./index.js";
+import { prisma } from "./index";
 
 const VAPID_PUBLIC_KEY = "vapid:publicKey";
 const VAPID_PRIVATE_KEY = "vapid:privateKey";
