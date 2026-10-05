@@ -69,11 +69,25 @@ export async function GET(request: Request) {
     }))
     .filter((a) => a.missing.length > 0);
 
+  // Diagnostic Web Push (jamais de clé exposée) : aide à comprendre pourquoi
+  // /api/push/vapid-key répond 503 sans accès aux logs Railway.
+  let push: Record<string, unknown> = { envPublicKey: (process.env.VAPID_PUBLIC_KEY?.trim()?.length ?? 0) > 0 };
+  try {
+    const table = await prisma.appSetting.count();
+    push = { ...push, appSettingRows: table };
+    const { getOrCreateVapidKeys } = await import("@rexfoot/db");
+    const keys = await getOrCreateVapidKeys();
+    push = { ...push, keygen: "ok", publicPrefix: keys.publicKey.slice(0, 8) };
+  } catch (err) {
+    push = { ...push, keygen: "error", error: err instanceof Error ? `${err.name}: ${err.message.slice(0, 200)}` : String(err).slice(0, 200) };
+  }
+
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
     failedTasks,
     draftBacklog: { totalPending: draftBacklogCount, oldest: oldestDrafts },
     translationGaps: { checked: publishedRecent.length, gaps: translationGaps },
     injurySync: { activeCompetitions, resolvedCompetitions, lastSuccessfulSyncAt: lastInjurySync?.updatedAt ?? null },
+    push,
   });
 }
