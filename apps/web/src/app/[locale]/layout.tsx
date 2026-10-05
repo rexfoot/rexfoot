@@ -28,6 +28,12 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "metadata" });
 
+  // og:image GLOBALE (logo/visuel RexFoot 1200×630) : fichier statique servi
+  // en 200 direct, sans redirect (public/, même URL pour les 3 locales —
+  // optimal pour les scrapers Facebook/X/WhatsApp et le cache CDN). Les pages
+  // avec un visuel propre (cover d'article, thumbnail vidéo) la remplacent
+  // via leur propre `openGraph.images` (comportement standard de fusion Next).
+  const ogImage = [{ url: "/opengraph-image.jpg", width: 1200, height: 630, alt: SITE_NAME }];
   return {
     metadataBase: new URL(siteUrl),
     title: { default: t("title"), template: `%s | ${SITE_NAME}` },
@@ -40,8 +46,9 @@ export async function generateMetadata({
       description: t("description"),
       locale: ogLocale(locale),
       alternateLocale: routing.locales.filter((l) => l !== locale).map(ogLocale),
+      images: ogImage,
     },
-    twitter: { card: "summary_large_image", title: t("title"), description: t("description") },
+    twitter: { card: "summary_large_image", title: t("title"), description: t("description"), images: ogImage },
     icons: { icon: "/favicon.ico", apple: `/${locale}/apple-icon.png` },
     verification: { google: "fb3QYMo5tbpDvbzF5eEU2jD9WUlkpa4Quui4Xeud_MU" },
   };

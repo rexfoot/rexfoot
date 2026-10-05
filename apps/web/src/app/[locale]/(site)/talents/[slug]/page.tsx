@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: `${talent.firstName} ${talent.lastName} — RexFoot Talents`,
     description: t("metaDescription", { name: `${talent.firstName} ${talent.lastName}`, nationality: talent.nationality, country: talent.currentCountry }),
     openGraph: talent.photoUrl ? { images: [{ url: talent.photoUrl }] } : undefined,
+    twitter: talent.photoUrl ? { images: [{ url: talent.photoUrl }] } : undefined,
     alternates: buildAlternates(`/talents/${slug}`, locale),
   };
 }

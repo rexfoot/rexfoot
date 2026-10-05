@@ -31,6 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     title: video.title,
     description: video.description ?? t("metaFallbackDescription", { title: video.title }),
     openGraph: video.thumbnailUrl ? { images: [{ url: video.thumbnailUrl }] } : undefined,
+    twitter: video.thumbnailUrl ? { images: [{ url: video.thumbnailUrl }] } : undefined,
     alternates: buildAlternates(`/video/${slug}`, locale),
   };
 }

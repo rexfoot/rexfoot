@@ -24,7 +24,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: article.title,
     description: article.summary ?? undefined,
+    // Cover en og:image ET twitter:image (sinon twitter hériterait l'image
+    // globale du layout au lieu de la cover — voir layout [locale]).
     openGraph: article.coverImageUrl ? { images: [{ url: article.coverImageUrl }] } : undefined,
+    twitter: article.coverImageUrl ? { images: [{ url: article.coverImageUrl }] } : undefined,
     alternates: buildAlternates(`/news/${slug}`, locale),
   };
 }
