@@ -6,10 +6,12 @@ const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID;
 export function GoogleAnalytics() {
   if (!GA_MEASUREMENT_ID) return null;
 
+  // lazyOnload : GA ne part qu'après le chargement complet de la page
+  // (événement load navigateur), jamais en concurrence avec LCP/FCP.
   return (
     <>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="afterInteractive" />
-      <Script id="google-analytics-init" strategy="afterInteractive">
+      <Script src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`} strategy="lazyOnload" />
+      <Script id="google-analytics-init" strategy="lazyOnload">
         {`
           window.dataLayer = window.dataLayer || [];
           function gtag(){dataLayer.push(arguments);}

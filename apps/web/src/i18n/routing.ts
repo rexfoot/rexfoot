@@ -20,4 +20,9 @@ export const routing = defineRouting({
   locales: LOCALES,
   defaultLocale: "fr",
   localePrefix: "as-needed",
+  // Pas de détection auto : elle faisait rediriger `/` → `/en` (ou `/es`)
+  // selon Accept-Language (~1 s perdue sur PageSpeed, testé depuis les US).
+  // `/` sert toujours le français sans redirect ; EN/ES via /en, /es et le
+  // sélecteur de langue. Les alternates hreflang restent posées (SEO).
+  localeDetection: false,
 });

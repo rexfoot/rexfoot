@@ -7,6 +7,7 @@ import { SITE_NAME } from "@rexfoot/config";
 import { routing, isRtl } from "@/i18n/routing";
 import { buildAlternates, ogLocale } from "@/lib/seo/alternates";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
+import { AdsenseLazy } from "@/components/AdsenseLazy";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
 import "../globals.css";
 
@@ -100,19 +101,14 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
       dir={isRtl(locale) ? "rtl" : "ltr"}
       className={`${inter.variable} ${outfit.variable} h-full antialiased`}
     >
-      <head>
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4763917863811490"
-          crossOrigin="anonymous"
-        ></script>
-      </head>
       <body className="min-h-full">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(buildRootJsonLd()) }}
         />
+        {/* Tiers différés après le load : zéro impact LCP/FCP (voir point perf PageSpeed). */}
         <GoogleAnalytics />
+        <AdsenseLazy />
         <ServiceWorkerRegister />
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
       </body>
