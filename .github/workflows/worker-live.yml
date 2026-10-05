@@ -1,4 +1,4 @@
-name: Worker live (scores en direct)
+﻿name: Worker live (scores en direct)
 
 # Remplace la boucle 24h/24 du worker Railway : un passage toutes les 10 min.
 # Dépôt public → minutes GitHub Actions illimitées.
@@ -7,34 +7,5 @@ name: Worker live (scores en direct)
 # expurgées, jamais de clés/URLs/mots de passe).
 
 on:
-  schedule:
-    - cron: "*/10 * * * *"
-  workflow_dispatch: {}
-
-jobs:
-  live:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-      - run: npm ci
-      - name: Scores + événements en direct
-        run: npx tsx apps/worker/src/run-once.ts live
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
-          FOOTBALL_DATA_ORG_API_KEY: ${{ secrets.FOOTBALL_DATA_ORG_API_KEY }}
-          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-          RAPIDAPI_HOST: ${{ secrets.RAPIDAPI_HOST }}
-          HIGHLIGHTLY_API_KEY: ${{ secrets.HIGHLIGHTLY_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
-          THESPORTSDB_API_KEY: ${{ secrets.THESPORTSDB_API_KEY }}
-          FACEBOOK_PAGE_ID: ${{ secrets.FACEBOOK_PAGE_ID }}
-          FACEBOOK_PAGE_ACCESS_TOKEN: ${{ secrets.FACEBOOK_PAGE_ACCESS_TOKEN }}
-          SUPERVISOR_API_TOKEN: ${{ secrets.SUPERVISOR_API_TOKEN }}
+  # DESACTIVE (pas de secrets) — reactiver en remettant le bloc schedule.
+  
