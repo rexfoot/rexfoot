@@ -19,3 +19,8 @@ coverage/
 
 # Prisma generated client output (regenerated via `npm run prisma:generate`)
 packages/db/generated/
+
+# Dumps de backup DB (dépôt public — ne jamais committer) ; pattern restreint
+# au préfixe backup- pour ne pas ignorer packages/db/prisma/migrations/**/migration.sql
+*.dump
+backup-*.sql
