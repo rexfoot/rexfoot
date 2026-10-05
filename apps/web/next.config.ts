@@ -19,15 +19,14 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       // googletagmanager.com : script gtag.js (Google Analytics, apps/web/src/components/GoogleAnalytics.tsx).
       "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com",
-      // upload.videodelivery.net : upload direct navigateur → Cloudflare Stream depuis le panel admin.
       // google-analytics.com / analytics.google.com : appels de mesure envoyés par gtag.js (sous-domaines
       // régionaux, ex. region1.google-analytics.com — d'où le wildcard plutôt qu'un host fixe).
-      "connect-src 'self' https://upload.videodelivery.net https://*.cloudflarestream.com https://*.google-analytics.com https://*.analytics.google.com",
-      // iframe.videodelivery.net : lecteur vidéo intégré Cloudflare Stream sur /video/[slug].
+      "connect-src 'self' https://*.google-analytics.com https://*.analytics.google.com",
       // youtube.com/youtube-nocookie.com : vidéos synchronisées depuis la chaîne
       // YouTube du propriétaire (apps/worker/src/jobs/syncYoutubeVideos.ts),
       // même page /video/[slug], playbackUrl pointant vers youtube.com/embed/.
-      "frame-src https://iframe.videodelivery.net https://*.cloudflarestream.com https://www.youtube.com https://www.youtube-nocookie.com",
+      // (Cloudflare Stream retiré de la CSP le 2026-10-05 : service résilié, plus aucun embed/upload.)
+      "frame-src https://www.youtube.com https://www.youtube-nocookie.com",
       "font-src 'self' data:",
       "frame-ancestors 'none'",
     ].join("; "),

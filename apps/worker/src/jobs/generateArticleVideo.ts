@@ -47,6 +47,14 @@ async function uploadToCloudflareStream(video: Buffer, filename: string): Promis
  * après la publication d'un article.
  */
 export async function generateArticleVideo(articleId: string): Promise<string | null> {
+  // Même raison que generateWeeklyRecap.ts : pas de backend vidéo → pas de
+  // génération (le MP4 serait construit pour rien). Déclenchements manuels
+  // depuis /admin inclus — l'erreur explicite vient du stub si besoin.
+  if (getEnv().VIDEO_PROVIDER !== "cloudflare-stream") {
+    logger.info({ articleId }, "Article vidéo : désactivé (pas de fournisseur vidéo configuré), ignoré");
+    return null;
+  }
+
   const article = await prisma.newsArticle.findUnique({
     where: { id: articleId },
     include: {

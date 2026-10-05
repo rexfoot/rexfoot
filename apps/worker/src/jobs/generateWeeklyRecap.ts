@@ -48,6 +48,15 @@ async function uploadToCloudflareStream(video: Buffer): Promise<string> {
  * silencieux si le morceau n'est pas récupérable, jamais bloquant.
  */
 export async function generateWeeklyRecap(): Promise<void> {
+  // Cloudflare Stream résilié (2026-10-05) : sans backend vidéo, le MP4 généré
+  // n'aurait nulle part où être hébergé — sortie propre plutôt qu'un échec
+  // après plusieurs minutes de ffmpeg. Réactiver = rebrancher un provider
+  // (voir packages/video-provider) puis retirer ce guard.
+  if (getEnv().VIDEO_PROVIDER !== "cloudflare-stream") {
+    logger.info("Résumé hebdo : désactivé (pas de fournisseur vidéo configuré), run ignoré");
+    return;
+  }
+
   const since = new Date();
   since.setDate(since.getDate() - RECAP_WINDOW_DAYS);
 
