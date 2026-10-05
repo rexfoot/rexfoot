@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import useSWR, { useSWRConfig } from "swr";
+import type { Socket } from "socket.io-client";
 import { LIVE_POLL_INTERVAL_MS } from "@rexfoot/config";
-import { getRealtimeSocket } from "@/lib/realtimeSocket";
 import type { MatchSummary } from "@/lib/types";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -40,14 +40,22 @@ export function useMatchesList(apiUrl: string, initialMatches: MatchSummary[]) {
   // dupliquer cette logique côté client — on revalide donc à chaque signal,
   // peu coûteux (une requête déjà no-store) et bien plus rare qu'un vrai
   // polling à 10s si peu de matchs sont en direct.
+  //
+  // Import dynamique : socket.io-client (~35 Ko) ne fait plus partie du
+  // bundle initial — il n'est téléchargé que si ce composant monte, et
+  // getRealtimeSocket() renvoie null (zéro connexion) sans WS configurée.
   useEffect(() => {
-    const socket = getRealtimeSocket();
-    if (!socket) return;
-
+    let cancelled = false;
+    let socket: Socket | undefined;
     const onUpdate = () => void mutate(apiUrl);
-    socket.on("fixture:update", onUpdate);
+    void import("@/lib/realtimeSocket").then(({ getRealtimeSocket }) => {
+      if (cancelled) return;
+      socket = getRealtimeSocket() ?? undefined;
+      socket?.on("fixture:update", onUpdate);
+    });
     return () => {
-      socket.off("fixture:update", onUpdate);
+      cancelled = true;
+      socket?.off("fixture:update", onUpdate);
     };
   }, [apiUrl, mutate]);
 

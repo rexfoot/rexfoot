@@ -2,8 +2,8 @@
 
 import { useEffect } from "react";
 import useSWR, { useSWRConfig } from "swr";
+import type { Socket } from "socket.io-client";
 import { LIVE_POLL_INTERVAL_MS } from "@rexfoot/config";
-import { getRealtimeSocket } from "@/lib/realtimeSocket";
 import type { MatchDetail } from "@/lib/types";
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
@@ -38,16 +38,22 @@ export function useMatchDetail(matchId: string, initialMatch: MatchDetail) {
   // worker signale un changement sur CE match, sans attendre le prochain
   // tick du polling ci-dessus (qui reste le filet de sécurité si le socket
   // est indisponible). Voir apps/worker/src/lib/realtime.ts.
+  // Import dynamique : voir useMatchesList.ts (même raison — socket.io hors
+  // du bundle initial).
   useEffect(() => {
-    const socket = getRealtimeSocket();
-    if (!socket) return;
-
+    let cancelled = false;
+    let socket: Socket | undefined;
     const onUpdate = (payload: { fixtureId: string }) => {
       if (payload.fixtureId === matchId) void mutate(key);
     };
-    socket.on("fixture:update", onUpdate);
+    void import("@/lib/realtimeSocket").then(({ getRealtimeSocket }) => {
+      if (cancelled) return;
+      socket = getRealtimeSocket() ?? undefined;
+      socket?.on("fixture:update", onUpdate);
+    });
     return () => {
-      socket.off("fixture:update", onUpdate);
+      cancelled = true;
+      socket?.off("fixture:update", onUpdate);
     };
   }, [matchId, key, mutate]);
 
