@@ -27,11 +27,12 @@ export interface FootballDataOrgConfig {
   apiKey: string;
 }
 
-// Plan "Free w/ Livescores" (passé de gratuit a 12E/mois le 2026-09-05,
-// justement pour lever le retard delibere du plan gratuit sur les scores) :
-// 20 requetes/minute, toujours aucun plafond quotidien. Marge de securite
-// gardee a 80% du quota documente (16 au lieu de 20), meme ratio qu'avant.
-const MAX_REQUESTS_PER_WINDOW = 16;
+// Plan GRATUIT (défaut) : 10 requêtes/minute, scores avec léger retard,
+// pas de Ligue Europa. Marge de sécurité à 80 % (8 au lieu de 10).
+// Code du plan payant "Free w/ Livescores" (16/min) GARDÉ mais désactivé :
+// réactiver en posant FOOTBALL_DATA_ORG_PAID=1 si on reprend l'abonnement.
+const FREE_MAX_REQUESTS_PER_WINDOW = 8;
+const PAID_MAX_REQUESTS_PER_WINDOW = 16;
 const WINDOW_MS = 60_000;
 
 const STATUS_MAP: Record<string, FixtureDTO["status"]> = {
@@ -58,15 +59,17 @@ const STATUS_MAP: Record<string, FixtureDTO["status"]> = {
  */
 export class FootballDataOrgProvider implements FootballDataProvider {
   private requestTimestamps: number[] = [];
+  private readonly maxRequestsPerWindow =
+    process.env.FOOTBALL_DATA_ORG_PAID === "1" ? PAID_MAX_REQUESTS_PER_WINDOW : FREE_MAX_REQUESTS_PER_WINDOW;
 
   constructor(private readonly config: FootballDataOrgConfig) {}
 
-  /** Fenêtre glissante simple : attend si on a déjà fait MAX_REQUESTS_PER_WINDOW requêtes dans la dernière minute. */
+  /** Fenêtre glissante simple : attend si on a déjà fait trop de requêtes dans la dernière minute. */
   private async throttle(): Promise<void> {
     const now = Date.now();
     this.requestTimestamps = this.requestTimestamps.filter((t) => now - t < WINDOW_MS);
 
-    if (this.requestTimestamps.length >= MAX_REQUESTS_PER_WINDOW) {
+    if (this.requestTimestamps.length >= this.maxRequestsPerWindow) {
       const oldest = this.requestTimestamps[0]!;
       const waitMs = WINDOW_MS - (now - oldest) + 250;
       await new Promise((resolve) => setTimeout(resolve, waitMs));

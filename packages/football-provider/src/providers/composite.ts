@@ -48,8 +48,15 @@ export class CompositeFootballProvider implements FootballDataProvider {
       return secondaryResults;
     }
 
-    // Autres requêtes (par pays, liste complète) : délègue au primary.
-    return this.primary.getCompetitions(params);
+    // Autres requêtes (par pays, liste complète) : union primary + secondary
+    // (ex. mode gratuit : FDO ne liste que ses compétitions, ESPN ajoute
+    // les coupes) — dédupliquées par externalId, primary prioritaire.
+    const [a, b] = await Promise.all([
+      this.primary.getCompetitions(params).catch(() => []),
+      this.secondary.getCompetitions(params).catch(() => []),
+    ]);
+    const seen = new Set(a.map((c) => c.externalId));
+    return [...a, ...b.filter((c) => !seen.has(c.externalId))];
   }
 
   async getSeasons(competitionExternalId: string): Promise<SeasonDTO[]> {
@@ -104,16 +111,31 @@ export class CompositeFootballProvider implements FootballDataProvider {
   }
 
   async getLiveScores(): Promise<FixtureDTO[]> {
-    // Les live scores viennent toujours du primary (football-data.org).
-    return this.primary.getLiveScores();
+    // Direct fusionné primary + secondary (mode gratuit : FDO avec léger
+    // retard + ESPN temps réel) — dédupliqués par externalId.
+    const [a, b] = await Promise.all([
+      this.primary.getLiveScores().catch(() => []),
+      this.secondary.getLiveScores().catch(() => []),
+    ]);
+    const seen = new Set(a.map((f) => f.externalId));
+    return [...a, ...b.filter((f) => !seen.has(f.externalId))];
   }
 
   async getFixtureDetail(fixtureExternalId: string): Promise<FixtureDetailDTO | null> {
     // Le detail est un match unique — on ne peut pas déduire le fournisseur
-    // à partir de son ID seul. On essaie le primary, puis le secondary.
-    const detail = await this.primary.getFixtureDetail(fixtureExternalId);
-    if (detail) return detail;
-    return this.secondary.getFixtureDetail(fixtureExternalId);
+    // à partir de son ID seul. On essaie le primary, puis le secondary
+    // (le primary peut aussi planter réseau/403 — jamais de crash).
+    try {
+      const detail = await this.primary.getFixtureDetail(fixtureExternalId);
+      if (detail) return detail;
+    } catch {
+      // repli secondary ci-dessous
+    }
+    try {
+      return await this.secondary.getFixtureDetail(fixtureExternalId);
+    } catch {
+      return null;
+    }
   }
 
   async getStandings(params: GetStandingsParams): Promise<StandingDTO[]> {

@@ -5,6 +5,7 @@ import { ApiFootballProvider } from "./providers/apiFootball";
 import { FootballDataOrgProvider } from "./providers/footballDataOrg";
 import { EspnProvider } from "./providers/espn";
 import { CompositeFootballProvider } from "./providers/composite";
+import { PrefixedFootballProvider } from "./providers/prefixed";
 import { NullFootballProvider } from "./providers/nullProvider";
 import { RedisCachingProvider } from "./cache/redisCachingProvider";
 import { HighlightlyClient } from "./highlightly";
@@ -13,8 +14,9 @@ export * from "./FootballDataProvider";
 export * from "./types";
 export { ApiFootballProvider } from "./providers/apiFootball";
 export { FootballDataOrgProvider } from "./providers/footballDataOrg";
-export { EspnProvider, ESPN_SLUGS, COMPETITION_TO_ESPN_SLUG } from "./providers/espn";
+export { EspnProvider, ESPN_SLUGS, ESPN_LEAGUE_SLUGS, ESPN_ALL_SLUGS, COMPETITION_TO_ESPN_SLUG } from "./providers/espn";
 export { CompositeFootballProvider } from "./providers/composite";
+export { PrefixedFootballProvider } from "./providers/prefixed";
 export { NullFootballProvider } from "./providers/nullProvider";
 export { RedisCachingProvider } from "./cache/redisCachingProvider";
 export {
@@ -97,7 +99,9 @@ export function createFootballProvider(): FootballDataProvider {
 
   const hasFdo = hasFootballDataOrgApiKey(env);
   const hasApi = hasFootballApiKey(env);
-  const espn = new EspnProvider();
+  // ESPN toujours wrappé avec préfixe "espn:" : ses IDs numériques peuvent
+  // entrer en collision avec ceux de FDO dans nos upserts provider+externalId.
+  const espn = new PrefixedFootballProvider(new EspnProvider(), "espn:");
 
   if (hasFdo && hasApi) {
     // Les trois clés configurées : football-data.org → API-Football → ESPN.

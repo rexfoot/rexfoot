@@ -72,7 +72,7 @@ export class EspnProvider implements FootballDataProvider {
         {
           externalId: slug,
           name: league.name ?? league.slug ?? slug,
-          type: "CUP",
+          type: (ESPN_LEAGUE_SLUGS as readonly string[]).includes(slug) ? "LEAGUE" : "CUP",
           logoUrl: null,
           countryName: null,
           countryCode: null,
@@ -153,7 +153,7 @@ export class EspnProvider implements FootballDataProvider {
   // On interroge chaque slug ESPN connu pour les matchs en direct.
 
   async getLiveScores(): Promise<FixtureDTO[]> {
-    const slugs = ESPN_SLUGS;
+    const slugs = ESPN_ALL_SLUGS;
     const results: FixtureDTO[] = [];
 
     for (const slug of slugs) {
@@ -179,7 +179,7 @@ export class EspnProvider implements FootballDataProvider {
   async getFixtureDetail(fixtureExternalId: string): Promise<FixtureDetailDTO | null> {
     // Le detail nécessite le slug de la ligue — on essaie tous les slugs
     // connus jusqu'à trouver le match.
-    for (const slug of ESPN_SLUGS) {
+    for (const slug of ESPN_ALL_SLUGS) {
       try {
         const data = await this.request<EspnScoreboard>(`${BASE_URL}/${slug}/scoreboard`);
         const event = data.events?.find((e) => String(e.id) === fixtureExternalId);
@@ -214,6 +214,17 @@ export class EspnProvider implements FootballDataProvider {
   }
 }
 
+// ── Slugs ESPN : championnats (direct + calendriers, plan 100 % gratuit) ──
+
+export const ESPN_LEAGUE_SLUGS = [
+  "eng.1",
+  "esp.1",
+  "ita.1",
+  "ger.1",
+  "fra.1",
+  "uefa.champions",
+] as const;
+
 // ── Slugs ESPN pour les 8 coupes ─────────────────────────────────────────
 
 export const ESPN_SLUGS = [
@@ -228,8 +239,17 @@ export const ESPN_SLUGS = [
   "uefa.nations",
 ] as const;
 
+/** Tous les slugs interrogés pour le direct et la recherche de match. */
+export const ESPN_ALL_SLUGS: readonly string[] = [...ESPN_LEAGUE_SLUGS, ...ESPN_SLUGS];
+
 /** Map notre FeaturedCompetitionSlug → slug ESPN. */
 export const COMPETITION_TO_ESPN_SLUG: Record<string, string> = {
+  "premier-league": "eng.1",
+  "la-liga": "esp.1",
+  "serie-a": "ita.1",
+  "bundesliga": "ger.1",
+  "ligue-1": "fra.1",
+  "champions-league": "uefa.champions",
   "europa-league": "uefa.europa",
   "europa-conference-league": "uefa.europa.conf",
   "fa-cup": "eng.fa",
