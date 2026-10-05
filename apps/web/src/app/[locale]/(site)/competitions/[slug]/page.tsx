@@ -7,6 +7,7 @@ import {
   getCompetitionBySlug,
   getFixturesForCompetition,
   getStandingsForCompetition,
+  hasCompetitionData,
 } from "@/lib/data/competitions";
 import { buildAlternates } from "@/lib/seo/alternates";
 import { TeamCrest } from "@/components/TeamCrest";
@@ -41,10 +42,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     getLocale(),
   ]);
   if (!competition) return {};
+  // Page vide (aucune saison en cours, ni classement ni calendrier) : noindex
+  // AUTOMATIQUE et TEMPORAIRE — la page reste en ligne (URL intacte, liens
+  // suivis) et redevient indexable seule dès que le worker synchronise des
+  // données (metadata recalculée à chaque revalidate, 60 s).
+  const season = competition.seasons[0];
+  const hasData = season ? await hasCompetitionData(competition.id, season.id) : false;
   return {
     title: competition.name,
     description: t("metaDescriptionDetail", { name: competition.name }),
     alternates: buildAlternates(`/competitions/${slug}`, locale),
+    robots: hasData ? undefined : { index: false, follow: true },
   };
 }
 

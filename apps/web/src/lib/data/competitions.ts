@@ -29,6 +29,21 @@ export async function getStandingsForCompetition(competitionId: string, seasonId
   });
 }
 
+/**
+ * La page compétition a-t-elle de vraies données (classement ou calendrier) ?
+ * Requêtes COUNT légères (pas de jointures) — sert le noindex automatique des
+ * pages vides (voir generateMetadata de competitions/[slug]) : noindex tant
+ * que vide, indexable dès que le worker synchronise des données, sans
+ * intervention et sans toucher aux URLs.
+ */
+export async function hasCompetitionData(competitionId: string, seasonId: string): Promise<boolean> {
+  const [standings, fixtures] = await Promise.all([
+    prisma.standing.count({ where: { competitionId, seasonId } }),
+    prisma.fixture.count({ where: { competitionId, seasonId } }),
+  ]);
+  return standings > 0 || fixtures > 0;
+}
+
 export async function getFixturesForCompetition(competitionId: string, seasonId: string) {
   return prisma.fixture.findMany({
     where: { competitionId, seasonId },

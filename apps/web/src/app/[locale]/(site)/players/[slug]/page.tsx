@@ -33,10 +33,17 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     getLocale(),
   ]);
   if (!player) return {};
+  // Joueur sans vraies données (ni photo, ni club actuel, ni stats) : noindex
+  // AUTOMATIQUE et TEMPORAIRE — même principe que les compétitions : la page
+  // reste en ligne (URL intacte) et redevient indexable seule dès que le
+  // worker enrichit la fiche (photo, club, stats).
+  const hasData =
+    player.photoUrl !== null || player.teamMemberships.length > 0 || player.statistics.length > 0;
   return {
     title: player.displayName,
     description: t("metaDescription", { name: player.displayName }),
     alternates: buildAlternates(`/players/${slug}`, locale),
+    robots: hasData ? undefined : { index: false, follow: true },
   };
 }
 
