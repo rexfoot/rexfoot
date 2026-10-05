@@ -58,7 +58,12 @@
     "ownGoal": "But contre son camp",
     "yellowCard": "Carton jaune",
     "redCard": "Carton rouge",
-    "substitution": "Remplacement"
+    "substitution": "Remplacement",
+    "watchFreeTitle": "Où regarder — gratuit et légal",
+    "watchFreeHighlights": "Résumés gratuits de ce match",
+    "watchFreeFifaPlus": "FIFA+",
+    "watchFreeFifaPlusDesc": "Certains matchs en direct gratuitement + archives officielles",
+    "watchFreeNote": "RexFoot propose le suivi en direct écrit (gratuit, léger en données). Nous ne diffusons ni ne lions aucun stream illégal."
   },
   "standings": {
     "title": "Classements",

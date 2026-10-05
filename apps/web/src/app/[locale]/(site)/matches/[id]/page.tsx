@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getTranslations, getLocale } from "next-intl/server";
 import { getMatchById } from "@/lib/data/matches";
 import { MatchDetailClient } from "@/components/MatchDetailClient";
+import { WatchFreeBlock } from "@/components/WatchFreeBlock";
 import { buildAlternates } from "@/lib/seo/alternates";
 
 interface PageProps {
@@ -46,9 +47,10 @@ export default async function MatchDetailPage({ params }: PageProps) {
   };
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6">
+    <div className="mx-auto max-w-3xl space-y-8 px-4 py-6">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <MatchDetailClient matchId={id} initialMatch={match} />
+      <WatchFreeBlock videos={match.relatedVideos} />
     </div>
   );
 }

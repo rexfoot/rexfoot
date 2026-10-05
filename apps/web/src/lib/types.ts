@@ -87,6 +87,8 @@ export interface MatchDetail extends MatchSummary {
   standings: StandingRow[];
   homeTeamNextMatch: MatchSummary | null;
   awayTeamNextMatch: MatchSummary | null;
+  /** Résumés/highlights liés à ce match (modérés + publiés uniquement) — alimente le bloc "Où regarder" gratuit. */
+  relatedVideos: VideoSummary[];
 }
 
 export interface NationalityOption {

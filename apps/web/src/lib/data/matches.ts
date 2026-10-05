@@ -132,6 +132,22 @@ const matchDetailSelect = {
       substitutes: true,
     },
   },
+  // Résumés liés (modérés + publiés) pour le bloc "Où regarder" gratuit de la
+  // page match — vide la plupart du temps (peu de vidéos liées), coût négligeable.
+  relatedVideos: {
+    where: { moderationStatus: "APPROVED", publishedAt: { not: null } },
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      thumbnailUrl: true,
+      durationSeconds: true,
+      viewCount: true,
+      status: true,
+    },
+    orderBy: { publishedAt: "desc" },
+    take: 4,
+  },
 } as const;
 
 function normalizePlayerName(name: string): string {

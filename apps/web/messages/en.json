@@ -58,7 +58,12 @@
     "ownGoal": "Own goal",
     "yellowCard": "Yellow card",
     "redCard": "Red card",
-    "substitution": "Substitution"
+    "substitution": "Substitution",
+    "watchFreeTitle": "Where to watch — free & legal",
+    "watchFreeHighlights": "Free highlights of this match",
+    "watchFreeFifaPlus": "FIFA+",
+    "watchFreeFifaPlusDesc": "Selected matches live for free + official archives",
+    "watchFreeNote": "RexFoot offers free written live coverage (light on data). We never stream or link illegal streams."
   },
   "standings": {
     "title": "Standings",
