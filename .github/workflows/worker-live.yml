@@ -7,5 +7,6 @@
 # expurgées, jamais de clés/URLs/mots de passe).
 
 on:
-  # DESACTIVE (pas de secrets) — reactiver en remettant le bloc schedule.
+  # DESACTIVE (pas de secrets) — réactiver en remettant le bloc schedule.
+  workflow_dispatch: {}
   

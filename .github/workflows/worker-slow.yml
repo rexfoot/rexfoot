@@ -4,5 +4,6 @@
 # Logs PUBLICS — aucun secret n'y est affiché (voir worker-live.yml).
 
 on:
-  # DESACTIVE (pas de secrets) — reactiver en remettant le bloc schedule.
+  # DESACTIVE (pas de secrets) — réactiver en remettant le bloc schedule.
+  workflow_dispatch: {}
   

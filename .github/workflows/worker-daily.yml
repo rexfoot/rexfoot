@@ -4,5 +4,15 @@
 # Logs PUBLICS — aucun secret n'y est affiché (voir worker-live.yml).
 
 on:
-  # DESACTIVE (pas de secrets) — reactiver en remettant le bloc schedule.
+  # DESACTIVE (pas de secrets) — réactiver en remettant le bloc schedule.
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Mode à exécuter (daily, weekly, ou video)"
+        required: false
+        default: "daily"
+      articleId:
+        description: "ID article (mode video uniquement)"
+        required: false
+        default: ""
   
