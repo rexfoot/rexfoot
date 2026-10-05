@@ -25,6 +25,11 @@ export function NewsHero({ article }: NewsHeroProps) {
   const locale = useLocale();
   const date = formatArticleDate(article.publishedAt, toIntlLocale(locale));
   const breaking = isCurrentlyBreaking(article.isBreaking ?? false, article.breakingSince ?? null);
+  // Optimizer Next (WebP + resize + srcset) pour les covers servies par
+  // /api/assets/... : ~500 Ko JPEG → ~50-80 Ko WebP (LCP accueil). Les covers
+  // externes éventuelles restent `unoptimized` (l'optimizer exige
+  // remotePatterns et répondrait 400).
+  const optimizeCover = article.coverImageUrl?.startsWith("/") ?? false;
 
   return (
     <Link
@@ -38,7 +43,7 @@ export function NewsHero({ article }: NewsHeroProps) {
             src={article.coverImageUrl}
             alt={article.title}
             fill
-            unoptimized
+            unoptimized={!optimizeCover}
             priority
             // sizes + priority + preload auto (Next émet le <link preload> dès
             // que la section streame) : le navigateur réserve la bonne taille
