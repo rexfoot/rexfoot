@@ -6,7 +6,8 @@ let queue: Queue | undefined;
 
 function createBullMqConnection(): Redis {
   const url = getEnv().REDIS_URL;
-  console.log(`[article-video-queue] Création connexion Redis BullMQ (url=${url.substring(0, 20)}...)`);
+  // Jamais d'URL (mot de passe) dans les logs — les logs Actions sont publics.
+  console.log("[article-video-queue] Création connexion Redis BullMQ");
   return new Redis(url, { maxRetriesPerRequest: null });
 }
 
