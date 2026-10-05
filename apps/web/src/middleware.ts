@@ -13,6 +13,9 @@ export default function middleware(request: NextRequest) {
   // Une seule URL FR, hreflang/sitemap pointent déjà vers `/`. Les URLs
   // `/fr/...` n'étant ni canoniques ni maillées, ce redirect ne coûte rien
   // aux perfs des URLs normales (aucun redirect sur `/`, `/en`, ...).
+  // Note : `/fr/opengraph-image` (og:image des meta FR) suit le même 301 —
+  // les scrapers réseaux sociaux (Facebook/X/WhatsApp) suivent ce redirect
+  // unique vers une 200, aucun traitement spécial nécessaire.
   if (pathname === "/fr" || pathname.startsWith("/fr/")) {
     const url = request.nextUrl.clone();
     url.pathname = pathname.replace(/^\/fr(?=\/|$)/, "") || "/";
