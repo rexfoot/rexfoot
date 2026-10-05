@@ -66,6 +66,16 @@ const envSchema = z.object({
   // DATABASE_URL : en cas de fuite, seul ce résumé en lecture seule est
   // exposé, jamais la base elle-même. Endpoint désactivé (404) tant que vide.
   SUPERVISOR_API_TOKEN: z.string().optional().default(""),
+
+  // Web Push navigateur (alertes de buts, 2026-10-05) — 100 % gratuit, sans
+  // service tiers : le worker signe et envoie lui-même via web-push.
+  // Générées avec `npx web-push generate-vapid-keys --workspace=apps/worker`.
+  // La clé PUBLIQUE est exposée via /api/push/vapid-key (le navigateur en a
+  // besoin pour s'abonner) — la PRIVÉE ne sort jamais du serveur. Vides =
+  // bouton d'alerte désactivé avec message explicite, jamais de crash.
+  VAPID_PUBLIC_KEY: z.string().optional().default(""),
+  VAPID_PRIVATE_KEY: z.string().optional().default(""),
+  VAPID_SUBJECT: z.string().optional().default(""),
 });
 
 export type Env = z.infer<typeof envSchema>;
@@ -111,4 +121,13 @@ export function hasCloudflareStreamConfig(env: Env = getEnv()): boolean {
 
 export function hasHighlightlyApiKey(env: Env = getEnv()): boolean {
   return env.HIGHLIGHTLY_API_KEY.trim().length > 0;
+}
+
+/** Vrai si l'envoi Web Push est possible (clés VAPID + contact configurés). */
+export function hasVapidConfig(env: Env = getEnv()): boolean {
+  return (
+    env.VAPID_PUBLIC_KEY.trim().length > 0 &&
+    env.VAPID_PRIVATE_KEY.trim().length > 0 &&
+    env.VAPID_SUBJECT.trim().length > 0
+  );
 }

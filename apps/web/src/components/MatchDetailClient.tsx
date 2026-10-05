@@ -10,6 +10,7 @@ import { MatchCard } from "./MatchCard";
 import { FormBadge } from "./FormBadge";
 import { FormationPitch, SubstitutesList, filterActiveSubstitutes } from "./FormationPitch";
 import { GoalCelebration } from "./GoalCelebration";
+import { GoalAlertButton } from "./GoalAlertButton";
 import { LiveAudioPlayer } from "./LiveAudioPlayer";
 import { useMatchDetail } from "@/hooks/useMatchDetail";
 import { toIntlLocale } from "@/lib/intl-locale";
@@ -83,6 +84,9 @@ export function MatchDetailClient({ matchId, initialMatch }: { matchId: string; 
               <p className="font-display text-2xl font-bold text-rf-fg-muted">{t("vs")}</p>
             )}
             <p className={`mt-2 text-sm font-semibold ${isLive ? "text-rf-live" : "text-rf-fg-muted"}`}>{statusLabel}</p>
+            <div className="mt-3 flex justify-center">
+              <GoalAlertButton matchId={match.id} />
+            </div>
           </div>
           <TeamColumn
             team={match.awayTeam}

@@ -9,6 +9,7 @@ import {
 } from "@rexfoot/football-provider";
 import { logger } from "../lib/logger.js";
 import { notifyWriters } from "../lib/notifyWriters.js";
+import { sendGoalPush } from "../lib/sendGoalPush.js";
 import { emitFixtureUpdate } from "../lib/realtime.js";
 
 // Highlightly (plan gratuit) : 100 requêtes/jour, aucun plafond horaire strict
@@ -213,9 +214,15 @@ async function replaceFixtureEvents(fixtureId: string, teams: MatchTeams, events
     ) {
       const teamName = teamId === teams.homeTeamId ? teams.homeTeamName : teams.awayTeamName;
       const minuteLabel = extraMinute ? `${minute}+${extraMinute}` : `${minute}`;
-      void notifyWriters(
-        `⚽ GOL de ${event.player ?? "?"} (${minuteLabel}') — ${teamName} | ${teams.homeTeamName} vs ${teams.awayTeamName}`,
-      );
+      const goalText = `⚽ GOL de ${event.player ?? "?"} (${minuteLabel}') — ${teamName} | ${teams.homeTeamName} vs ${teams.awayTeamName}`;
+      void notifyWriters(goalText);
+      // Même détection que l'alerte rédacteurs, mais vers les navigateurs
+      // abonnés aux buts de CE match (bouton sur la page match — sans compte).
+      void sendGoalPush(fixtureId, {
+        title: `⚽ ${teamName} — ${minuteLabel}'`,
+        body: `${event.player ?? "?"} · ${teams.homeTeamName} vs ${teams.awayTeamName}`,
+        url: `/matches/${fixtureId}`,
+      });
     }
 
     await prisma.fixtureEvent.create({

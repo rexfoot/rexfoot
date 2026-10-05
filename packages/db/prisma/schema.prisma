@@ -442,6 +442,10 @@ model Fixture {
   lineups          Lineup[]
   relatedVideos    Video[]
   votes            MatchVote[]
+  /// Abonnés Web Push aux buts de ce match (bouton "M'alerter" sur la page
+  /// match, sans compte requis — voir apps/web/src/app/api/push + le worker
+  /// sendGoalPush). Cascade : match supprimé = abonnements supprimés.
+  pushSubscriptions PushSubscription[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -587,6 +591,25 @@ model MatchVote {
 
   @@unique([fixtureId, voterKey])
   @@index([fixtureId])
+}
+
+/// Abonnement Web Push aux buts d'un match (bouton "M'alerter" sur la page
+/// match — sans compte requis, l'endpoint navigateur FAIT OFFICE d'identité :
+/// même navigateur = même endpoint = un seul abonnement par match).
+/// Envoyé par le worker (sendGoalPush) quand un but est détecté. Les
+/// abonnements morts (endpoint expiré, 404/410 côté push service) sont
+/// supprimés à l'envoi.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  matchId   String
+  match     Fixture  @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([matchId, endpoint])
+  @@index([matchId])
 }
 
 /// Log d'affichage anonyme pour calculer les tendances (section 19 du plan) —
