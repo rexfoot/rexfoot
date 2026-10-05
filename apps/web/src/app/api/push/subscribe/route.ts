@@ -20,8 +20,6 @@ export async function POST(request: Request) {
   const rateLimitResponse = await enforceRateLimit(request, "api:push-subscribe");
   if (rateLimitResponse) return rateLimitResponse;
 
-  if (!process.env.VAPID_PUBLIC_KEY) return apiError(503, "Alertes push non configurées.");
-
   const parsed = subscriptionSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return apiError(400, "Abonnement invalide.");
   const { matchId, endpoint, p256dh, auth } = parsed.data;

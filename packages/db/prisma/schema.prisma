@@ -612,6 +612,15 @@ model PushSubscription {
   @@index([matchId])
 }
 
+/// Configuration applicative stockée en base (plutôt qu'en variables Railway)
+/// pour ce qui peut s'auto-générer : clés VAPID Web Push (voir
+/// packages/db/src/vapid.ts). Une seule ligne par clé, écrite une fois.
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
+}
+
 /// Log d'affichage anonyme pour calculer les tendances (section 19 du plan) —
 /// jamais de classement inventé : uniquement des vues réelles, comptées sur
 /// une fenêtre glissante côté requête (voir lib/data/trending.ts), et

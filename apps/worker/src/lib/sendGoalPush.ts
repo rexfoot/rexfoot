@@ -1,17 +1,22 @@
 import webpush from "web-push";
-import { prisma } from "@rexfoot/db";
-import { getEnv, hasVapidConfig } from "@rexfoot/config";
+import { prisma, getOrCreateVapidKeys } from "@rexfoot/db";
 import { logger } from "./logger.js";
 
 let configured = false;
 
-function ensureConfigured(): boolean {
+async function ensureConfigured(): Promise<boolean> {
   if (configured) return true;
-  const env = getEnv();
-  if (!hasVapidConfig(env)) return false;
-  webpush.setVapidDetails(env.VAPID_SUBJECT, env.VAPID_PUBLIC_KEY, env.VAPID_PRIVATE_KEY);
-  configured = true;
-  return true;
+  try {
+    // Env prioritaire, sinon paire auto-générée en base (zéro Railway) —
+    // voir packages/db/src/vapid.ts.
+    const { publicKey, privateKey, subject } = await getOrCreateVapidKeys();
+    webpush.setVapidDetails(subject, publicKey, privateKey);
+    configured = true;
+    return true;
+  } catch (cause) {
+    logger.warn({ cause }, "Web Push indisponible (ni env ni base) — alertes ignorées");
+    return false;
+  }
 }
 
 export interface GoalPush {
@@ -28,7 +33,7 @@ export interface GoalPush {
  * job de synchro. Sans VAPID configuré : no-op silencieux.
  */
 export async function sendGoalPush(matchId: string, push: GoalPush): Promise<void> {
-  if (!ensureConfigured()) return;
+  if (!(await ensureConfigured())) return;
 
   const subs = await prisma.pushSubscription.findMany({ where: { matchId } });
   if (subs.length === 0) return;

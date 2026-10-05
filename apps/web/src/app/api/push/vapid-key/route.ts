@@ -1,8 +1,17 @@
 import { NextResponse } from "next/server";
+import { getOrCreateVapidKeys } from "@rexfoot/db";
 
-/** Clé publique VAPID pour que le navigateur construise son abonnement push. 404 si non configuré. */
+/**
+ * Clé publique VAPID pour que le navigateur construise son abonnement push.
+ * Variables d'environnement d'abord, sinon paire auto-générée et stockée en
+ * base (aucune manipulation Railway requise) — voir
+ * packages/db/src/vapid.ts.
+ */
 export async function GET() {
-  const key = process.env.VAPID_PUBLIC_KEY;
-  if (!key) return NextResponse.json({ error: "Push non configuré." }, { status: 404 });
-  return NextResponse.json({ publicKey: key });
+  try {
+    const { publicKey } = await getOrCreateVapidKeys();
+    return NextResponse.json({ publicKey });
+  } catch {
+    return NextResponse.json({ error: "Push non configuré." }, { status: 503 });
+  }
 }
