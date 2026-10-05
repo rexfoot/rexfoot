@@ -98,7 +98,10 @@ export function getEnv(): Env {
     throw new Error(`Variables d'environnement invalides:\n${issues}`);
   }
 
-  cachedEnv = parsed.data;
+  // Cloudflare Stream est résilié (2026-10) : VIDEO_PROVIDER est forcé à
+  // "stub" ici, quelle que soit la valeur réelle de la variable d'env sur
+  // Railway/Vercel, pour ne pas dépendre d'un nettoyage de config externe.
+  cachedEnv = { ...parsed.data, VIDEO_PROVIDER: "stub" };
   return cachedEnv;
 }
 
