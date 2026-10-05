@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ListChecks, Goal } from "lucide-react";
+import { ListChecks, Goal, ArrowLeftRight, MonitorPlay } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 import { TeamGoogleLink } from "./TeamGoogleLink";
 import { CompetitionBadge } from "./CompetitionBadge";
@@ -17,7 +17,7 @@ import { bestKnownMinute } from "@/lib/match-minute";
 import { cn } from "@/lib/cn";
 import type { MatchDetail, MatchEventSummary, MatchSummary } from "@/lib/types";
 
-type QuickTab = "composition" | "standings" | "nextMatch";
+type QuickTab = "timeline" | "composition" | "standings" | "nextMatch";
 
 const GOAL_EVENT_TYPES: ReadonlySet<MatchEventSummary["type"]> = new Set(["GOAL", "PENALTY", "OWN_GOAL"]);
 
@@ -143,9 +143,13 @@ function useGoalCelebration(match: MatchDetail): { trigger: number; label: strin
  */
 function QuickTabs({ match }: { match: MatchDetail }) {
   const t = useTranslations("matches");
-  const [tab, setTab] = useState<QuickTab>("composition");
+  // En direct : le fil but-par-but d'abord (c'est ce qu'on vient voir) ;
+  // sinon les compos (habitude existante).
+  const isLive = match.status === "LIVE" || match.status === "HALFTIME";
+  const [tab, setTab] = useState<QuickTab>(isLive ? "timeline" : "composition");
 
   const tabs: Array<{ id: QuickTab; label: string }> = [
+    { id: "timeline", label: t("timeline") },
     { id: "composition", label: t("composition") },
     { id: "standings", label: t("standingsTab") },
     { id: "nextMatch", label: t("nextMatch") },
@@ -169,6 +173,7 @@ function QuickTabs({ match }: { match: MatchDetail }) {
         ))}
       </div>
 
+      {tab === "timeline" && <TimelinePanel match={match} />}
       {tab === "composition" && <CompositionPanel match={match} />}
       {tab === "standings" && <StandingsPanel match={match} />}
       {tab === "nextMatch" && <NextMatchPanel match={match} />}
@@ -305,6 +310,86 @@ function NextMatchPanel({ match }: { match: MatchDetail }) {
 
 function formatEventMinute(minute: number, extraMinute: number | null): string {
   return extraMinute ? `${minute}+${extraMinute}'` : `${minute}'`;
+}
+
+/**
+ * Fil du match but par but (texte uniquement — gratuit et léger en données) :
+ * buts, cartons, remplacements, VAR, triés du plus récent au plus ancien.
+ * Données déjà présentes via syncMatchEvents/Highlightly (match.events) —
+ * aucun appel en plus, se met à jour avec le polling existant du détail.
+ */
+function TimelinePanel({ match }: { match: MatchDetail }) {
+  const t = useTranslations("matches");
+
+  if (match.events.length === 0) {
+    return <EmptyState icon={ListChecks} title={t("noEvents")} description={t("noEventsDescription")} />;
+  }
+
+  const teamName = (teamId: string) =>
+    teamId === match.homeTeam.id ? match.homeTeam.name : teamId === match.awayTeam.id ? match.awayTeam.name : "";
+
+  const sorted = [...match.events].sort((a, b) => b.minute - a.minute || (b.extraMinute ?? 0) - (a.extraMinute ?? 0));
+
+  return (
+    <ul className="space-y-1">
+      {match.status === "FINISHED" && (
+        <li className="flex items-center gap-3 rounded-xl bg-rf-bg-elevated px-3 py-2 text-xs font-bold text-rf-fg">
+          <span className="w-10 shrink-0 text-rf-gold">90&apos;</span>
+          {t("fullTime")}
+        </li>
+      )}
+      {sorted.map((event) => (
+        <li key={event.id} className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm">
+          <span className="w-10 shrink-0 text-xs font-bold text-rf-fg-muted">
+            {formatEventMinute(event.minute, event.extraMinute)}
+          </span>
+          <TimelineIcon type={event.type} />
+          <span className="min-w-0">
+            <span className="block truncate font-medium text-rf-fg">
+              {event.detail ?? t(eventLabelKey(event.type))}
+              {event.type === "OWN_GOAL" && event.detail ? ` (${t("ownGoal")})` : ""}
+            </span>
+            {teamName(event.teamId) && <span className="block truncate text-xs text-rf-fg-subtle">{teamName(event.teamId)}</span>}
+          </span>
+        </li>
+      ))}
+      <li className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold text-rf-fg-muted">
+        <span className="w-10 shrink-0">0&apos;</span>
+        {t("kickoff")}
+      </li>
+    </ul>
+  );
+}
+
+function eventLabelKey(type: MatchEventSummary["type"]): string {
+  switch (type) {
+    case "GOAL":
+      return "goal";
+    case "PENALTY":
+      return "penalty";
+    case "OWN_GOAL":
+      return "ownGoal";
+    case "MISSED_PENALTY":
+      return "missedPenalty";
+    case "YELLOW_CARD":
+      return "yellowCard";
+    case "RED_CARD":
+      return "redCard";
+    case "SUBSTITUTION":
+      return "substitution";
+    case "VAR":
+      return "var";
+  }
+}
+
+/** Pastille jaune/rouge pour les cartons, icônes sinon — texte d'abord, zéro image. */
+function TimelineIcon({ type }: { type: MatchEventSummary["type"] }) {
+  if (type === "YELLOW_CARD") return <span aria-hidden className="h-4 w-3 shrink-0 rounded-[3px] bg-yellow-400" />;
+  if (type === "RED_CARD") return <span aria-hidden className="h-4 w-3 shrink-0 rounded-[3px] bg-red-500" />;
+  if (GOAL_EVENT_TYPES.has(type)) return <Goal size={16} className="shrink-0 text-rf-gold" />;
+  if (type === "MISSED_PENALTY") return <Goal size={16} className="shrink-0 text-rf-fg-subtle" />;
+  if (type === "SUBSTITUTION") return <ArrowLeftRight size={16} className="shrink-0 text-rf-fg-muted" />;
+  return <MonitorPlay size={16} className="shrink-0 text-rf-fg-muted" />;
 }
 
 /**
