@@ -67,6 +67,12 @@
     "var": "Revisión VAR",
     "kickoff": "Saque inicial",
     "fullTime": "Final del partido",
+    "lightTitle": "RexFoot Ligero — solo texto",
+    "lightLive": "En directo",
+    "lightUpcoming": "Próximos",
+    "lightResults": "Últimos resultados",
+    "lightRefresh": "Página de pocos KB, actualizada cada minuto — ideal para datos limitados.",
+    "lightEmpty": "Ningún partido en directo ahora.",
     "watchFreeTitle": "Dónde ver — gratis y legal",
     "watchFreeHighlights": "Resúmenes gratis de este partido",
     "watchFreeFifaPlus": "FIFA+",
@@ -444,6 +450,7 @@
   "footer": {
     "legalLink": "Aviso legal",
     "privacyLink": "Política de privacidad",
+    "lightLink": "Versión ligera",
     "rights": "Todos los derechos reservados."
   },
   "addToHomeScreen": {

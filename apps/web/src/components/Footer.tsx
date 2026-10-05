@@ -15,6 +15,9 @@ export async function Footer() {
         </span>
         <div className="flex flex-wrap items-center gap-4">
           <AddToHomeScreenButton />
+          <Link href="/light" className="underline hover:text-rf-fg">
+            {t("lightLink")}
+          </Link>
           <Link href="/mentions-legales" className="underline hover:text-rf-fg">
             {t("legalLink")}
           </Link>

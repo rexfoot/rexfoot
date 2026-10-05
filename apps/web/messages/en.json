@@ -67,6 +67,12 @@
     "var": "VAR check",
     "kickoff": "Kick-off",
     "fullTime": "Full time",
+    "lightTitle": "RexFoot Lite — text-only scores",
+    "lightLive": "Live now",
+    "lightUpcoming": "Upcoming",
+    "lightResults": "Latest results",
+    "lightRefresh": "A few KB page, refreshed every minute — ideal for small data plans.",
+    "lightEmpty": "No live match right now.",
     "watchFreeTitle": "Where to watch — free & legal",
     "watchFreeHighlights": "Free highlights of this match",
     "watchFreeFifaPlus": "FIFA+",
@@ -444,6 +450,7 @@
   "footer": {
     "legalLink": "Legal notice",
     "privacyLink": "Privacy policy",
+    "lightLink": "Lite version",
     "rights": "All rights reserved."
   },
   "addToHomeScreen": {

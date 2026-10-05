@@ -67,6 +67,12 @@
     "var": "Intervention VAR",
     "kickoff": "Coup d'envoi",
     "fullTime": "Coup de sifflet final",
+    "lightTitle": "RexFoot Léger — scores en texte seul",
+    "lightLive": "En direct",
+    "lightUpcoming": "À venir",
+    "lightResults": "Derniers résultats",
+    "lightRefresh": "Page de quelques Ko, actualisée chaque minute — idéale pour les petits forfaits.",
+    "lightEmpty": "Aucun match en direct en ce moment.",
     "watchFreeTitle": "Où regarder — gratuit et légal",
     "watchFreeHighlights": "Résumés gratuits de ce match",
     "watchFreeFifaPlus": "FIFA+",
@@ -444,6 +450,7 @@
   "footer": {
     "legalLink": "Mentions légales",
     "privacyLink": "Politique de confidentialité",
+    "lightLink": "Version légère",
     "rights": "Tous droits réservés."
   },
   "addToHomeScreen": {

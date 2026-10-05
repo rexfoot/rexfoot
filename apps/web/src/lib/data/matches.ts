@@ -254,3 +254,59 @@ export async function getLiveMatchIds(): Promise<string[]> {
   });
   return rows.map((r) => r.id);
 }
+
+const lightSelect = {
+  id: true,
+  kickoffAt: true,
+  status: true,
+  minute: true,
+  homeScore: true,
+  awayScore: true,
+  homeTeam: { select: { name: true } },
+  awayTeam: { select: { name: true } },
+  competition: { select: { name: true } },
+} as const;
+
+export interface LightMatch {
+  id: string;
+  kickoffAt: string;
+  status: MatchSummary["status"];
+  minute: number | null;
+  homeScore: number | null;
+  awayScore: number | null;
+  homeTeam: { name: string };
+  awayTeam: { name: string };
+  competition: { name: string };
+}
+
+/**
+ * Données ultra-légères pour la page /light (texte seul, petits forfaits) :
+ * 3 requêtes simples, sans images ni jointures lourdes — le strict minimum
+ * pour suivre les scores.
+ */
+export async function getLightMatches(): Promise<{ live: LightMatch[]; upcoming: LightMatch[]; results: LightMatch[] }> {
+  const serialize = (row: Omit<LightMatch, "kickoffAt"> & { kickoffAt: Date }): LightMatch => ({
+    ...row,
+    kickoffAt: row.kickoffAt.toISOString(),
+  });
+  const [live, upcoming, results] = await Promise.all([
+    prisma.fixture.findMany({
+      where: { status: { in: ["LIVE", "HALFTIME"] } },
+      orderBy: { kickoffAt: "asc" },
+      select: lightSelect,
+    }),
+    prisma.fixture.findMany({
+      where: { status: "SCHEDULED", kickoffAt: { gte: new Date() } },
+      orderBy: { kickoffAt: "asc" },
+      take: 15,
+      select: lightSelect,
+    }),
+    prisma.fixture.findMany({
+      where: { status: "FINISHED" },
+      orderBy: { kickoffAt: "desc" },
+      take: 10,
+      select: lightSelect,
+    }),
+  ]);
+  return { live: live.map(serialize), upcoming: upcoming.map(serialize), results: results.map(serialize) };
+}
