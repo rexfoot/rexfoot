@@ -40,6 +40,10 @@ export function NewsHero({ article }: NewsHeroProps) {
             fill
             unoptimized
             priority
+            // sizes + priority + preload auto (Next émet le <link preload> dès
+            // que la section streame) : le navigateur réserve la bonne taille
+            // sans attendre la mise en page — LCP accueil.
+            sizes="(max-width: 640px) 100vw, 1152px"
             className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
