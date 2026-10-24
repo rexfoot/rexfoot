@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma, type NewsCategory, type BreakingPriority } from "@rexfoot/db";
 import { requirePermission, apiError } from "@/lib/api-response";
-import { storeImageAsset, AssetUploadError } from "@/lib/data/assets";
+import { storeImageAsset, storeImageAssetFromUrl, AssetUploadError } from "@/lib/data/assets";
 import { generateUniqueNewsSlug } from "@/lib/data/news-admin";
 import { notifyBreakingNews } from "@/lib/data/notifications-admin";
 import { NEWS_CATEGORY_VALUES } from "@/lib/news-categories";
@@ -39,10 +39,18 @@ export async function POST(request: Request) {
   }
 
   const coverImage = formData.get("coverImage");
+  const coverImageSourceUrl = formData.get("coverImageSourceUrl");
   let coverImageUrl: string | null = null;
   if (coverImage instanceof File && coverImage.size > 0) {
     try {
       coverImageUrl = await storeImageAsset(coverImage);
+    } catch (error) {
+      if (error instanceof AssetUploadError) return apiError(400, error.message);
+      throw error;
+    }
+  } else if (typeof coverImageSourceUrl === "string" && coverImageSourceUrl.trim()) {
+    try {
+      coverImageUrl = await storeImageAssetFromUrl(coverImageSourceUrl.trim());
     } catch (error) {
       if (error instanceof AssetUploadError) return apiError(400, error.message);
       throw error;
