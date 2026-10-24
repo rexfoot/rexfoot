@@ -15,16 +15,29 @@ export async function publishToFacebook(article: { title: string; slug: string; 
     return;
   }
 
-  const message = article.summary ? `${article.title}\n\n${article.summary}` : article.title;
-
-  const url = `https://graph.facebook.com/v26.0/${pageId}/feed`;
-  const body = new URLSearchParams({
-    message,
-    link: `https://rexfoot.com/news/${article.slug}`,
-    access_token: accessToken,
-  });
+  // Le titre seul : Facebook affiche automatiquement la photo, le titre et
+  // REXFOOT.COM à partir des balises og: de l'article.
+  const message = article.title;
 
   try {
+    // FACEBOOK_PAGE_ACCESS_TOKEN peut être soit un token de Page, soit un token
+    // utilisateur longue durée (celui de l'outil « Étendre le token » de Meta,
+    // qui n'expire jamais). Dans les deux cas, on demande à Facebook le token
+    // de la Page juste avant de publier : un token utilisateur ne peut pas
+    // publier au nom d'une Page, et le token de Page obtenu ainsi n'expire pas.
+    let pageToken = accessToken;
+    const tokenRes = await fetch(
+      `https://graph.facebook.com/v26.0/${pageId}?fields=access_token&access_token=${encodeURIComponent(accessToken)}`,
+    );
+    const tokenData = await tokenRes.json().catch(() => ({}));
+    if (tokenRes.ok && typeof tokenData.access_token === "string") pageToken = tokenData.access_token;
+
+    const url = `https://graph.facebook.com/v26.0/${pageId}/feed`;
+    const body = new URLSearchParams({
+      message,
+      link: `https://rexfoot.com/news/${article.slug}`,
+      access_token: pageToken,
+    });
     const res = await fetch(url, { method: "POST", body });
     const data = await res.json();
     if (!res.ok) {
