@@ -10,6 +10,12 @@ export interface NavItem {
    * et affiche toujours l'entrée.
    */
   hideInBottomNav?: boolean;
+  /**
+   * Entrée mise en avant (couleur visible même hors page active, libellé
+   * sous l'icône dans la Sidebar). Demandé par Hicham le 2026-10-24 : l'accès
+   * aux articles était tout en bas du rail et passait inaperçu.
+   */
+  featured?: boolean;
 }
 
 /**
@@ -24,10 +30,10 @@ export interface NavItem {
  */
 export const NAV_ITEMS: NavItem[] = [
   { href: "/", icon: "home" },
+  { href: "/news", icon: "news", featured: true },
   { href: "/matches", icon: "matches" },
   { href: "/classements", icon: "standings" },
   { href: "/portraits", icon: "portraits" },
   { href: "/video", icon: "video" },
-  { href: "/news", icon: "news" },
   { href: "/talents", icon: "talents", hideInBottomNav: true },
 ];

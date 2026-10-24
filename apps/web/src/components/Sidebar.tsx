@@ -43,12 +43,20 @@ export function Sidebar({ user }: { user: CurrentUser | null }) {
               title={label}
               aria-current={isActive ? "page" : undefined}
               className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-xl transition-colors",
-                isActive ? `${accent.bg} ${accent.text}` : "text-rf-fg-muted hover:bg-rf-bg-card hover:text-rf-fg",
+                "flex items-center justify-center rounded-xl transition-colors",
+                item.featured ? "h-14 w-14 flex-col gap-0.5" : "h-12 w-12",
+                isActive || item.featured
+                  ? `${accent.bg} ${accent.text}`
+                  : "text-rf-fg-muted hover:bg-rf-bg-card hover:text-rf-fg",
+                item.featured && !isActive && "ring-1 ring-current/40 hover:brightness-125",
               )}
             >
-              <Icon size={21} strokeWidth={isActive ? 2.25 : 1.75} />
-              <span className="sr-only">{label}</span>
+              <Icon size={21} strokeWidth={isActive || item.featured ? 2.25 : 1.75} />
+              {item.featured ? (
+                <span className="text-[10px] leading-none font-bold">{label}</span>
+              ) : (
+                <span className="sr-only">{label}</span>
+              )}
             </Link>
           );
         })}

@@ -33,11 +33,12 @@ export function BottomNav() {
                 href={item.href}
                 className={cn(
                   "flex flex-col items-center gap-1 px-1 py-2.5 text-[10px] font-medium transition-colors",
-                  isActive ? accent.text : "text-rf-fg-muted",
+                  isActive || item.featured ? accent.text : "text-rf-fg-muted",
+                  item.featured && "font-bold",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
-                <Icon size={20} strokeWidth={isActive ? 2.25 : 1.75} />
+                <Icon size={20} strokeWidth={isActive || item.featured ? 2.25 : 1.75} />
                 <span className="truncate">{t(item.icon)}</span>
               </Link>
             </li>
