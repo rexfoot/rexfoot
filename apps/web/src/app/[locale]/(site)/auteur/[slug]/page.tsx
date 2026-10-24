@@ -104,6 +104,22 @@ export default async function AuthorPage({ params }: PageProps) {
           <h1 className="font-display text-3xl font-bold text-rf-fg">{author.displayName}</h1>
           <p className="text-xs font-semibold uppercase tracking-wide text-rf-gold">{jobTitle}</p>
           <p className="max-w-2xl text-[15px] leading-relaxed text-rf-fg-subtle">{pick(author.bio, locale)}</p>
+          {author.sameAs.length > 0 && (
+            <ul className="flex flex-wrap gap-3 pt-1">
+              {author.sameAs.map((href) => (
+                <li key={href}>
+                  <a
+                    href={href}
+                    rel="me noopener"
+                    target="_blank"
+                    className="text-sm font-semibold text-rf-fg underline hover:text-rf-gold"
+                  >
+                    {href.includes("youtube.com") ? "YouTube" : href.includes("facebook.com") ? "Facebook" : new URL(href).hostname}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </header>
 
