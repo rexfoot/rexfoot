@@ -9,6 +9,7 @@ import { TrackView } from "@/components/TrackView";
 import { ShareButtons } from "@/components/ShareButtons";
 import { ArticleSignature } from "@/components/ArticleSignature";
 import { buildAlternates, localizedUrl } from "@/lib/seo/alternates";
+import { getAuthorByName } from "@/lib/authors";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rexfoot.com";
 
@@ -39,6 +40,8 @@ export default async function NewsArticlePage({ params }: PageProps) {
   if (!article) notFound();
 
   const articleUrl = localizedUrl(locale, `/news/${slug}`);
+  const authorProfile = getAuthorByName(article.author?.displayName);
+  const authorPath = authorProfile ? `/auteur/${authorProfile.slug}` : undefined;
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "NewsArticle",
@@ -49,7 +52,11 @@ export default async function NewsArticlePage({ params }: PageProps) {
     dateModified: (article.updatedAt ?? article.publishedAt)?.toISOString(),
     mainEntityOfPage: { "@type": "WebPage", "@id": articleUrl },
     author: article.author
-      ? { "@type": "Person", name: article.author.displayName }
+      ? {
+          "@type": "Person",
+          name: article.author.displayName,
+          ...(authorPath ? { url: localizedUrl(locale, authorPath), "@id": `${siteUrl}${authorPath}#person` } : {}),
+        }
       : { "@type": "Organization", name: SITE_NAME },
     publisher: {
       "@type": "Organization",
@@ -94,7 +101,7 @@ export default async function NewsArticlePage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: article.contentHtml }}
       />
 
-      <ArticleSignature name={article.author?.displayName ?? SITE_NAME} label={t("writtenBy")} />
+      <ArticleSignature name={article.author?.displayName ?? SITE_NAME} label={t("writtenBy")} href={authorPath} />
     </article>
   );
 }

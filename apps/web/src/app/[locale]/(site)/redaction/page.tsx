@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { getTranslations, getLocale } from "next-intl/server";
 import { buildAlternates, localizedUrl } from "@/lib/seo/alternates";
+import { Link } from "@/i18n/navigation";
+import { getAuthorByName } from "@/lib/authors";
 
 const CONTACT_EMAIL = "footrexofficial@gmail.com";
 
@@ -34,6 +36,12 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function EditorialTeamPage() {
   const [t, locale] = await Promise.all([getTranslations("editorial"), getLocale()]);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://rexfoot.com";
+  const personLd = (name: string, jobTitle: string) => {
+    const profile = getAuthorByName(name);
+    return profile
+      ? { "@type": "Person", "@id": `${siteUrl}/auteur/${profile.slug}#person`, name, jobTitle, url: localizedUrl(locale, `/auteur/${profile.slug}`) }
+      : { "@type": "Person", name, jobTitle };
+  };
 
   // Données structurées : aide Google à identifier les responsables éditoriaux (E-E-A-T).
   const jsonLd = {
@@ -43,8 +51,8 @@ export default async function EditorialTeamPage() {
     url: siteUrl,
     email: CONTACT_EMAIL,
     publishingPrinciples: localizedUrl(locale, "/redaction"),
-    founder: { "@type": "Person", name: TEAM[0].name },
-    employee: TEAM.map((m) => ({ "@type": "Person", name: m.name, jobTitle: m.jobTitle })),
+    founder: personLd(TEAM[0].name, TEAM[0].jobTitle),
+    employee: TEAM.map((m) => personLd(m.name, m.jobTitle)),
   };
 
   return (
@@ -121,7 +129,16 @@ export default async function EditorialTeamPage() {
                   {m.initials}
                 </span>
                 <div>
-                  <p className="font-display text-base font-bold text-rf-fg">{m.name}</p>
+                  {getAuthorByName(m.name) ? (
+                    <Link
+                      href={`/auteur/${getAuthorByName(m.name)!.slug}`}
+                      className="font-display text-base font-bold text-rf-fg hover:text-rf-gold"
+                    >
+                      {m.name}
+                    </Link>
+                  ) : (
+                    <p className="font-display text-base font-bold text-rf-fg">{m.name}</p>
+                  )}
                   <p className="text-xs font-semibold uppercase tracking-wide text-rf-gold">{t(m.roleKey)}</p>
                 </div>
               </div>

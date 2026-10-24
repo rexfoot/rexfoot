@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { prisma } from "@rexfoot/db";
 import { routing } from "@/i18n/routing";
 import { localizedUrl } from "@/lib/seo/alternates";
+import { AUTHORS } from "@/lib/authors";
 
 // Dynamique : évite tout appel Prisma au moment du `docker build` — voir
 // page.tsx (accueil) pour le détail.
@@ -75,6 +76,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { pathname: "/matches", changeFrequency: "always", priority: 0.9 },
       { pathname: "/video", changeFrequency: "hourly", priority: 0.8 },
       { pathname: "/news", changeFrequency: "hourly", priority: 0.8 },
+      ...AUTHORS.map((a) => ({ pathname: `/auteur/${a.slug}`, changeFrequency: "weekly" as const, priority: 0.7 })),
       { pathname: "/talents", changeFrequency: "daily", priority: 0.7 },
       { pathname: "/talents/decouvrir", changeFrequency: "daily", priority: 0.7 },
       { pathname: "/talents/recruteurs", changeFrequency: "weekly", priority: 0.5 },
