@@ -512,7 +512,7 @@
   },
   "editorial": {
     "title": "Editorial team",
-    "metaDescription": "Meet the RexFoot editorial team: publication director and editor-in-chief.",
+    "metaDescription": "About RexFoot, an online football media outlet: our mission, how we work and our editorial team.",
     "intro": "RexFoot is a football media outlet. Our articles are written, reviewed and approved by an identified editorial team committed to reliable, verified and independent information.",
     "teamTitle": "Our editorial team",
     "directorRole": "Publication director",
@@ -522,6 +522,13 @@
     "chartTitle": "Our commitment",
     "chartBody": "Every piece of information is checked against reliable sources before publication.\nReported errors are corrected as quickly as possible.\nRexFoot remains independent from any club, agent or commercial interest in its news coverage.",
     "contactTitle": "Contact the editorial team",
-    "contactBody": "For a tip, a correction or a press request, write to us:"
+    "contactBody": "For a tip, a correction or a press request, write to us:",
+    "aboutTitle": "About RexFoot",
+    "aboutBody": "RexFoot is an online media outlet entirely dedicated to football, available at rexfoot.com in French, English and Spanish.\nOur mission: to give fans reliable, fast and clear football news, covering Europe’s top leagues as well as the talents of tomorrow.",
+    "offerTitle": "What we offer",
+    "offerItems": "Football news|every day\nMatches|live, with results and fixtures\nStandings|for the main leagues and cups\nTransfers|: deals, rumours and official announcements\nAnalyses and portraits|of players\nYoung talents|to follow\nVideos|about football",
+    "methodTitle": "How we work",
+    "methodIntro": "Before publication, every article follows the same process:",
+    "methodItems": "Research|of the information from recognised sources\nVerification|and cross-checking of facts\nWriting|by the editorial team\nReview and approval|by the editor-in-chief\nPublication|, followed by a quick correction if an error is reported"
   }
 }

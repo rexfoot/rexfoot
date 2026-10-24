@@ -512,7 +512,7 @@
   },
   "editorial": {
     "title": "La redacción",
-    "metaDescription": "Conoce al equipo editorial de RexFoot: dirección de la publicación y redacción jefe.",
+    "metaDescription": "Sobre RexFoot, medio de fútbol en línea: nuestra misión, nuestro método de trabajo y nuestro equipo editorial.",
     "intro": "RexFoot es un medio dedicado al fútbol. Nuestros artículos son redactados, revisados y validados por un equipo editorial identificado, comprometido con una información fiable, verificada e independiente.",
     "teamTitle": "El equipo editorial",
     "directorRole": "Director de la publicación",
@@ -522,6 +522,13 @@
     "chartTitle": "Nuestro compromiso",
     "chartBody": "Cada información se verifica con fuentes fiables antes de su publicación.\nLos errores señalados se corrigen lo antes posible.\nRexFoot se mantiene independiente de cualquier club, agente o interés comercial en el tratamiento de la actualidad.",
     "contactTitle": "Contactar con la redacción",
-    "contactBody": "Para una información, una corrección o una solicitud de prensa, escríbenos:"
+    "contactBody": "Para una información, una corrección o una solicitud de prensa, escríbenos:",
+    "aboutTitle": "Sobre RexFoot",
+    "aboutBody": "RexFoot es un medio en línea dedicado por completo al fútbol, disponible en rexfoot.com en francés, inglés y español.\nNuestra misión: ofrecer a los aficionados una información futbolística fiable, rápida y clara, tanto de las grandes ligas europeas como de los talentos del mañana.",
+    "offerTitle": "Lo que ofrecemos",
+    "offerItems": "La actualidad|del fútbol, cada día\nLos partidos|en directo, los resultados y el calendario\nLas clasificaciones|de las principales ligas y copas\nEl mercado de fichajes|: traspasos, rumores y oficializaciones\nAnálisis y retratos|de jugadores\nLos jóvenes talentos|a seguir\nVídeos|de fútbol",
+    "methodTitle": "Nuestro método de trabajo",
+    "methodIntro": "Antes de publicarse, cada artículo sigue el mismo recorrido:",
+    "methodItems": "Búsqueda|de la información en fuentes reconocidas\nVerificación|y contraste de los hechos\nRedacción|por el equipo editorial\nRevisión y validación|por el redactor jefe\nPublicación|, y corrección rápida si se nos señala un error"
   }
 }

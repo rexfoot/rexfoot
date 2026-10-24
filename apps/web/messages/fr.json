@@ -512,7 +512,7 @@
   },
   "editorial": {
     "title": "La rédaction",
-    "metaDescription": "Découvrez l’équipe éditoriale de RexFoot : direction de la publication et rédaction en chef.",
+    "metaDescription": "À propos de RexFoot, média football en ligne : notre mission, notre méthode de travail et notre équipe éditoriale.",
     "intro": "RexFoot est un média consacré au football. Nos articles sont rédigés, relus et validés par une équipe éditoriale identifiée, attachée à une information fiable, vérifiée et indépendante.",
     "teamTitle": "L’équipe éditoriale",
     "directorRole": "Directeur de la publication",
@@ -522,6 +522,13 @@
     "chartTitle": "Notre engagement",
     "chartBody": "Chaque information est vérifiée auprès de sources fiables avant publication.\nLes erreurs signalées sont corrigées dans les meilleurs délais.\nRexFoot reste indépendant de tout club, agent ou intérêt commercial dans le traitement de l’actualité.",
     "contactTitle": "Contacter la rédaction",
-    "contactBody": "Pour une information, une correction ou une demande de presse, écrivez-nous :"
+    "contactBody": "Pour une information, une correction ou une demande de presse, écrivez-nous :",
+    "aboutTitle": "À propos de RexFoot",
+    "aboutBody": "RexFoot est un média en ligne entièrement consacré au football, accessible sur rexfoot.com en français, en anglais et en espagnol.\nNotre mission : offrir aux passionnés une information football fiable, rapide et claire, sur les grands championnats européens comme sur les talents de demain.",
+    "offerTitle": "Ce que nous proposons",
+    "offerItems": "L’actualité|du football, chaque jour\nLes matchs|en direct, les résultats et le programme\nLes classements|des principaux championnats et coupes\nLe mercato|: transferts, rumeurs et officialisations\nDes analyses et des portraits|de joueurs\nLes jeunes talents|à suivre\nDes vidéos|football",
+    "methodTitle": "Notre méthode de travail",
+    "methodIntro": "Avant toute publication, chaque article suit le même parcours :",
+    "methodItems": "Recherche|de l’information auprès de sources reconnues\nVérification|et recoupement des faits\nRédaction|par l’équipe éditoriale\nRelecture et validation|par le rédacteur en chef\nPublication|, puis correction rapide si une erreur nous est signalée"
   }
 }
