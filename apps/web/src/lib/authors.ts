@@ -32,7 +32,7 @@ export const AUTHORS: AuthorProfile[] = [
       en: "Hicham Jikh Cheddad is the founder of RexFoot, a football media outlet. As publication director, he is responsible for the editorial line and all content published on the site. He writes about Moroccan, European and international football.",
       es: "Hicham Jikh Cheddad es el fundador de RexFoot, medio dedicado al fútbol. Como director de la publicación, es responsable de la línea editorial y de todos los contenidos publicados en el sitio. Escribe sobre fútbol marroquí, europeo e internacional.",
     },
-    sameAs: ["https://www.youtube.com/@rexfootcom"],
+    sameAs: ["https://www.youtube.com/@rexfootcom", "https://www.facebook.com/profile.php?id=61594325813815"],
   },
 ];
 
