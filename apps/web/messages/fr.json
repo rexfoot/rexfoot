@@ -457,7 +457,8 @@
     "privacyLink": "Politique de confidentialité",
     "lightLink": "Version légère",
     "rights": "Tous droits réservés.",
-    "editorialLink": "La rédaction"
+    "editorialLink": "La rédaction",
+    "contactLink": "Contact"
   },
   "addToHomeScreen": {
     "button": "Ajouter à l'écran d'accueil",
@@ -530,5 +531,12 @@
     "methodTitle": "Notre méthode de travail",
     "methodIntro": "Avant toute publication, chaque article suit le même parcours :",
     "methodItems": "Recherche|de l’information auprès de sources reconnues\nVérification|et recoupement des faits\nRédaction|par l’équipe éditoriale\nRelecture et validation|par le rédacteur en chef\nPublication|, puis correction rapide si une erreur nous est signalée"
+  },
+  "contact": {
+    "title": "Contact",
+    "metaDescription": "Contactez la rédaction de RexFoot : e-mail, Facebook et YouTube.",
+    "intro": "Une information, une correction, un partenariat ou une demande de presse ? La rédaction de RexFoot vous répond.",
+    "emailLabel": "E-mail",
+    "responseTime": "Nous répondons généralement sous 48 heures."
   }
 }

@@ -23,6 +23,7 @@ export async function MatchesHeroSection() {
       initialMatches={matches}
       emptyTitle={t("noMatchesTodayTitle")}
       listClassName="grid-cols-1 gap-3"
+      limit={6}
     />
   );
 }

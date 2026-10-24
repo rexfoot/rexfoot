@@ -88,6 +88,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       { pathname: "/login", changeFrequency: "yearly", priority: 0.3 },
       { pathname: "/signup", changeFrequency: "yearly", priority: 0.3 },
       { pathname: "/redaction", changeFrequency: "yearly", priority: 0.4 },
+      { pathname: "/contact", changeFrequency: "yearly", priority: 0.3 },
       { pathname: "/mentions-legales", changeFrequency: "yearly", priority: 0.2 },
       { pathname: "/confidentialite", changeFrequency: "yearly", priority: 0.2 },
       { pathname: "/supprimer-mon-compte", changeFrequency: "yearly", priority: 0.2 },
