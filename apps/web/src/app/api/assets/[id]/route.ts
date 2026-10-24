@@ -15,6 +15,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
       "Content-Type": asset.mimeType,
       "Content-Length": String(asset.byteSize),
       "Cache-Control": "public, max-age=31536000, immutable",
+      // Images publiques : autorise leur reprise depuis nos autres sites (ex. Souss Actualités).
+      "Access-Control-Allow-Origin": "*",
     },
   });
 }
