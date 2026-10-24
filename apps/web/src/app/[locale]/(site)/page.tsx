@@ -56,12 +56,10 @@ export default function HomePage() {
         </Suspense>
       </section>
 
-      <section>
-        <SectionHeader title={t("videoTitle")} href="/video" accent="video" />
-        <Suspense fallback={<VideoRailSkeleton />}>
-          <VideoSection />
-        </Suspense>
-      </section>
+      {/* Le titre de section est rendu par VideoSection, qui masque tout le bloc s'il y a trop peu de vidéos. */}
+      <Suspense fallback={<VideoRailSkeleton />}>
+        <VideoSection />
+      </Suspense>
 
       <section>
         <SectionHeader title={t("trendingTitle")} />

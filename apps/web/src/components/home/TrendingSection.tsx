@@ -9,7 +9,7 @@ const TYPE_ICON = { ARTICLE: Newspaper, VIDEO: PlayCircle, TEAM: Shield, PLAYER:
 
 /** Contenus les plus consultés sur 7 jours — jamais affiché tant qu'il n'y a pas de vraies vues (section 19 du plan). */
 export async function TrendingSection() {
-  const [items, t, tHome] = await Promise.all([
+  const [allItems, t, tHome] = await Promise.all([
     getTrending(),
     getTranslations("trending"),
     getTranslations("home"),
@@ -22,6 +22,9 @@ export async function TrendingSection() {
     PLAYER: t("topPlayer"),
     TALENT_PROFILE: t("topTalent"),
   };
+
+  // « Club le plus consulté » retiré de l'accueil (résultats peu crédibles, ex. petits clubs).
+  const items = allItems.filter((item) => item.type !== "TEAM");
 
   if (items.length === 0) {
     return (
