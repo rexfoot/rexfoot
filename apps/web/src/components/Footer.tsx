@@ -18,6 +18,9 @@ export async function Footer() {
           <Link href="/light" className="underline hover:text-rf-fg">
             {t("lightLink")}
           </Link>
+          <Link href="/redaction" className="underline hover:text-rf-fg">
+            {t("editorialLink")}
+          </Link>
           <Link href="/mentions-legales" className="underline hover:text-rf-fg">
             {t("legalLink")}
           </Link>

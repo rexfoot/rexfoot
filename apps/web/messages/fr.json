@@ -456,7 +456,8 @@
     "legalLink": "Mentions légales",
     "privacyLink": "Politique de confidentialité",
     "lightLink": "Version légère",
-    "rights": "Tous droits réservés."
+    "rights": "Tous droits réservés.",
+    "editorialLink": "La rédaction"
   },
   "addToHomeScreen": {
     "button": "Ajouter à l'écran d'accueil",
@@ -490,8 +491,8 @@
     "metaDescription": "Mentions légales du site RexFoot : éditeur, hébergement, propriété intellectuelle et données personnelles.",
     "publisherTitle": "1. Éditeur du site",
     "publisherBody": "Le site RexFoot, accessible à l'adresse rexfoot.com, est édité par Hicham Jikh Cheddad.\nContact : footrexofficial@gmail.com",
-    "directorTitle": "2. Directeur de la publication",
-    "directorBody": "Le directeur de la publication du site RexFoot est Hicham Jikh Cheddad.",
+    "directorTitle": "2. Direction de la publication et rédaction",
+    "directorBody": "Le directeur de la publication du site RexFoot est Hicham Jikh Cheddad.\nLe rédacteur en chef est Redouane Jikh.",
     "hostingTitle": "3. Hébergement et infrastructure technique",
     "hostingBody": "Le site RexFoot est hébergé et exploité avec le concours de prestataires techniques professionnels.\nLes informations relatives à l'hébergement, au nom de domaine ainsi qu'à l'infrastructure technique et réseau peuvent être communiquées aux autorités compétentes dans le cadre d'une demande légalement fondée, conformément à la réglementation applicable.",
     "ipTitle": "4. Propriété intellectuelle",
@@ -508,5 +509,19 @@
     "label": "Rechercher sur Google",
     "ariaLabel": "Rechercher « {team} » sur Google",
     "firstUseHint": "Ouvre une recherche Google. Appuyez sur Retour pour revenir à RexFoot."
+  },
+  "editorial": {
+    "title": "La rédaction",
+    "metaDescription": "Découvrez l’équipe éditoriale de RexFoot : direction de la publication et rédaction en chef.",
+    "intro": "RexFoot est un média consacré au football. Nos articles sont rédigés, relus et validés par une équipe éditoriale identifiée, attachée à une information fiable, vérifiée et indépendante.",
+    "teamTitle": "L’équipe éditoriale",
+    "directorRole": "Directeur de la publication",
+    "directorBio": "Fondateur de RexFoot, il est responsable de la ligne éditoriale et de l’ensemble des contenus publiés sur le site.",
+    "chiefRole": "Rédacteur en chef",
+    "chiefBio": "Il coordonne la rédaction, supervise l’écriture des articles et veille à la qualité et à l’exactitude des informations publiées.",
+    "chartTitle": "Notre engagement",
+    "chartBody": "Chaque information est vérifiée auprès de sources fiables avant publication.\nLes erreurs signalées sont corrigées dans les meilleurs délais.\nRexFoot reste indépendant de tout club, agent ou intérêt commercial dans le traitement de l’actualité.",
+    "contactTitle": "Contacter la rédaction",
+    "contactBody": "Pour une information, une correction ou une demande de presse, écrivez-nous :"
   }
 }
