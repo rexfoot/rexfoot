@@ -142,11 +142,17 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
   );
   // Agent éditorial (apps/worker/src/jobs/editorial) : une fois par jour à 7h
   // heure serveur — jamais de publication automatique, voir runEditorialDigest.
-  await queue.add(
-    JobName.editorialDigest,
-    {},
-    { repeat: { pattern: "0 7 * * *" }, jobId: JobName.editorialDigest, ...DEFAULT_JOB_OPTS },
-  );
+  // Coupé par défaut depuis le 2026-10-24 (demande de Hicham : plus d'articles
+  // venus automatiquement, seulement les siens). removeAllRepeatableJobs
+  // ci-dessus retire l'ancien enregistrement ; ENABLE_EDITORIAL_DIGEST=true le
+  // rallume sans toucher au code. Les brouillons déjà créés restent en base.
+  if (process.env.ENABLE_EDITORIAL_DIGEST === "true") {
+    await queue.add(
+      JobName.editorialDigest,
+      {},
+      { repeat: { pattern: "0 7 * * *" }, jobId: JobName.editorialDigest, ...DEFAULT_JOB_OPTS },
+    );
+  }
   // Convertit les articles mercato (catégorie TRANSFERTS) déjà publiés en
   // fiches structurées pour /mercato — jamais de publication automatique non
   // plus, voir extractTransfers.ts. Peu coûteux (dédoublonné par sourceUrl,
@@ -178,11 +184,17 @@ export async function registerScheduledJobs(queue: Queue): Promise<void> {
   // Vitrine de presse (agrégateur multi-médias) — voir aggregateHeadlines.ts.
   // 20 min : assez réactif pour une vitrine de titres, sans redemander les
   // mêmes flux RSS déjà interrogés par editorialDigest à un rythme absurde.
-  await queue.add(
-    JobName.aggregateHeadlines,
-    {},
-    { repeat: { every: 20 * 60 * 1000 }, jobId: JobName.aggregateHeadlines, ...DEFAULT_JOB_OPTS },
-  );
+  // Coupé par défaut depuis le 2026-10-24, même raison et même interrupteur
+  // que l'agent éditorial (ENABLE_AGGREGATOR=true pour le rallumer). Les titres
+  // déjà agrégés restent en base et dans /admin/aggregator, simplement plus
+  // affichés publiquement (voir getMixedNewsFeed).
+  if (process.env.ENABLE_AGGREGATOR === "true") {
+    await queue.add(
+      JobName.aggregateHeadlines,
+      {},
+      { repeat: { every: 20 * 60 * 1000 }, jobId: JobName.aggregateHeadlines, ...DEFAULT_JOB_OPTS },
+    );
+  }
   // football-data.org (gratuit) ne fournit aucune photo de joueur — comble ce
   // manque via TheSportsDB, par petits lots (voir MAX_PLAYERS_PER_RUN dans
   // syncPlayerPhotos.ts) pour rester sous son plan gratuit très limité en débit.

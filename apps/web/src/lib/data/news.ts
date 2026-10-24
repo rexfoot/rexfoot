@@ -43,12 +43,16 @@ export type MixedFeedItem = MixedFeedArticleItem | MixedFeedHeadlineItem;
  * sur ce modèle, la publication et la détection sont désormais le même instant).
  */
 export async function getMixedNewsFeed(limit = PAGE_SIZE_DEFAULT): Promise<MixedFeedItem[]> {
+  // Depuis le 2026-10-24, Hicham veut que seuls SES articles soient montrés
+  // (ce sont eux qu'on veut voir indexés, pas des liens vers d'autres médias).
+  // SHOW_AGGREGATED_HEADLINES=true rétablit le flux mélangé.
+  const showHeadlines = process.env.SHOW_AGGREGATED_HEADLINES === "true";
   const [articles, headlines] = await Promise.all([
     getPublishedNews(limit),
     prisma.aggregatedHeadline.findMany({
       where: { status: "PUBLISHED" },
       orderBy: { firstSeenAt: "desc" },
-      take: limit,
+      take: showHeadlines ? limit : 0,
       select: {
         id: true,
         title: true,

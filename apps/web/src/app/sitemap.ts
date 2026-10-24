@@ -97,7 +97,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...expand(teams.map((t) => ({ pathname: `/teams/${t.slug}`, lastModified: t.updatedAt, priority: 0.6 }))),
     ...expand(players.map((p) => ({ pathname: `/players/${p.slug}`, lastModified: p.updatedAt, priority: 0.5 }))),
     ...expand(videos.map((v) => ({ pathname: `/video/${v.slug}`, lastModified: v.updatedAt, priority: 0.5 }))),
-    ...expand(articles.map((a) => ({ pathname: `/news/${a.slug}`, lastModified: a.updatedAt, priority: 0.5 }))),
+    // Les articles originaux sont le contenu à faire indexer en priorité.
+    ...expand(
+      articles.map((a): RouteEntry => ({ pathname: `/news/${a.slug}`, lastModified: a.updatedAt, changeFrequency: "daily", priority: 0.9 })),
+    ),
     ...expand(talents.map((tl) => ({ pathname: `/talents/${tl.slug}`, lastModified: tl.updatedAt, priority: 0.5 }))),
     ...expand(
       matches.map((m): RouteEntry => {

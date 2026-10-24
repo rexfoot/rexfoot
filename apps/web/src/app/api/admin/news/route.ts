@@ -7,6 +7,7 @@ import { generateUniqueNewsSlug } from "@/lib/data/news-admin";
 import { notifyBreakingNews } from "@/lib/data/notifications-admin";
 import { NEWS_CATEGORY_VALUES } from "@/lib/news-categories";
 import { publishToFacebook } from "@/lib/social/facebook";
+import { pingIndexNow } from "@/lib/seo/indexnow";
 import { textToHtml } from "@/lib/text-to-html";
 
 const fieldsSchema = z.object({
@@ -74,6 +75,7 @@ export async function POST(request: Request) {
 
   if (status === "PUBLISHED") {
     await publishToFacebook({ title: article.title, slug: article.slug, summary: article.summary });
+    await pingIndexNow(article.slug);
   }
 
   return NextResponse.json({ ok: true, id: article.id });

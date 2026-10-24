@@ -6,6 +6,7 @@ import { storeImageAsset, deleteAssetFromUrl, AssetUploadError } from "@/lib/dat
 import { notifyBreakingNews } from "@/lib/data/notifications-admin";
 import { NEWS_CATEGORY_VALUES } from "@/lib/news-categories";
 import { publishToFacebook } from "@/lib/social/facebook";
+import { pingIndexNow } from "@/lib/seo/indexnow";
 import { textToHtml } from "@/lib/text-to-html";
 
 const fieldsSchema = z.object({
@@ -96,6 +97,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const justPublished = status === "PUBLISHED" && existing.status !== "PUBLISHED";
   if (justPublished) {
     await publishToFacebook({ title: updated.title, slug: updated.slug, summary: updated.summary });
+    await pingIndexNow(updated.slug);
   }
 
   return NextResponse.json({ ok: true });
