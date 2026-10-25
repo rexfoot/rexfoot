@@ -157,6 +157,9 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
         renderer.toneMappingExposure = 1.18;
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        // Le canvas doit être inséré dans la page, sinon rien ne s'affiche et le
+        // ballon ne peut pas être touché (l'overlay resterait noir).
+        mount.appendChild(renderer.domElement);
 
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x03070c);
