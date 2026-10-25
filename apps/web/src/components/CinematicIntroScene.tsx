@@ -117,6 +117,64 @@ function disposeScene(THREE: typeof import("three"), scene: Scene) {
   });
 }
 
+// Sur téléphone (écran vertical), on élargit le champ de vision pour que le
+// but entier reste visible (au moins ~32° à l'horizontale).
+function fitFov(aspect: number) {
+  const base = Math.tan((39 * Math.PI) / 360);
+  const minHalfWidth = Math.tan((32 * Math.PI) / 360);
+  return (2 * Math.atan(Math.max(base, minHalfWidth / aspect)) * 180) / Math.PI;
+}
+
+/** Écran géant du stade, derrière le but, affichant le logo officiel RexFoot. */
+function makeStadiumScreen(THREE: typeof import("three")) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 576;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D unavailable");
+  const paint = (logo?: HTMLImageElement) => {
+    const glow = ctx.createRadialGradient(512, 288, 40, 512, 288, 560);
+    glow.addColorStop(0, "#132233");
+    glow.addColorStop(1, "#04070b");
+    ctx.fillStyle = glow;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    if (logo && logo.width && logo.height) {
+      const scale = Math.min(460 / logo.width, 460 / logo.height);
+      const w = logo.width * scale;
+      const h = logo.height * scale;
+      ctx.drawImage(logo, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+    }
+  };
+  paint();
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  const img = new Image();
+  img.onload = () => {
+    paint(img);
+    texture.needsUpdate = true;
+  };
+  img.src = "/logo-crown.png";
+
+  const group = new THREE.Group();
+  const panel = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.7, 1.52),
+    new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }),
+  );
+  panel.position.z = 0.07;
+  const frame = new THREE.Mesh(
+    new THREE.BoxGeometry(2.92, 1.74, 0.12),
+    new THREE.MeshStandardMaterial({ color: 0x0b0e12, roughness: 0.6, metalness: 0.4 }),
+  );
+  const legMaterial = new THREE.MeshStandardMaterial({ color: 0x1a1e24, roughness: 0.7 });
+  for (const x of [-1.1, 1.1]) {
+    const leg = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.6, 0.1), legMaterial);
+    leg.position.set(x, -1.6, -0.02);
+    group.add(leg);
+  }
+  group.add(frame, panel);
+  return { group, texture };
+}
+
 export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) {
   const mountRef = useRef<HTMLDivElement>(null);
   const callbacksRef = useRef({ onReady, onFailure, onKick });
@@ -144,6 +202,21 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
     let didKick = false;
     let ready = false;
     let autoKickTimer = 0;
+    let fadeTimer = 0;
+    let audio: HTMLAudioElement | null = null;
+    const fadeOutSound = (duration: number) => {
+      const sound = audio;
+      if (!sound || sound.paused) return;
+      const from = sound.volume;
+      const t0 = performance.now();
+      const step = () => {
+        const k = Math.min((performance.now() - t0) / duration, 1);
+        sound.volume = from * (1 - k);
+        if (k < 1) window.requestAnimationFrame(step);
+        else sound.pause();
+      };
+      step();
+    };
     void (async () => {
       try {
         const THREE = await import("three");
@@ -164,7 +237,8 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
         scene = new THREE.Scene();
         scene.background = new THREE.Color(0x03070c);
         scene.fog = new THREE.FogExp2(0x08111b, 0.025);
-        camera = new THREE.PerspectiveCamera(39, mount.clientWidth / mount.clientHeight, 0.1, 80);
+        const aspect = mount.clientWidth / mount.clientHeight;
+        camera = new THREE.PerspectiveCamera(fitFov(aspect), aspect, 0.1, 80);
         camera.position.set(0, 0.25, 8.5);
         camera.lookAt(0, -0.25, -0.6);
 
@@ -234,6 +308,10 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
         );
         scene.add(crowd);
 
+        const stadiumScreen = makeStadiumScreen(THREE);
+        stadiumScreen.group.position.set(0, 2.45, -3.95);
+        scene.add(stadiumScreen.group);
+
         spots = [-1, 1].map((side) => {
           const light = new THREE.SpotLight(0xd8edff, 22, 18, 0.48, 0.7, 1.5);
           light.position.set(side * 4.4, 5.6, -3.1);
@@ -287,7 +365,19 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           const height = mountRef.current.clientHeight;
           renderer.setSize(width, height, false);
           camera.aspect = width / height;
+          camera.fov = fitFov(camera.aspect);
           camera.updateProjectionMatrix();
+        };
+
+        // Son : clameur de stade du début de l'intro jusqu'à l'arrivée du site —
+        // « Crowd Cheering » (pixabay.com/sound-effects/people-crowd-cheering-379666), Pixabay Content License, extrait de 5 s.
+        audio = new Audio(CROWD_SOUND);
+        audio.preload = "auto";
+        audio.volume = 0.75;
+        const startSound = () => {
+          // Dans l'app installée, Chrome autorise le son au lancement ; sinon il
+          // peut le bloquer jusqu'au premier toucher (l'animation continue).
+          if (audio) void audio.play().catch(() => {});
         };
 
         // Le tir part tout seul ; toucher l'écran le déclenche plus tôt.
@@ -301,21 +391,16 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           } catch {
             // Vibration is optional and may be denied by the browser.
           }
-          // Son : clameur de stade après un but — « Crowd Cheering » (pixabay.com/sound-effects/people-crowd-cheering-379666), Pixabay Content License, extrait de 6 s.
-          // Sans geste de l'utilisateur, certains navigateurs bloquent le son : le tir continue en silence.
-          try {
-            const audio = new Audio(CROWD_SOUND);
-            audio.volume = 0.7;
-            audio.preload = "auto";
-            // La clameur éclate au moment où le ballon touche le filet (~1,5 s après le tir).
-            autoKickTimer = window.setTimeout(() => {
-              if (active) void audio.play().catch(() => {});
-            }, 1450);
-          } catch {
-            // Audio is optional.
-          }
+          // La clameur part dès l'ouverture (voir startSound) ; un toucher la
+          // relance si le téléphone l'avait bloquée.
+          if (audio && audio.paused) void audio.play().catch(() => {});
+          // Fondu du son pendant le fondu de l'écran, fini quand le site apparaît.
+          fadeTimer = window.setTimeout(() => fadeOutSound(800), 2300);
         };
-        const onPointerDown = () => kick();
+        const onPointerDown = () => {
+          if (audio && audio.paused && !didKick) void audio.play().catch(() => {});
+          kick();
+        };
         renderer.domElement.addEventListener("pointerdown", onPointerDown, { passive: true });
         window.addEventListener("resize", resize);
 
@@ -355,6 +440,7 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           if (!ready) {
             ready = true;
             callbacksRef.current.onReady();
+            startSound();
             autoKickTimer = window.setTimeout(kick, 1200);
           }
           frame = window.requestAnimationFrame(animate);
@@ -375,6 +461,8 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
     return () => {
       active = false;
       window.clearTimeout(autoKickTimer);
+      window.clearTimeout(fadeTimer);
+      fadeOutSound(250);
       window.cancelAnimationFrame(frame);
       mount.dispatchEvent(new Event("rexfoot-dispose"));
       if (renderer && scene) {
