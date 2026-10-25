@@ -71,18 +71,21 @@ export default async function NewsArticlePage({ params }: PageProps) {
       <TrackView entityType="ARTICLE" entityId={article.id} />
 
       {article.coverImageUrl && (
-        <div className="relative aspect-video overflow-hidden rounded-2xl bg-rf-bg-card">
-          {/* object-top : voir NewsCard.tsx (même raison — évite de couper la tête sur un recadrage centré). */}
+        <div className="overflow-hidden rounded-2xl bg-rf-bg-card">
+          {/* Page article : la photo est affichée en ENTIER, à ses vraies
+              proportions (aucun recadrage) — width/height ne servent qu'au
+              calcul du srcset, h-auto garde le ratio réel de l'image. */}
           {/* Optimizer Next (WebP + srcset) si cover locale /api/assets/...,
               `unoptimized` sinon (covers externes : pas de remotePatterns). */}
           <Image
             src={article.coverImageUrl}
             alt={article.title}
-            fill
+            width={1200}
+            height={675}
             unoptimized={!article.coverImageUrl.startsWith("/")}
             priority
             sizes="(max-width: 768px) 100vw, 672px"
-            className="object-cover object-top"
+            className="block h-auto w-full"
           />
         </div>
       )}
