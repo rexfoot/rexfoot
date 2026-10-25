@@ -31,9 +31,10 @@ export function AppIntroGate() {
     }
 
     let mounted = true;
-    void import("./CinematicIntro").then(
+    // Film d'ouverture ; l'ancienne intro 3D reste dans CinematicIntro.tsx.
+    void import("./VideoIntro").then(
       (module) => {
-        if (mounted) setIntro(() => module.CinematicIntro);
+        if (mounted) setIntro(() => module.VideoIntro);
       },
       () => {
         // A missing chunk must leave the already-rendered homepage usable.
