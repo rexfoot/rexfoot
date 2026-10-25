@@ -349,7 +349,7 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
               bank.add(lamp);
             }
           }
-          bank.position.set(side * 4.3, 4.3, -4.4);
+          bank.position.set(side * 3.7, 3.25, -4.4);
           bank.rotation.set(-0.25, -side * 0.35, 0);
           scene.add(bank);
         }
