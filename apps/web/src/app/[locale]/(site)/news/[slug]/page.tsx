@@ -85,7 +85,7 @@ export default async function NewsArticlePage({ params }: PageProps) {
             unoptimized={!article.coverImageUrl.startsWith("/")}
             priority
             sizes="(max-width: 768px) 100vw, 672px"
-            className="block h-auto w-full"
+            className="mx-auto block h-auto max-h-[75vh] w-full object-contain"
           />
         </div>
       )}
