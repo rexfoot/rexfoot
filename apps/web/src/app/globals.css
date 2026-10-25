@@ -167,7 +167,7 @@ body {
 }
 
 .rf-cinematic.is-kicked {
-  animation: rf-cinematic-reveal 800ms ease 2300ms forwards;
+  animation: rf-cinematic-reveal 800ms ease 1600ms forwards;
 }
 
 .rf-cinematic-scene {

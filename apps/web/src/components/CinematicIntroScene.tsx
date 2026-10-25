@@ -6,6 +6,13 @@ import type { BufferAttribute, Group, Mesh, PerspectiveCamera, Scene, WebGLRende
 type SceneProps = { onReady: () => void; onFailure: () => void; onKick: () => void };
 
 const CROWD_SOUND = "/sounds/goal-crowd.mp3";
+/** Durée du tir (s) : rapide, comme une vraie frappe. */
+const SHOT_DURATION = 0.62;
+const BALL_START = { x: 0, y: -0.76, z: 0.68 };
+/** Lucarne droite : le ballon (rayon 0,68) se loge sous la barre, contre le poteau. */
+const GOAL_TARGET = { x: 1.55, y: 0.42, z: -2.6 };
+/** Début du fondu vers le site après le tir (ms) — même valeur que l'animation CSS. */
+const REVEAL_DELAY_MS = 1600;
 
 function makeBallMap(THREE: typeof import("three")) {
   const canvas = document.createElement("canvas");
@@ -202,6 +209,9 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
     let didKick = false;
     let ready = false;
     let autoKickTimer = 0;
+    let goalFlash = 0;
+    let sparkles: import("three").Points | null = null;
+    let sparkleColors: Float32Array | null = null;
     let fadeTimer = 0;
     let audio: HTMLAudioElement | null = null;
     const fadeOutSound = (duration: number) => {
@@ -308,6 +318,42 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
         );
         scene.add(crowd);
 
+        // Lumières dans la tribune : téléphones et flashs qui scintillent,
+        // beaucoup plus nombreux au moment du but.
+        const sparkleCount = 160;
+        const sparklePositions: number[] = [];
+        for (let i = 0; i < sparkleCount; i += 1) {
+          sparklePositions.push((Math.random() - 0.5) * 12, -0.35 + Math.random() * 3.2, -4.05 - Math.random() * 0.7);
+        }
+        const sparkleGeometry = new THREE.BufferGeometry();
+        sparkleGeometry.setAttribute("position", new THREE.Float32BufferAttribute(sparklePositions, 3));
+        sparkleColors = new Float32Array(sparkleCount * 3);
+        sparkleGeometry.setAttribute("color", new THREE.BufferAttribute(sparkleColors, 3));
+        sparkles = new THREE.Points(
+          sparkleGeometry,
+          new THREE.PointsMaterial({ size: 0.09, sizeAttenuation: true, vertexColors: true, transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, toneMapped: false }),
+        );
+        scene.add(sparkles);
+
+        // Rampes de projecteurs en haut des tribunes.
+        const lampMaterial = new THREE.MeshBasicMaterial({ color: 0xf4f8ff, toneMapped: false });
+        const lampFrame = new THREE.MeshStandardMaterial({ color: 0x15191f, roughness: 0.7, metalness: 0.3 });
+        for (const side of [-1, 1]) {
+          const bank = new THREE.Group();
+          const back = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.8, 0.08), lampFrame);
+          bank.add(back);
+          for (let row = 0; row < 3; row += 1) {
+            for (let col = 0; col < 5; col += 1) {
+              const lamp = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.16), lampMaterial);
+              lamp.position.set(-0.56 + col * 0.28, 0.24 - row * 0.24, 0.05);
+              bank.add(lamp);
+            }
+          }
+          bank.position.set(side * 4.3, 4.3, -4.4);
+          bank.rotation.set(-0.25, -side * 0.35, 0);
+          scene.add(bank);
+        }
+
         const stadiumScreen = makeStadiumScreen(THREE);
         stadiumScreen.group.position.set(0, 2.45, -3.95);
         scene.add(stadiumScreen.group);
@@ -373,7 +419,7 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
         // « Crowd Cheering » (pixabay.com/sound-effects/people-crowd-cheering-379666), Pixabay Content License, extrait de 5 s.
         audio = new Audio(CROWD_SOUND);
         audio.preload = "auto";
-        audio.volume = 0.75;
+        audio.volume = 0.45;
         const startSound = () => {
           // Dans l'app installée, Chrome autorise le son au lancement ; sinon il
           // peut le bloquer jusqu'au premier toucher (l'animation continue).
@@ -395,7 +441,7 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           // relance si le téléphone l'avait bloquée.
           if (audio && audio.paused) void audio.play().catch(() => {});
           // Fondu du son pendant le fondu de l'écran, fini quand le site apparaît.
-          fadeTimer = window.setTimeout(() => fadeOutSound(800), 2300);
+          fadeTimer = window.setTimeout(() => fadeOutSound(800), REVEAL_DELAY_MS);
         };
         const onPointerDown = () => {
           if (audio && audio.paused && !didKick) void audio.play().catch(() => {});
@@ -412,25 +458,48 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
               ballRoot.rotation.y = Math.sin(time * 0.00035) * 0.08;
               ballRoot.position.y = -0.76 + Math.sin(time * 0.0011) * 0.018;
             } else {
-              const progress = Math.min(elapsed / 1.78, 1);
-              const eased = progress < 0.28 ? 0.055 * (progress / 0.28) : 0.055 + 0.945 * ((progress - 0.28) / 0.72) ** 2;
-              ballRoot.position.set(0, -0.76 + eased * 0.59, 0.68 - eased * 2.48);
-              ballRoot.rotation.x = -eased * 4.6;
-              ballRoot.rotation.y = 0.1 + eased * 1.8;
-              if (elapsed > 1.58 && elapsed < 2.05 && netPositions && netBase) {
+              // Frappe sèche et rapide, enroulée vers la lucarne droite.
+              const progress = Math.min(elapsed / SHOT_DURATION, 1);
+              const eased = 1 - (1 - progress) ** 2.2;
+              const curl = progress ** 1.4;
+              const settle = elapsed > SHOT_DURATION ? Math.min((elapsed - SHOT_DURATION) / 0.18, 1) : 0;
+              ballRoot.position.set(
+                BALL_START.x + (GOAL_TARGET.x - BALL_START.x) * curl,
+                BALL_START.y + (GOAL_TARGET.y - BALL_START.y) * eased + Math.sin(Math.PI * progress) * 0.28,
+                BALL_START.z + (GOAL_TARGET.z - BALL_START.z) * eased - settle * 0.22,
+              );
+              ballRoot.rotation.x = -eased * 9.5;
+              ballRoot.rotation.y = 0.1 + eased * 3.2;
+              const impact = elapsed - SHOT_DURATION;
+              if (impact > -0.02 && impact < 0.6 && netPositions && netBase) {
                 const position = netPositions.array as Float32Array;
-                const pulse = Math.sin((elapsed - 1.58) * 24) * Math.exp(-(elapsed - 1.58) * 4.5);
+                const pulse = Math.sin(Math.max(impact, 0) * 26) * Math.exp(-Math.max(impact, 0) * 5) + (impact < 0.18 ? 0.6 : 0);
                 for (let vertex = 0; vertex < position.length; vertex += 3) {
-                  const x = netBase[vertex];
-                  const y = netBase[vertex + 1];
-                  const strength = Math.exp(-(x * x * 0.8 + (y + 0.15) ** 2) * 0.5);
-                  position[vertex + 2] = netBase[vertex + 2] + pulse * 0.2 * strength;
+                  const dx = netBase[vertex] - GOAL_TARGET.x;
+                  const dy = netBase[vertex + 1] - GOAL_TARGET.y;
+                  const strength = Math.exp(-(dx * dx + dy * dy) * 1.1);
+                  position[vertex + 2] = netBase[vertex + 2] - Math.abs(pulse) * 0.32 * strength;
                 }
                 netPositions.needsUpdate = true;
               }
-              const flash = Math.max(0, 1 - Math.abs(elapsed - 1.7) / 0.22);
+              const flash = Math.max(0, 1 - Math.abs(elapsed - SHOT_DURATION - 0.05) / 0.25);
+              goalFlash = flash;
               for (const light of spots) light.intensity = 22 + flash * 48;
             }
+          }
+          if (sparkles && sparkleColors) {
+            // Chaque lumière s'allume et s'éteint au hasard ; au but, la tribune s'illumine.
+            const rate = 0.04 + goalFlash * 0.5;
+            for (let i = 0; i < sparkleColors.length; i += 3) {
+              if (Math.random() < rate) {
+                const on = Math.random() < 0.35 + goalFlash * 0.5;
+                const level = on ? 0.75 + Math.random() * 0.25 : 0.05;
+                sparkleColors[i] = level;
+                sparkleColors[i + 1] = level * 0.95;
+                sparkleColors[i + 2] = level * 0.82;
+              }
+            }
+            (sparkles.geometry.getAttribute("color") as BufferAttribute).needsUpdate = true;
           }
           for (const { sprite, offset } of smoke) {
             sprite.position.x += Math.sin(time * 0.00025 + offset) * 0.0008;
