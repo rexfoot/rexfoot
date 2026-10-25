@@ -143,10 +143,10 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
     let startedAt: number | null = null;
     let didKick = false;
     let ready = false;
+    let autoKickTimer = 0;
     void (async () => {
       try {
         const THREE = await import("three");
-        const { DecalGeometry } = await import("three/addons/geometries/DecalGeometry.js");
         if (!active || !mountRef.current) return;
 
         renderer = new THREE.WebGLRenderer({ alpha: false, antialias: true, powerPreference: "high-performance" });
@@ -279,22 +279,6 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
         ballRoot.add(ballMesh);
         scene.add(ballRoot);
 
-        const logoTexture = await new THREE.TextureLoader().loadAsync("/logo-crown.png");
-        if (!active || !ballMesh || !ballRoot) return;
-        logoTexture.colorSpace = THREE.SRGBColorSpace;
-        logoTexture.anisotropy = 4;
-        ballMesh.updateMatrixWorld(true);
-        const decalGeometry = new DecalGeometry(
-          ballMesh,
-          new THREE.Vector3(0, 0.03, 0.668),
-          new THREE.Euler(0, 0, 0),
-          new THREE.Vector3(0.43, 0.43, 0.2),
-        );
-        const decal = new THREE.Mesh(
-          decalGeometry,
-          new THREE.MeshStandardMaterial({ map: logoTexture, transparent: true, depthTest: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, roughness: 0.58 }),
-        );
-        ballRoot.add(decal);
         ballRoot.position.set(0, -0.76, 0.68);
 
         const resize = () => {
@@ -306,17 +290,9 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           camera.updateProjectionMatrix();
         };
 
-        const onPointerDown = (event: PointerEvent) => {
-          if (!renderer || !camera || !ballMesh || didKick) return;
-          const rect = renderer.domElement.getBoundingClientRect();
-          const pointer = new THREE.Vector2(
-            ((event.clientX - rect.left) / rect.width) * 2 - 1,
-            -((event.clientY - rect.top) / rect.height) * 2 + 1,
-          );
-          const picker = new THREE.Raycaster();
-          picker.setFromCamera(pointer, camera);
-          if (!picker.intersectObject(ballMesh, false).length) return;
-
+        // Le tir part tout seul ; toucher l'écran le déclenche plus tôt.
+        const kick = () => {
+          if (didKick || !active) return;
           didKick = true;
           startedAt = performance.now();
           callbacksRef.current.onKick();
@@ -325,15 +301,21 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           } catch {
             // Vibration is optional and may be denied by the browser.
           }
-          // Sound: “Victorious Roar Crowd Cheering 44”, SFXMint, CC0 1.0 (public domain).
+          // Son : clameur de stade après un but (Pixabay Content License, voir apps/web/public/sounds).
+          // Sans geste de l'utilisateur, certains navigateurs bloquent le son : le tir continue en silence.
           try {
             const audio = new Audio(CROWD_SOUND);
-            audio.volume = 0.58;
-            void audio.play().catch(() => {});
+            audio.volume = 0.7;
+            audio.preload = "auto";
+            // La clameur éclate au moment où le ballon touche le filet (~1,5 s après le tir).
+            autoKickTimer = window.setTimeout(() => {
+              if (active) void audio.play().catch(() => {});
+            }, 1450);
           } catch {
-            // Audio is optional; the shot continues if media playback is unavailable.
+            // Audio is optional.
           }
         };
+        const onPointerDown = () => kick();
         renderer.domElement.addEventListener("pointerdown", onPointerDown, { passive: true });
         window.addEventListener("resize", resize);
 
@@ -373,6 +355,7 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           if (!ready) {
             ready = true;
             callbacksRef.current.onReady();
+            autoKickTimer = window.setTimeout(kick, 1200);
           }
           frame = window.requestAnimationFrame(animate);
         };
@@ -391,6 +374,7 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
 
     return () => {
       active = false;
+      window.clearTimeout(autoKickTimer);
       window.cancelAnimationFrame(frame);
       mount.dispatchEvent(new Event("rexfoot-dispose"));
       if (renderer && scene) {

@@ -58,7 +58,6 @@ export function CinematicIntro({ onDismiss }: { onDismiss: () => void }) {
           >
             Passer
           </button>
-          <div className={`rf-cinematic-hint ${started ? "is-hidden" : ""}`}>Touchez le ballon</div>
         </>
       )}
     </div>
