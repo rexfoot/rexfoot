@@ -441,12 +441,14 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
 
         AD_BOARDS.forEach((ad, index) => {
           const board = makeAdBoard(THREE, ad);
-          board.position.set((index - 1) * 2.42, -1.22, -3.6);
+          // Rangée de panneaux en bord de tribune, juste au-dessus de la barre :
+          // lisible, jamais cachée par le ballon ni par les poteaux.
+          board.position.set((index - 1) * 2.42, 1.52, -3.6);
           scene?.add(board);
         });
 
         const stadiumScreen = makeStadiumScreen(THREE);
-        stadiumScreen.group.position.set(0, 2.45, -3.95);
+        stadiumScreen.group.position.set(0, 2.95, -3.95);
         scene.add(stadiumScreen.group);
 
         spots = [-1, 1].map((side) => {
