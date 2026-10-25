@@ -208,7 +208,7 @@ function makeAdBoard(THREE: typeof import("three"), ad: AdBoard) {
     new THREE.PlaneGeometry(2.3, 0.43),
     new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }),
   );
-  face.position.z = 0.04;
+  face.position.z = 0.07; // devant le boîtier (0,04), sinon les deux surfaces se confondent et le panneau reste noir
   const housing = new THREE.Mesh(
     new THREE.BoxGeometry(2.36, 0.5, 0.08),
     new THREE.MeshStandardMaterial({ color: 0x0a0c0f, roughness: 0.5, metalness: 0.5 }),
