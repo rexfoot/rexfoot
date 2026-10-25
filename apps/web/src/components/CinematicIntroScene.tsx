@@ -12,7 +12,11 @@ const BALL_START = { x: 0, y: -0.76, z: 0.68 };
 /** Lucarne droite : le ballon (rayon 0,68) se loge sous la barre, contre le poteau. */
 const GOAL_TARGET = { x: 1.55, y: 0.42, z: -2.6 };
 /** Début du fondu vers le site après le tir (ms) — même valeur que l'animation CSS. */
-const REVEAL_DELAY_MS = 1600;
+const REVEAL_DELAY_MS = 2700;
+/** Mouvement de caméra après le but : envol vers la tribune en balayant les panneaux. */
+const CAMERA_MOVE_START = 0.22; // s après l'impact
+const CAMERA_MOVE_DURATION = 2.2; // s
+const smoothstep = (t: number) => t * t * (3 - 2 * t);
 
 function makeBallMap(THREE: typeof import("three")) {
   const canvas = document.createElement("canvas");
@@ -597,6 +601,19 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           for (const { sprite, offset } of smoke) {
             sprite.position.x += Math.sin(time * 0.00025 + offset) * 0.0008;
             sprite.position.y += Math.sin(time * 0.0004 + offset) * 0.00035;
+          }
+          if (startedAt !== null) {
+            // Après le but : la caméra s'élance vers la tribune et balaie les
+            // panneaux de gauche (Souss Actualités) à droite (Atlas Dépêche).
+            const t = (elapsed - SHOT_DURATION - CAMERA_MOVE_START) / CAMERA_MOVE_DURATION;
+            if (t > 0) {
+              const k = smoothstep(Math.min(t, 1));
+              const sweep = smoothstep(Math.min(Math.max((t - 0.12) / 0.88, 0), 1));
+              const lookX = -2.42 + 4.84 * sweep;
+              const approach = Math.min(k * 1.6, 1);
+              camera.position.set(lookX * 0.55 * approach, 0.25 + 1.1 * k, 8.5 - 6.1 * k);
+              camera.lookAt(lookX * approach, -0.25 + 1.77 * approach, -0.6 - 3.0 * approach);
+            }
           }
           renderer.render(scene, camera);
           if (!ready) {
