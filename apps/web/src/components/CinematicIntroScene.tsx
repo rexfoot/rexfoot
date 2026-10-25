@@ -132,6 +132,91 @@ function fitFov(aspect: number) {
   return (2 * Math.atan(Math.max(base, minHalfWidth / aspect)) * 180) / Math.PI;
 }
 
+type AdBoard = { brand: string; tagline: string; bg: [string, string]; accent: string; text: string; logo?: string };
+
+/** Panneaux publicitaires LED au bord du terrain (marques du groupe). */
+const AD_BOARDS: AdBoard[] = [
+  { brand: "SOUSS ACTUALITÉS", tagline: "souss-actualites.com · depuis 1971", bg: ["#5a0710", "#9c1020"], accent: "#ffffff", text: "#ffffff" },
+  { brand: "REXFOOT", tagline: "rexfoot.com · l'actu foot en direct", bg: ["#050505", "#1b1508"], accent: "#e2b33c", text: "#f4d27a", logo: "/logo-crown.png" },
+  { brand: "ATLAS DÉPÊCHE", tagline: "atlasdépêche.com · l'info en continu", bg: ["#05234f", "#0b4aa0"], accent: "#ffd34d", text: "#ffffff" },
+];
+
+function brandFont(weight: number, size: number) {
+  // Police du site (Outfit), servie par next/font : on relit son vrai nom.
+  let family = "";
+  try {
+    family = getComputedStyle(document.body).getPropertyValue("--font-outfit").trim();
+  } catch {
+    family = "";
+  }
+  return `${weight} ${size}px ${family ? `${family}, ` : ""}"Arial Black", Arial, sans-serif`;
+}
+
+function makeAdBoard(THREE: typeof import("three"), ad: AdBoard) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1024;
+  canvas.height = 192;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas 2D unavailable");
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.anisotropy = 4;
+  const paint = (logo?: HTMLImageElement) => {
+    const bg = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    bg.addColorStop(0, ad.bg[0]);
+    bg.addColorStop(1, ad.bg[1]);
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Liseré lumineux haut et bas, comme un vrai panneau LED.
+    ctx.fillStyle = ad.accent;
+    ctx.fillRect(0, 0, canvas.width, 7);
+    ctx.fillRect(0, canvas.height - 7, canvas.width, 7);
+    let x = 60;
+    if (logo && logo.width) {
+      const h = 150;
+      const w = (logo.width / logo.height) * h;
+      ctx.drawImage(logo, x, (canvas.height - h) / 2, w, h);
+      x += w + 34;
+    }
+    ctx.fillStyle = ad.text;
+    ctx.textBaseline = "alphabetic";
+    ctx.shadowColor = "rgba(0,0,0,0.45)";
+    ctx.shadowBlur = 8;
+    ctx.font = brandFont(800, 78);
+    const available = canvas.width - x - 50;
+    const measured = ctx.measureText(ad.brand).width;
+    if (measured > available) ctx.font = brandFont(800, Math.floor((78 * available) / measured));
+    ctx.fillText(ad.brand, x, 112);
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = ad.accent;
+    ctx.font = brandFont(600, 30);
+    ctx.fillText(ad.tagline.toUpperCase(), x + 2, 156);
+    // Trame de pixels LED discrète.
+    ctx.fillStyle = "rgba(0,0,0,0.16)";
+    for (let px = 0; px < canvas.width; px += 4) ctx.fillRect(px, 0, 1, canvas.height);
+    for (let py = 0; py < canvas.height; py += 4) ctx.fillRect(0, py, canvas.width, 1);
+    texture.needsUpdate = true;
+  };
+  paint();
+  if (ad.logo) {
+    const img = new Image();
+    img.onload = () => paint(img);
+    img.src = ad.logo;
+  }
+  const board = new THREE.Group();
+  const face = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.3, 0.43),
+    new THREE.MeshBasicMaterial({ map: texture, toneMapped: false }),
+  );
+  face.position.z = 0.04;
+  const housing = new THREE.Mesh(
+    new THREE.BoxGeometry(2.36, 0.5, 0.08),
+    new THREE.MeshStandardMaterial({ color: 0x0a0c0f, roughness: 0.5, metalness: 0.5 }),
+  );
+  board.add(housing, face);
+  return board;
+}
+
 /** Écran géant du stade, derrière le but, affichant le logo officiel RexFoot. */
 function makeStadiumScreen(THREE: typeof import("three")) {
   const canvas = document.createElement("canvas");
@@ -353,6 +438,12 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           bank.rotation.set(-0.25, -side * 0.35, 0);
           scene.add(bank);
         }
+
+        AD_BOARDS.forEach((ad, index) => {
+          const board = makeAdBoard(THREE, ad);
+          board.position.set((index - 1) * 2.42, -1.22, -3.6);
+          scene?.add(board);
+        });
 
         const stadiumScreen = makeStadiumScreen(THREE);
         stadiumScreen.group.position.set(0, 2.45, -3.95);
