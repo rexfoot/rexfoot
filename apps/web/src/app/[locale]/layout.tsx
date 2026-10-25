@@ -9,6 +9,7 @@ import { buildAlternates, ogLocale } from "@/lib/seo/alternates";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { AdsenseLazy } from "@/components/AdsenseLazy";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { FACEBOOK_PAGE_URL, YOUTUBE_CHANNEL_URL } from "@/lib/social-links";
 import "../globals.css";
 
 const inter = Inter({ variable: "--font-inter", subsets: ["latin"] });
@@ -77,6 +78,16 @@ function buildRootJsonLd() {
       name: SITE_NAME,
       url: siteUrl,
       logo: `${siteUrl}/logo-crown.png`,
+      // Profils officiels de RexFoot : relie le site à sa chaîne YouTube et à
+      // sa page Facebook pour Google (knowledge panel).
+      sameAs: [YOUTUBE_CHANNEL_URL, "https://www.youtube.com/@rexfootcom", FACEBOOK_PAGE_URL],
+      founder: {
+        "@type": "Person",
+        "@id": `${siteUrl}/auteur/hicham-jikh-cheddad#person`,
+        name: "Hicham Jikh Cheddad",
+        jobTitle: "Directeur de la publication",
+        url: `${siteUrl}/auteur/hicham-jikh-cheddad`,
+      },
     },
     // Pas de `potentialAction: SearchAction` (sitelinks searchbox) : la
     // recherche n'a pas de page dédiée lisant `?q=` (overlay client + /api/search
