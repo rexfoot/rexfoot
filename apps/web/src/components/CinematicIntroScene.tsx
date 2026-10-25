@@ -5,7 +5,7 @@ import type { BufferAttribute, Group, Mesh, PerspectiveCamera, Scene, WebGLRende
 
 type SceneProps = { onReady: () => void; onFailure: () => void; onKick: () => void };
 
-const CROWD_SOUND = "/sounds/crowd-cheer.mp3";
+const CROWD_SOUND = "/sounds/goal-crowd.mp3";
 
 function makeBallMap(THREE: typeof import("three")) {
   const canvas = document.createElement("canvas");
@@ -301,7 +301,7 @@ export function CinematicIntroScene({ onReady, onFailure, onKick }: SceneProps) 
           } catch {
             // Vibration is optional and may be denied by the browser.
           }
-          // Son : clameur de stade après un but (Pixabay Content License, voir apps/web/public/sounds).
+          // Son : clameur de stade après un but — « Crowd Cheering » (pixabay.com/sound-effects/people-crowd-cheering-379666), Pixabay Content License, extrait de 6 s.
           // Sans geste de l'utilisateur, certains navigateurs bloquent le son : le tir continue en silence.
           try {
             const audio = new Audio(CROWD_SOUND);
