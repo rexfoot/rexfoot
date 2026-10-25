@@ -10,11 +10,18 @@ export function AppIntroGate() {
 
   useEffect(() => {
     try {
-      const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+      // ?intro=1 force l'intro (test sur n'importe quel navigateur, sans installer l'app).
+      const forced = new URLSearchParams(window.location.search).get("intro") === "1";
+      const isStandalone =
+        window.matchMedia("(display-mode: standalone)").matches ||
+        window.matchMedia("(display-mode: fullscreen)").matches ||
+        window.matchMedia("(display-mode: minimal-ui)").matches ||
+        // Application Play Store (TWA) : Chrome l'ouvre avec ce referrer.
+        document.referrer.startsWith("android-app://");
       const isHome = /^\/(?:en|es)?\/?$/.test(window.location.pathname);
       const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!isStandalone || !isHome || prefersReducedMotion) return;
-      if (window.sessionStorage.getItem("rexfoot-cinematic-intro-seen")) return;
+      if (!forced && (!isStandalone || !isHome || prefersReducedMotion)) return;
+      if (!forced && window.sessionStorage.getItem("rexfoot-cinematic-intro-seen")) return;
 
       // Mark before loading so failures and reloads never trap or replay the app.
       window.sessionStorage.setItem("rexfoot-cinematic-intro-seen", "1");
