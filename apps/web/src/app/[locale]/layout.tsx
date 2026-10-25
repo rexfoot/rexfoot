@@ -9,6 +9,7 @@ import { buildAlternates, ogLocale } from "@/lib/seo/alternates";
 import { GoogleAnalytics } from "@/components/GoogleAnalytics";
 import { AdsenseLazy } from "@/components/AdsenseLazy";
 import { ServiceWorkerRegister } from "@/components/ServiceWorkerRegister";
+import { AppIntroGate } from "@/components/AppIntroGate";
 import { FACEBOOK_PAGE_URL, YOUTUBE_CHANNEL_URL } from "@/lib/social-links";
 import "../globals.css";
 
@@ -128,7 +129,10 @@ export default async function LocaleLayout({ children, params }: LocaleLayoutPro
         <GoogleAnalytics />
         <AdsenseLazy />
         <ServiceWorkerRegister />
-        <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider>
+          <AppIntroGate />
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );
