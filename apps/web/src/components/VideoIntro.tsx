@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 // Film d'ouverture de l'application (but dans un stade, foule), genere sur Higgsfield.
-const INTRO_VIDEO_URL = "https://d8j0ntlcm91z4.cloudfront.net/user_3LCdkAhIwSRrWprhjeFFfSONXjJ/hf_20261025_230635_e9fd1027-ac5f-4e39-b188-90b9352b09d4.mp4";
+const INTRO_VIDEO_URL = "https://d8j0ntlcm91z4.cloudfront.net/user_3LCdkAhIwSRrWprhjeFFfSONXjJ/hf_20261025_231615_04254e50-5243-4d2a-bd54-14141cb2d213.mp4";
 
 /** Shows the real logo (never AI-drawn) over the last moment of the film, then opens the site. */
 export function VideoIntro({ onDismiss }: { onDismiss: () => void }) {
