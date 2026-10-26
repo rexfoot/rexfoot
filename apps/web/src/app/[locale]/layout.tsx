@@ -51,6 +51,17 @@ export async function generateMetadata({
       images: ogImage,
     },
     twitter: { card: "summary_large_image", title: t("title"), description: t("description"), images: ogImage },
+    // Google Discover : sans max-image-preview:large, Google n'affiche que des
+    // vignettes et les articles sortent très peu dans Discover. Les pages qui
+    // doivent rester hors index (admin, etc.) définissent leur propre `robots`.
+    robots: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+      googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+    },
     icons: { icon: "/favicon.ico", apple: `/${locale}/apple-icon.png` },
     verification: { google: "fb3QYMo5tbpDvbzF5eEU2jD9WUlkpa4Quui4Xeud_MU" },
   };

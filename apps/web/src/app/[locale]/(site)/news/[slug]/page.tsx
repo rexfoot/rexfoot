@@ -27,7 +27,18 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: article.summary ?? undefined,
     // Cover en og:image ET twitter:image (sinon twitter hériterait l'image
     // globale du layout au lieu de la cover — voir layout [locale]).
-    openGraph: article.coverImageUrl ? { images: [{ url: article.coverImageUrl }] } : undefined,
+    // `type: "article"` explicite : l'openGraph de la page remplace celui du
+    // layout (fusion superficielle de Next), donc sans ça og:type disparaissait.
+    openGraph: {
+      type: "article",
+      title: article.title,
+      description: article.summary ?? undefined,
+      images: [
+        article.coverImageUrl
+          ? { url: article.coverImageUrl }
+          : { url: "/opengraph-image.jpg", width: 1200, height: 630, alt: SITE_NAME },
+      ],
+    },
     twitter: article.coverImageUrl ? { images: [{ url: article.coverImageUrl }] } : undefined,
     alternates: buildAlternates(`/news/${slug}`, locale),
   };
